@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
+// ✅ API base URL (auto switch between local and Render)
+const API_URL =
+  process.env.NODE_ENV === "production"
+    ? "https://your-render-backend.onrender.com"   // 🔹 Replace with your Render backend URL
+    : "http://localhost:5000";
+
 function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,10 +22,9 @@ function LoginPage() {
 
     try {
       const res = await axios.post(
-        'http://10.136.156.118:5000/api/auth/login',
+        `${API_URL}/api/auth/login`,
         { email, password },
         {
-          withCredentials: true,
           headers: {
             'Content-Type': 'application/json',
           },
