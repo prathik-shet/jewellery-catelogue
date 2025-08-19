@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Jewellery = require("../models/jewellery");
+const Jewellery = require("../models/Jewellery");
 
 // ✅ Enhanced CORS middleware for better network support
 router.use((req, res, next) => {
