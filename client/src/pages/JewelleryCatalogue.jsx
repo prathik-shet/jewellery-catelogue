@@ -64,7 +64,7 @@ function JewelleryCatalogue() {
   const fetchJewellery = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`${BASE_URL}/api/jewellery`, {
+      const res = await axios.get(`/api/jewellery`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = res.data;
@@ -88,7 +88,7 @@ function JewelleryCatalogue() {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.patch(`${BASE_URL}/api/jewellery/${item._id}/click`, {}, {
+      const response = await axios.patch(`/api/jewellery/${item._id}/click`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -337,7 +337,7 @@ function JewelleryCatalogue() {
       };
 
       const token = localStorage.getItem('token');
-      await axios.post(`${BASE_URL}/api/jewellery`, payload, {
+      await axios.post(`/api/jewellery`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -423,7 +423,7 @@ function JewelleryCatalogue() {
         payload.videos = videoResults;
       }
 
-      await axios.put(`${BASE_URL}/api/jewellery/${newItem._id}`, payload, {
+      await axios.put(`/api/jewellery/${newItem._id}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       
@@ -445,7 +445,7 @@ function JewelleryCatalogue() {
     if (window.confirm('Are you sure you want to delete this item?')) {
       try {
         const token = localStorage.getItem('token');
-        await axios.delete(`${BASE_URL}/api/jewellery/${id}`, {
+        await axios.delete(`/api/jewellery/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         fetchJewellery();
