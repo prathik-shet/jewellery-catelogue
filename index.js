@@ -6,9 +6,23 @@ require('dotenv').config();
 
 const app = express();
 
-// ✅ CORS (allow all origins in production, restrict in dev)
+// ✅ Allowed origins (frontend URLs)
+const allowedOrigins = [
+  "https://jewellery-catelogue.onrender.com", // production frontend
+  "http://localhost:3000"                     // local frontend for dev
+];
+
+// ✅ CORS setup
 app.use(cors({
-  origin: true,
+  origin: function (origin, callback) {
+    // allow requests with no origin (like Postman or curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   credentials: true
 }));
 
@@ -25,7 +39,7 @@ if (process.env.NODE_ENV === "production") {
   const clientBuildPath = path.join(__dirname, "client", "build");
   app.use(express.static(clientBuildPath));
 
-  // ✅ FIX: use /* instead of * (Express v5 compatible)
+  // FIX: Express route for SPA
   app.get("/*", (req, res) => {
     res.sendFile(path.join(clientBuildPath, "index.html"));
   });

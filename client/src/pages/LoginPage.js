@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 // ✅ API base URL (auto switch between local and Render)
 const API_URL =
   process.env.NODE_ENV === "production"
-    ? "https://your-render-backend.onrender.com"   // 🔹 Replace with your Render backend URL
+    ? "https://jewellery-catelogue.onrender.com"   // 🔹 Replace with your Render backend URL
     : "http://localhost:5000";
 
 function LoginPage() {
