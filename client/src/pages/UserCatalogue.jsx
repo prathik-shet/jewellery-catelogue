@@ -19,7 +19,7 @@ function UserCatalogue() {
   const [modalMedia, setModalMedia] = useState([]); // Combined images and videos
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   
-  const [gridCols, setGridCols] = useState(3);
+  const [gridCols, setGridCols] = useState(2);
   const [sortField, setSortField] = useState('clickCount');
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [showSortPanel, setShowSortPanel] = useState(false);
@@ -42,7 +42,7 @@ function UserCatalogue() {
     'Custom',
   ];
   const genders = ['All', 'Unisex', 'Women', 'Men'];
-  const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
+  const types = ['All', 'wedding', 'lightweight', 'daily wear', 'fancy', 'normal'];
   const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
 
   useEffect(() => {
@@ -375,61 +375,60 @@ function UserCatalogue() {
   const filteredJewellery = filterJewellery();
 
   return (
-    <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 min-h-screen pb-20">
-      {/* Enhanced Header with Glassmorphism Effect */}
-      <div className="bg-gradient-to-r from-amber-400/90 via-yellow-400/90 to-orange-400/90 backdrop-blur-md fixed top-0 left-0 w-full z-[80] shadow-2xl p-4 border-b border-amber-300/50">
-        <div className="flex flex-col items-center gap-4">
-          {/* Logo and Company Name */}
-          <div className="flex items-center gap-4 justify-center sm:justify-start">
-            <div className="relative">
-              <img
-                src="./logo.png"
-                alt="Logo"
-                className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-3 border-white shadow-xl ring-4 ring-amber-200/50"
-              />
-              <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>
-            </div>
-            <div className="text-center sm:text-left">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-wide drop-shadow-lg">
-                VIMALESHWARA JEWELLERS
-              </h1>
-              <p className="text-amber-100 text-xs sm:text-sm font-medium">Premium Jewellery Collection</p>
-            </div>
+    <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 min-h-screen">
+      {/* Header with Logo and Company Name */}
+      <div className="bg-gradient-to-r from-amber-400/90 via-yellow-400/90 to-orange-400/90 backdrop-blur-md fixed top-0 left-0 w-full z-[90] shadow-2xl p-4 border-b border-amber-300/50">
+        <div className="flex items-center gap-4 justify-center sm:justify-start">
+          <div className="relative">
+            <img
+              src="./logo.png"
+              alt="Logo"
+              className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-3 border-white shadow-xl ring-4 ring-amber-200/50"
+            />
+            <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>
           </div>
-          
-          {/* Search Bar */}
-          <div className="w-full max-w-2xl relative">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search jewellery by name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-2xl text-gray-800 placeholder-gray-500 focus:outline-none focus:border-white focus:ring-4 focus:ring-white/30 transition-all duration-300 shadow-lg text-sm sm:text-base font-medium"
-              />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-wide drop-shadow-lg">
+              VIMALESHWARA JEWELLERS
+            </h1>
+            <p className="text-amber-100 text-xs sm:text-sm font-medium">Premium Jewellery Collection</p>
           </div>
         </div>
       </div>
 
-      {/* Filter and Sort Dropdown Row */}
-      <div className="fixed top-28 sm:top-32 lg:top-36 left-0 w-full bg-gradient-to-r from-white/95 via-amber-50/95 to-orange-50/95 backdrop-blur-md border-b-2 border-amber-300/50 shadow-lg z-[70] p-4">
-        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+      {/* Search Bar - Separate Section */}
+      <div className="bg-gradient-to-r from-white/95 via-amber-50/95 to-orange-50/95 backdrop-blur-md fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-4 border-b border-amber-300/50">
+        <div className="w-full max-w-2xl mx-auto relative">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search jewellery by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-2xl text-gray-800 placeholder-gray-500 focus:outline-none focus:border-white focus:ring-4 focus:ring-white/30 transition-all duration-300 shadow-lg text-sm sm:text-base font-medium"
+            />
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Fixed Filter and Sort Controls Row */}
+      <div className="fixed top-36 sm:top-44 left-0 w-full bg-gradient-to-r from-white/95 via-amber-50/95 to-orange-50/95 backdrop-blur-md border-b-2 border-amber-300/50 shadow-lg z-[80] p-4">
+        <div className="flex items-center justify-center gap-2">
           
           {/* Filter By Dropdown */}
           <div className="relative">
@@ -438,20 +437,20 @@ function UserCatalogue() {
                 setShowFilterPanel(!showFilterPanel);
                 setShowSortPanel(false);
               }}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border border-white/20 min-w-[200px] justify-center"
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-2 border border-white/20"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
-              Filter By
-              <svg className={`w-4 h-4 transform transition-transform duration-300 ${showFilterPanel ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <span className="text-sm sm:text-base">Filter By</span>
+              <svg className={`w-3 h-3 sm:w-4 sm:h-4 transform transition-transform duration-300 ${showFilterPanel ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
 
             {/* Filter Dropdown Panel */}
             {showFilterPanel && (
-              <div className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white/95 backdrop-blur-md border-2 border-blue-300 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[80]">
+              <div className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white/95 backdrop-blur-md border-2 border-blue-300 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]">
                 <div className="space-y-4">
                   
                   {/* Category Multi-Select */}
@@ -630,44 +629,72 @@ function UserCatalogue() {
             )}
           </div>
 
-          {/* Sort By Dropdown */}
+          {/* Vertical Divider */}
+          <div className="w-px h-8 bg-white/50"></div>
+
+          {/* Sort By Dropdown - Fixed Positioning */}
           <div className="relative">
             <button
               onClick={() => {
                 setShowSortPanel(!showSortPanel);
                 setShowFilterPanel(false);
               }}
-              className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg hover:from-purple-600 hover:to-pink-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border border-white/20 min-w-[200px] justify-center"
+              className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-bold shadow-lg hover:from-purple-600 hover:to-pink-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-2 border border-white/20"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+              <svg
+                className="w-4 h-4 sm:w-5 sm:h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                />
               </svg>
-              Sort By
-              <svg className={`w-4 h-4 transform transition-transform duration-300 ${showSortPanel ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <span className="text-sm sm:text-base">Sort By</span>
+              <svg
+                className={`w-3 h-3 sm:w-4 sm:h-4 transform transition-transform duration-300 ${
+                  showSortPanel ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 
-            {/* Sort Dropdown Panel with Scroll */}
+            {/* Sort Dropdown Panel - Fixed to match Filter positioning */}
             {showSortPanel && (
-              <div className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white/95 backdrop-blur-md border-2 border-purple-300 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[80]">
+              <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white/95 backdrop-blur-md border-2 border-purple-300 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]">
                 <div className="space-y-4">
-                  
                   {/* Current Sort Display */}
                   <div className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl border border-purple-300">
                     <h3 className="font-bold text-purple-700 mb-2">Current Sort</h3>
-                    <p className="text-purple-600 font-semibold">{getActiveSortDescription()}</p>
+                    <p className="text-purple-600 font-semibold">
+                      {getActiveSortDescription()}
+                    </p>
                   </div>
 
                   {/* Sort by Field */}
                   <div>
-                    <label className="block font-bold text-purple-700 mb-2">Sort By Field</label>
+                    <label className="block font-bold text-purple-700 mb-2">
+                      Sort By Field
+                    </label>
                     <select
                       value={sortField}
                       onChange={(e) => {
                         setSortField(e.target.value);
-                        setSortOrder('');
-                        setSortByDate('');
+                        setSortOrder("");
+                        setSortByDate("");
                       }}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
                     >
@@ -679,35 +706,43 @@ function UserCatalogue() {
                   </div>
 
                   {/* Sort Direction */}
-                  {(sortField === 'weight' || sortField === 'orderNo' || sortField === 'clickCount') && (
+                  {(sortField === "weight" ||
+                    sortField === "orderNo" ||
+                    sortField === "clickCount") && (
                     <div>
-                      <label className="block font-bold text-purple-700 mb-2">Sort Direction</label>
+                      <label className="block font-bold text-purple-700 mb-2">
+                        Sort Direction
+                      </label>
                       <div className="space-y-2">
                         <button
                           onClick={() => {
-                            setSortOrder('asc');
-                            setSortByDate('');
+                            setSortOrder("asc");
+                            setSortByDate("");
                           }}
                           className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                            sortOrder === 'asc'
-                              ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600'
-                              : 'bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300'
+                            sortOrder === "asc"
+                              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
                           }`}
                         >
-                          {sortField === 'clickCount' ? 'Least Popular First' : 'Low to High (Ascending)'}
+                          {sortField === "clickCount"
+                            ? "Least Popular First"
+                            : "Low to High (Ascending)"}
                         </button>
                         <button
                           onClick={() => {
-                            setSortOrder('desc');
-                            setSortByDate('');
+                            setSortOrder("desc");
+                            setSortByDate("");
                           }}
                           className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                            sortOrder === 'desc'
-                              ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600'
-                              : 'bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300'
+                            sortOrder === "desc"
+                              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
                           }`}
                         >
-                          {sortField === 'clickCount' ? 'Most Popular First' : 'High to Low (Descending)'}
+                          {sortField === "clickCount"
+                            ? "Most Popular First"
+                            : "High to Low (Descending)"}
                         </button>
                       </div>
                     </div>
@@ -715,32 +750,34 @@ function UserCatalogue() {
 
                   {/* Sort by Date */}
                   <div>
-                    <label className="block font-bold text-purple-700 mb-2">Sort by Date</label>
+                    <label className="block font-bold text-purple-700 mb-2">
+                      Sort by Date
+                    </label>
                     <div className="space-y-2">
                       <button
                         onClick={() => {
-                          setSortByDate('newest');
-                          setSortOrder('');
-                          setSortField('');
+                          setSortByDate("newest");
+                          setSortOrder("");
+                          setSortField("");
                         }}
                         className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                          sortByDate === 'newest'
-                            ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600'
-                            : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300'
+                          sortByDate === "newest"
+                            ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300"
                         }`}
                       >
                         Newest First
                       </button>
                       <button
                         onClick={() => {
-                          setSortByDate('oldest');
-                          setSortOrder('');
-                          setSortField('');
+                          setSortByDate("oldest");
+                          setSortOrder("");
+                          setSortField("");
                         }}
                         className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                          sortByDate === 'oldest'
-                            ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600'
-                            : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300'
+                          sortByDate === "oldest"
+                            ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300"
                         }`}
                       >
                         Oldest First
@@ -750,13 +787,15 @@ function UserCatalogue() {
 
                   {/* Quick Sort Options */}
                   <div>
-                    <label className="block font-bold text-purple-700 mb-2">Quick Sort</label>
+                    <label className="block font-bold text-purple-700 mb-2">
+                      Quick Sort
+                    </label>
                     <div className="space-y-2">
                       <button
                         onClick={() => {
-                          setSortField('clickCount');
-                          setSortOrder('desc');
-                          setSortByDate('');
+                          setSortField("clickCount");
+                          setSortOrder("desc");
+                          setSortByDate("");
                         }}
                         className="w-full p-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-semibold"
                       >
@@ -764,9 +803,9 @@ function UserCatalogue() {
                       </button>
                       <button
                         onClick={() => {
-                          setSortField('weight');
-                          setSortOrder('desc');
-                          setSortByDate('');
+                          setSortField("weight");
+                          setSortOrder("desc");
+                          setSortByDate("");
                         }}
                         className="w-full p-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-semibold"
                       >
@@ -774,9 +813,9 @@ function UserCatalogue() {
                       </button>
                       <button
                         onClick={() => {
-                          setSortField('weight');
-                          setSortOrder('asc');
-                          setSortByDate('');
+                          setSortField("weight");
+                          setSortOrder("asc");
+                          setSortByDate("");
                         }}
                         className="w-full p-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-semibold"
                       >
@@ -785,20 +824,19 @@ function UserCatalogue() {
                     </div>
                   </div>
 
-                  {/* Grid Columns */}
+                  {/* Grid Columns - Simplified */}
                   <div>
-                    <label className="block font-bold text-purple-700 mb-2">Grid Layout</label>
+                    <label className="block font-bold text-purple-700 mb-2">
+                      Grid Layout
+                    </label>
                     <select
                       value={gridCols}
                       onChange={(e) => setGridCols(Number(e.target.value))}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
                     >
-                      <option value={2}>Grid: 2</option>
-                      <option value={3}>Grid: 3</option>
-                      <option value={4}>Grid: 4</option>
-                      <option value={6}>Grid: 6</option>
-                      <option value={8}>Grid: 8</option>
-                      <option value={10}>Grid: 10</option>
+                      <option value={1}>1 Column</option>
+                      <option value={2}>2 Columns</option>
+                      <option value={3}>3 Columns</option>
                     </select>
                   </div>
 
@@ -807,8 +845,18 @@ function UserCatalogue() {
                     onClick={clearAllSorts}
                     className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center gap-2"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
                     </svg>
                     Reset to Most Popular
                   </button>
@@ -822,7 +870,7 @@ function UserCatalogue() {
       {/* Overlay for closing dropdowns */}
       {(showFilterPanel || showSortPanel) && (
         <div 
-          className="fixed inset-0 z-[60]" 
+          className="fixed inset-0 z-[70]" 
           onClick={() => {
             setShowFilterPanel(false);
             setShowSortPanel(false);
@@ -830,130 +878,125 @@ function UserCatalogue() {
         />
       )}
 
-      <div className="h-40 sm:h-44 lg:h-48" />
-
-      {/* Enhanced Cards Grid with Multiple Media (Images + Videos) */}
-      <div
-        className={`grid gap-4 sm:gap-6 lg:gap-8 px-4 sm:px-6 pb-20 ${
-          gridCols === 2
-            ? 'grid-cols-1 sm:grid-cols-2'
-            : gridCols === 3
-            ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
-            : gridCols === 4
-            ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-            : gridCols === 6
-            ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'
-            : gridCols === 8
-            ? 'grid-cols-1 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-8'
-            : gridCols === 10
-            ? 'grid-cols-2 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-10'
-            : 'grid-cols-1'
-        }`}
-      >
-        {filteredJewellery.length === 0 ? (
-          <div className="col-span-full text-center py-20">
-            <div className="text-6xl sm:text-8xl mb-6 animate-bounce">💎</div>
-            <p className="text-xl sm:text-2xl font-bold text-gray-600 mb-2">No jewellery items found.</p>
-            <p className="text-gray-500 text-base sm:text-lg">Try adjusting your filters or search terms.</p>
-          </div>
-        ) : (
-          filteredJewellery.map((item) => {
-            const itemImages = getItemImages(item);
-            const itemVideos = getItemVideos(item);
-            const mainImage = getMainImage(item);
-            
-            return (
-              <div
-                key={item._id}
-                onClick={() => handleItemClick(item)}
-                className="bg-gradient-to-br from-white via-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-500 cursor-pointer group overflow-hidden relative"
-              >
-                {/* Card Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                
-                {/* Enhanced Media Section with Images and Videos Support */}
-                {mainImage && (
-                  <div className="relative mb-4 overflow-hidden rounded-xl sm:rounded-2xl">
-                    <img
-                      src={mainImage}
-                      alt={item.name}
-                      className="w-full h-32 sm:h-40 lg:h-48 object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    
-                    {/* Enhanced Media Indicators */}
-                    <div className="absolute top-2 left-2 flex gap-1 sm:gap-2">
-                      {/* Images Count */}
-                      {itemImages.length > 0 && (
-                        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          {itemImages.length}
+      {/* Content with proper spacing to avoid overlap */}
+      <div className="pt-60 sm:pt-64">
+        {/* Enhanced Cards Grid with Simplified Grid Options */}
+        <div
+          className={`gap-4 sm:gap-6 lg:gap-8 px-4 sm:px-6 pb-20 ${
+            gridCols === 1
+              ? 'grid grid-cols-1'
+              : gridCols === 2
+              ? 'grid grid-cols-1 sm:grid-cols-2'
+              : gridCols === 3
+              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+              : 'grid grid-cols-1 sm:grid-cols-2'
+          }`}
+        >
+          {filteredJewellery.length === 0 ? (
+            <div className="col-span-full text-center py-20">
+              <div className="text-6xl sm:text-8xl mb-6 animate-bounce">💎</div>
+              <p className="text-xl sm:text-2xl font-bold text-gray-600 mb-2">No jewellery items found.</p>
+              <p className="text-gray-500 text-base sm:text-lg">Try adjusting your filters or search terms.</p>
+            </div>
+          ) : (
+            filteredJewellery.map((item) => {
+              const itemImages = getItemImages(item);
+              const itemVideos = getItemVideos(item);
+              const mainImage = getMainImage(item);
+              
+              return (
+                <div
+                  key={item._id}
+                  onClick={() => handleItemClick(item)}
+                  className="bg-gradient-to-br from-white via-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-500 cursor-pointer group overflow-hidden relative"
+                >
+                  {/* Card Glow Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  {/* Enhanced Media Section with Images and Videos Support */}
+                  {mainImage && (
+                    <div className="relative mb-4 overflow-hidden rounded-xl sm:rounded-2xl">
+                      <img
+                        src={mainImage}
+                        alt={item.name}
+                        className="w-full h-32 sm:h-40 lg:h-48 object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      
+                      {/* Enhanced Media Indicators */}
+                      <div className="absolute top-2 left-2 flex gap-1 sm:gap-2">
+                        {/* Images Count */}
+                        {itemImages.length > 0 && (
+                          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {itemImages.length}
+                          </div>
+                        )}
+                        
+                        {/* Videos Count */}
+                        {itemVideos.length > 0 && (
+                          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
+                            </svg>
+                            {itemVideos.length}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Popularity badge */}
+                      {item.clickCount > 0 && (
+                        <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
+                          🔥 {item.clickCount}
                         </div>
                       )}
                       
-                      {/* Videos Count */}
-                      {itemVideos.length > 0 && (
-                        <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
-                          </svg>
-                          {itemVideos.length}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Popularity badge */}
-                    {item.clickCount > 0 && (
-                      <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
-                        🔥 {item.clickCount}
+                      {/* Design Ownership Badge */}
+                      <div className={`absolute bottom-2 left-2 px-2 py-1 rounded-full text-xs font-bold shadow-lg ${
+                        item.isOurDesign === false 
+                          ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' 
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                      }`}>
+                        {item.isOurDesign === false ? '👤' : '🏪'}
                       </div>
-                    )}
-                    
-                    {/* Design Ownership Badge */}
-                    <div className={`absolute bottom-2 left-2 px-2 py-1 rounded-full text-xs font-bold shadow-lg ${
-                      item.isOurDesign === false 
-                        ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' 
-                        : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                    }`}>
-                      {item.isOurDesign === false ? '👤' : '🏪'}
+                    </div>
+                  )}
+                  
+                  <h2 className="text-lg sm:text-xl font-black text-amber-900 mb-3 sm:mb-4 truncate group-hover:text-amber-800 transition-colors duration-300">{item.name}</h2>
+                  
+                  <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-gray-700">
+                    <div className="flex items-center gap-2 sm:gap-3 p-2 bg-white/50 rounded-lg sm:rounded-xl">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-amber-500 rounded-lg flex items-center justify-center text-white font-bold text-xs">⚖️</div>
+                      <span className="font-semibold">Weight:</span> 
+                      <span className="font-bold text-amber-700">{item.weight}g</span>
+                    </div>
+                    <div className="flex items-center gap-2 sm:gap-3 p-2 bg-white/50 rounded-lg sm:rounded-xl">
+                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-amber-500 rounded-lg flex items-center justify-center text-white font-bold text-xs">🏷️</div>
+                      <span className="font-semibold">Category:</span> 
+                      <span className="font-bold text-amber-700">{item.category?.main}</span>
                     </div>
                   </div>
-                )}
-                
-                <h2 className="text-lg sm:text-xl font-black text-amber-900 mb-3 sm:mb-4 truncate group-hover:text-amber-800 transition-colors duration-300">{item.name}</h2>
-                
-                <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-gray-700">
-                  <div className="flex items-center gap-2 sm:gap-3 p-2 bg-white/50 rounded-lg sm:rounded-xl">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-amber-500 rounded-lg flex items-center justify-center text-white font-bold text-xs">⚖️</div>
-                    <span className="font-semibold">Weight:</span> 
-                    <span className="font-bold text-amber-700">{item.weight}g</span>
-                  </div>
-                  <div className="flex items-center gap-2 sm:gap-3 p-2 bg-white/50 rounded-lg sm:rounded-xl">
-                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-amber-500 rounded-lg flex items-center justify-center text-white font-bold text-xs">🏷️</div>
-                    <span className="font-semibold">Category:</span> 
-                    <span className="font-bold text-amber-700">{item.category?.main}</span>
+                  
+                  <div className="mt-4 sm:mt-6 text-center">
+                    <span className="text-xs sm:text-sm text-blue-600 font-bold bg-gradient-to-r from-blue-100 to-indigo-100 px-3 sm:px-4 py-2 rounded-full border border-blue-200 group-hover:from-blue-200 group-hover:to-indigo-200 transition-all duration-300">
+                      Click for details ✨
+                    </span>
                   </div>
                 </div>
-                
-                <div className="mt-4 sm:mt-6 text-center">
-                  <span className="text-xs sm:text-sm text-blue-600 font-bold bg-gradient-to-r from-blue-100 to-indigo-100 px-3 sm:px-4 py-2 rounded-full border border-blue-200 group-hover:from-blue-200 group-hover:to-indigo-200 transition-all duration-300">
-                    Click for details ✨
-                  </span>
-                </div>
-              </div>
-            );
-          })
-        )}
+              );
+            })
+          )}
+        </div>
       </div>
 
       {/* Enhanced Item Details Popup with Media Gallery (Images + Videos) - No Admin Actions */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[85] flex items-center justify-center p-2 sm:p-4">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2 sm:p-4">
           <div className="bg-gradient-to-br from-white via-amber-50 to-orange-50 rounded-2xl sm:rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-y-auto border-2 sm:border-4 border-amber-400 shadow-2xl">
             {/* Enhanced Popup Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400 p-4 sm:p-6 border-b-2 border-amber-500 flex items-center justify-between rounded-t-2xl sm:rounded-t-3xl">
+            <div className="sticky top-0 bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400 p-4 sm:p-6 border-b-2 border-amber-500 flex items-center justify-between rounded-t-2xl sm:rounded-t-3xl z-10">
               <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white flex items-center gap-2 sm:gap-4 drop-shadow-lg">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center">
                   <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
