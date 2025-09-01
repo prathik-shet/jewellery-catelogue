@@ -50,26 +50,24 @@ function UserCatalogue() {
   }, []);
 
   const fetchJewellery = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`/api/jewellery`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = res.data;
-      if (Array.isArray(data)) {
-        setJewellery(data);
-      } else if (data && Array.isArray(data.items)) {
-        setJewellery(data.items);
-      } else {
-        console.error('Unexpected response format:', data);
-        setJewellery([]);
-      }
-    } catch (error) {
-      console.error('Failed to load jewellery:', error);
-      alert('Failed to load jewellery.');
+  try {
+    const res = await axios.get(`/api/jewellery`);
+    const data = res.data;
+
+    if (Array.isArray(data)) {
+      setJewellery(data);
+    } else if (data && Array.isArray(data.items)) {
+      setJewellery(data.items);
+    } else {
+      console.error('Unexpected response format:', data);
       setJewellery([]);
     }
-  };
+  } catch (error) {
+    console.error('Failed to load jewellery:', error);
+    alert('Failed to load jewellery.');
+    setJewellery([]);
+  }
+};
 
   const handleItemClick = async (item) => {
     setSelectedItem(item);
