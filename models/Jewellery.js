@@ -29,7 +29,7 @@ const jewellerySchema = new mongoose.Schema({
 
   type: {
     type: String,
-    enum: ["wedding", "lightweight", "daily wear", "fancy", "normal"],
+    enum: ["festival", "lightweight", "daily wear", "fancy", "normal"],
     default: "normal",
   },
 

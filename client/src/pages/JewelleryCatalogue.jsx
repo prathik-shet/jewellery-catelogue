@@ -50,7 +50,7 @@ function JewelleryCatalogue() {
     'Custom',
   ];
   const genders = ['All', 'Unisex', 'Women', 'Men'];
-  const types = ['All', 'wedding', 'lightweight', 'daily wear', 'fancy', 'normal'];
+  const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
   const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
   const isAdmin = true;
 
@@ -1708,7 +1708,7 @@ function JewelleryCatalogue() {
               required
             >
               <option value="">✨ Select Type*</option>
-              <option value="wedding">💒 Wedding</option>
+              <option value="festival">💒 festival</option>
               <option value="lightweight">🪶 Lightweight</option>
               <option value="daily wear">👕 Daily Wear</option>
               <option value="fancy">✨ Fancy</option>
