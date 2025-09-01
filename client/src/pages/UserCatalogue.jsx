@@ -42,7 +42,7 @@ function UserCatalogue() {
     'Custom',
   ];
   const genders = ['All', 'Unisex', 'Women', 'Men'];
-  const types = ['All', 'wedding', 'lightweight', 'daily wear', 'fancy', 'normal'];
+  const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
   const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
 
   useEffect(() => {
