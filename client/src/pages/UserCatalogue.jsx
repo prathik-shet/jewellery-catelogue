@@ -56,32 +56,96 @@ function UserCatalogue() {
   const fetchJewellery = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        limit: itemsPerPage.toString(),
-        sortField: sortField || 'clickCount',
-        sortOrder: sortOrder || 'desc',
-        ...(sortByDate && { sortByDate }),
-        ...(selectedCategory.length > 0 && { categories: selectedCategory.join(',') }),
-        ...(selectedSubCategory && { subCategory: selectedSubCategory }),
-        ...(selectedType && { type: selectedType }),
-        ...(selectedGender && { gender: selectedGender }),
-        ...(metalFilter && { metal: metalFilter }),
-        ...(stoneFilter && { stone: stoneFilter }),
-        ...(designFilter && { design: designFilter }),
-        ...(weightRanges.length > 0 && { weightRanges: weightRanges.join(',') }),
-        ...(searchQuery && { search: searchQuery }),
-        ...(searchId && { searchId: searchId }),
-      });
+      const params = new URLSearchParams();
+      
+      // Always add basic pagination params
+      params.append('page', currentPage.toString());
+      params.append('limit', itemsPerPage.toString());
+      params.append('sortField', sortField || 'clickCount');
+      params.append('sortOrder', sortOrder || 'desc');
 
-      const res = await axios.get(`/api/jewellery?${params}`);
+      // Add filters only if they have valid values
+      if (sortByDate && sortByDate !== '') {
+        params.append('sortByDate', sortByDate);
+      }
+      
+      if (selectedCategory.length > 0) {
+        params.append('categories', selectedCategory.join(','));
+      }
+      
+      if (selectedSubCategory && selectedSubCategory !== '') {
+        params.append('subCategory', selectedSubCategory);
+      }
+      
+      if (selectedType && selectedType !== '' && selectedType !== 'All') {
+        params.append('type', selectedType);
+      }
+      
+      if (selectedGender && selectedGender !== '' && selectedGender !== 'All') {
+        params.append('gender', selectedGender);
+      }
+      
+      if (metalFilter && metalFilter !== '' && metalFilter !== 'All') {
+        params.append('metal', metalFilter);
+      }
+      
+      if (stoneFilter && stoneFilter !== '') {
+        params.append('stone', stoneFilter);
+      }
+      
+      if (designFilter && designFilter !== '') {
+        params.append('design', designFilter);
+      }
+      
+      if (weightRanges.length > 0) {
+        params.append('weightRanges', weightRanges.join(','));
+      }
+      
+      if (searchQuery && searchQuery.trim() !== '') {
+        params.append('search', searchQuery.trim());
+      }
+      
+      if (searchId && searchId.trim() !== '') {
+        params.append('searchId', searchId.trim());
+      }
+
+      console.log('API URL:', `/api/jewellery?${params.toString()}`);
+      const res = await axios.get(`/api/jewellery?${params.toString()}`);
       const data = res.data;
 
-      if (data && Array.isArray(data.items)) {
-        setJewellery(data.items);
-        setTotalItems(data.totalItems || 0);
-        setTotalPages(data.totalPages || 1);
+      console.log('API Response:', data);
+
+      // Handle different API response formats more robustly
+      if (data && typeof data === 'object') {
+        if (data.items && Array.isArray(data.items)) {
+          // Paginated response format
+          setJewellery(data.items);
+          setTotalItems(data.totalItems || data.total || data.count || 0);
+          setTotalPages(data.totalPages || Math.ceil((data.totalItems || data.total || data.count || 0) / itemsPerPage));
+        } else if (data.data && Array.isArray(data.data)) {
+          // Alternative response format with data wrapper
+          setJewellery(data.data);
+          setTotalItems(data.totalItems || data.total || data.count || data.data.length);
+          setTotalPages(data.totalPages || Math.ceil((data.totalItems || data.total || data.count || data.data.length) / itemsPerPage));
+        } else if (Array.isArray(data)) {
+          // Direct array response
+          setJewellery(data);
+          setTotalItems(data.length);
+          setTotalPages(Math.ceil(data.length / itemsPerPage));
+        } else if (data.success && data.jewellery && Array.isArray(data.jewellery)) {
+          // Success wrapper format
+          setJewellery(data.jewellery);
+          setTotalItems(data.totalItems || data.total || data.count || data.jewellery.length);
+          setTotalPages(data.totalPages || Math.ceil((data.totalItems || data.total || data.count || data.jewellery.length) / itemsPerPage));
+        } else {
+          // Fallback
+          console.warn('Unexpected response format:', data);
+          setJewellery([]);
+          setTotalItems(0);
+          setTotalPages(1);
+        }
       } else if (Array.isArray(data)) {
+        // Direct array response
         setJewellery(data);
         setTotalItems(data.length);
         setTotalPages(Math.ceil(data.length / itemsPerPage));
@@ -89,13 +153,13 @@ function UserCatalogue() {
         console.error('Unexpected response format:', data);
         setJewellery([]);
         setTotalItems(0);
-        setTotalPages(0);
+        setTotalPages(1);
       }
     } catch (error) {
       console.error('Failed to load jewellery:', error);
       setJewellery([]);
       setTotalItems(0);
-      setTotalPages(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -198,7 +262,6 @@ function UserCatalogue() {
   const goToPage = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      // Smooth scroll to top when changing pages
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -238,13 +301,10 @@ function UserCatalogue() {
 
   const getAllCategories = () => {
     const baseCategories = categories.filter(cat => cat !== 'All Jewellery');
-    // Note: For pagination, we might not have all categories in current page
-    // You might want to fetch categories separately from backend
     return baseCategories;
   };
 
   const getAllSubCategories = () => {
-    // For pagination, we might need to fetch subcategories separately
     const subCategories = jewellery
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
@@ -638,60 +698,55 @@ function UserCatalogue() {
                       value={sortField}
                       onChange={(e) => {
                         setSortField(e.target.value);
-                        setSortOrder("");
+                        setSortOrder("desc");
                         setSortByDate("");
                       }}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
                     >
-                      <option value="">Select Field...</option>
+                      <option value="clickCount">Popularity</option>
                       <option value="weight">Weight</option>
                       <option value="orderNo">Order Number</option>
-                      <option value="clickCount">Popularity</option>
                     </select>
                   </div>
 
                   {/* Sort Direction */}
-                  {(sortField === "weight" ||
-                    sortField === "orderNo" ||
-                    sortField === "clickCount") && (
-                    <div>
-                      <label className="block font-bold text-purple-700 mb-2">
-                        Sort Direction
-                      </label>
-                      <div className="space-y-2">
-                        <button
-                          onClick={() => {
-                            setSortOrder("asc");
-                            setSortByDate("");
-                          }}
-                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                            sortOrder === "asc"
-                              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
-                              : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
-                          }`}
-                        >
-                          {sortField === "clickCount"
-                            ? "Least Popular First"
-                            : "Low to High (Ascending)"}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSortOrder("desc");
-                            setSortByDate("");
-                          }}
-                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                            sortOrder === "desc"
-                              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
-                              : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
-                          }`}
-                        >
-                          {sortField === "clickCount"
-                            ? "Most Popular First"
-                            : "High to Low (Descending)"}
-                        </button>
-                      </div>
+                  <div>
+                    <label className="block font-bold text-purple-700 mb-2">
+                      Sort Direction
+                    </label>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => {
+                          setSortOrder("asc");
+                          setSortByDate("");
+                        }}
+                        className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                          sortOrder === "asc"
+                            ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
+                        }`}
+                      >
+                        {sortField === "clickCount"
+                          ? "Least Popular First"
+                          : "Low to High (Ascending)"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortOrder("desc");
+                          setSortByDate("");
+                        }}
+                        className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                          sortOrder === "desc"
+                            ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
+                        }`}
+                      >
+                        {sortField === "clickCount"
+                          ? "Most Popular First"
+                          : "High to Low (Descending)"}
+                      </button>
                     </div>
-                  )}
+                  </div>
 
                   {/* Sort by Date */}
                   <div>
@@ -726,45 +781,6 @@ function UserCatalogue() {
                         }`}
                       >
                         Oldest First
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Quick Sort Options */}
-                  <div>
-                    <label className="block font-bold text-purple-700 mb-2">
-                      Quick Sort
-                    </label>
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => {
-                          setSortField("clickCount");
-                          setSortOrder("desc");
-                          setSortByDate("");
-                        }}
-                        className="w-full p-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-semibold"
-                      >
-                        Most Popular Items
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSortField("weight");
-                          setSortOrder("desc");
-                          setSortByDate("");
-                        }}
-                        className="w-full p-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-semibold"
-                      >
-                        Heaviest Items
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSortField("weight");
-                          setSortOrder("asc");
-                          setSortByDate("");
-                        }}
-                        className="w-full p-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-semibold"
-                      >
-                        Lightest Items
                       </button>
                     </div>
                   </div>
@@ -850,9 +866,11 @@ function UserCatalogue() {
                     <p className="text-lg font-bold text-amber-800">
                       Showing {jewellery.length} of {totalItems} items
                     </p>
-                    <p className="text-sm text-gray-600">
-                      Page {currentPage} of {totalPages}
-                    </p>
+                    {totalPages > 1 && (
+                      <p className="text-sm text-gray-600">
+                        Page {currentPage} of {totalPages}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="text-sm text-gray-600 bg-white/80 px-3 py-2 rounded-lg border border-amber-200">
@@ -863,7 +881,7 @@ function UserCatalogue() {
           </div>
         )}
 
-        {/* Enhanced Cards Grid */}
+        {/* Enhanced Cards Grid with Bigger Images */}
         <div
           className={`gap-4 sm:gap-6 lg:gap-8 px-4 sm:px-6 pb-8 ${
             gridCols === 1
@@ -891,24 +909,24 @@ function UserCatalogue() {
                 <div
                   key={item._id}
                   onClick={() => handleItemClick(item)}
-                  className="bg-gradient-to-br from-white via-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-500 cursor-pointer group overflow-hidden relative"
+                  className="bg-gradient-to-br from-white via-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-500 cursor-pointer group overflow-hidden relative"
                 >
                   {/* Card Glow Effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   
-                  {/* Enhanced Media Section with Lazy Loading */}
+                  {/* Enhanced Media Section with Bigger Images */}
                   {mainImage && (
-                    <div className="relative mb-4 overflow-hidden rounded-xl sm:rounded-2xl">
+                    <div className="relative mb-3 overflow-hidden rounded-xl sm:rounded-2xl">
                       <img
                         src={mainImage}
                         alt={item.name}
                         loading="lazy"
-                        className="w-full h-32 sm:h-40 lg:h-48 object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-48 sm:h-56 lg:h-64 object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       
                       {/* Media Indicators */}
-                      <div className="absolute top-2 left-2 flex gap-1 sm:gap-2">
+                      <div className="absolute top-2 left-2 flex gap-1">
                         {itemImages.length > 0 && (
                           <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -946,25 +964,16 @@ function UserCatalogue() {
                     </div>
                   )}
                   
-                  <h2 className="text-lg sm:text-xl font-black text-amber-900 mb-3 sm:mb-4 truncate group-hover:text-amber-800 transition-colors duration-300">{item.name}</h2>
-                  
-                  <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-gray-700">
-                    <div className="flex items-center gap-2 sm:gap-3 p-2 bg-white/50 rounded-lg sm:rounded-xl">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-amber-500 rounded-lg flex items-center justify-center text-white font-bold text-xs">⚖️</div>
-                      <span className="font-semibold">Weight:</span> 
-                      <span className="font-bold text-amber-700">{item.weight}g</span>
+                  {/* Minimal Text Section */}
+                  <div className="space-y-1">
+                    <h2 className="text-base sm:text-lg font-bold text-amber-900 truncate group-hover:text-amber-800 transition-colors duration-300">
+                      {item.name}
+                    </h2>
+                    
+                    <div className="flex items-center justify-between text-xs text-gray-600">
+                      <span className="font-semibold text-amber-700">{item.weight}g</span>
+                      <span className="font-semibold">{item.category?.main}</span>
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-3 p-2 bg-white/50 rounded-lg sm:rounded-xl">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-amber-500 rounded-lg flex items-center justify-center text-white font-bold text-xs">🏷️</div>
-                      <span className="font-semibold">Category:</span> 
-                      <span className="font-bold text-amber-700">{item.category?.main}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 sm:mt-6 text-center">
-                    <span className="text-xs sm:text-sm text-blue-600 font-bold bg-gradient-to-r from-blue-100 to-indigo-100 px-3 sm:px-4 py-2 rounded-full border border-blue-200 group-hover:from-blue-200 group-hover:to-indigo-200 transition-all duration-300">
-                      Click for details ✨
-                    </span>
                   </div>
                 </div>
               );
@@ -983,7 +992,7 @@ function UserCatalogue() {
                     Page {currentPage} of {totalPages}
                   </p>
                   <p className="text-sm text-gray-600">
-                    Showing {Math.min(itemsPerPage, jewellery.length)} of {totalItems} items
+                    Showing {jewellery.length} of {totalItems} items
                   </p>
                 </div>
 
@@ -1063,38 +1072,32 @@ function UserCatalogue() {
         )}
       </div>
 
-      {/* Enhanced Item Details Popup with Lazy Loading */}
+      {/* Redesigned Item Details Popup - Image Focused */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2 sm:p-4">
-          <div className="bg-gradient-to-br from-white via-amber-50 to-orange-50 rounded-2xl sm:rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-y-auto border-2 sm:border-4 border-amber-400 shadow-2xl">
-            {/* Popup Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400 p-4 sm:p-6 border-b-2 border-amber-500 flex items-center justify-between rounded-t-2xl sm:rounded-t-3xl z-10">
-              <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white flex items-center gap-2 sm:gap-4 drop-shadow-lg">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                Item Details
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2">
+          <div className="bg-white rounded-2xl max-w-5xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
+            {/* Compact Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-amber-400 to-orange-400 p-3 flex items-center justify-between rounded-t-2xl z-10">
+              <h2 className="text-lg font-black text-white">
+                {selectedItem.name}
               </h2>
               <button
                 onClick={() => setSelectedItem(null)}
-                className="text-red-600 hover:text-red-800 bg-white/90 hover:bg-white rounded-xl sm:rounded-2xl p-2 sm:p-3 lg:p-4 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110"
+                className="text-white hover:text-red-200 transition-colors duration-200"
               >
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            {/* Popup Content */}
-            <div className="p-4 sm:p-6 lg:p-8">
-              {/* Media Gallery Section with Lazy Loading */}
+            <div className="flex flex-col lg:flex-row">
+              {/* Image Section - Takes Most Space */}
               {(() => {
                 const itemMedia = getItemMedia(selectedItem);
                 return itemMedia.length > 0 && (
-                  <div className="mb-6 sm:mb-8">
-                    {/* Main Media */}
+                  <div className="lg:w-2/3 p-4">
+                    {/* Main Image */}
                     <div className="text-center mb-4">
                       {itemMedia[0].type === 'image' ? (
                         <img
@@ -1102,212 +1105,138 @@ function UserCatalogue() {
                           alt={selectedItem.name}
                           loading="lazy"
                           onClick={() => openMediaModal(itemMedia, 0)}
-                          className="max-w-full h-48 sm:h-64 lg:h-80 object-cover rounded-xl sm:rounded-2xl mx-auto cursor-pointer border-2 sm:border-4 border-amber-200 hover:border-amber-400 transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105"
+                          className="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-xl cursor-pointer border-2 border-amber-200 hover:border-amber-400 transition-all duration-300 shadow-lg"
                         />
                       ) : (
                         <video
                           src={itemMedia[0].src}
                           controls
-                          className="max-w-full h-48 sm:h-64 lg:h-80 object-cover rounded-xl sm:rounded-2xl mx-auto border-2 sm:border-4 border-amber-200 shadow-2xl"
-                          poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTggNUwyMCAxMkw4IDE5VjVaIiBmaWxsPSIjRkY2OTAwIi8+Cjwvc3ZnPgo="
+                          className="w-full h-64 sm:h-80 lg:h-96 object-cover rounded-xl border-2 border-amber-200 shadow-lg"
                         />
                       )}
                     </div>
                     
-                    {/* Media Thumbnails with Lazy Loading */}
+                    {/* Thumbnail Gallery */}
                     {itemMedia.length > 1 && (
-                      <div className="flex justify-center gap-2 sm:gap-3 flex-wrap">
-                        {itemMedia.map((media, index) => (
+                      <div className="flex justify-center gap-2 flex-wrap">
+                        {itemMedia.slice(1, 6).map((media, index) => (
                           <div
-                            key={index}
-                            onClick={() => openMediaModal(itemMedia, index)}
-                            className="relative w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-lg sm:rounded-xl cursor-pointer border-2 border-amber-200 hover:border-amber-400 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110 overflow-hidden"
+                            key={index + 1}
+                            onClick={() => openMediaModal(itemMedia, index + 1)}
+                            className="w-16 h-16 rounded-lg cursor-pointer border-2 border-amber-200 hover:border-amber-400 transition-all duration-300 overflow-hidden"
                           >
                             {media.type === 'image' ? (
                               <img
                                 src={media.src}
-                                alt={`${selectedItem.name} ${index + 1}`}
+                                alt={`${selectedItem.name} ${index + 2}`}
                                 loading="lazy"
                                 className="w-full h-full object-cover"
                               />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
-                                <svg className="w-4 h-4 sm:w-6 sm:w-6 lg:w-8 lg:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
                                 </svg>
                               </div>
                             )}
-                            {/* Media Type Badge */}
-                            <div className={`absolute top-0.5 right-0.5 sm:top-1 sm:right-1 px-1 py-0.5 rounded text-xs font-bold ${
-                              media.type === 'image' 
-                                ? 'bg-blue-500 text-white' 
-                                : 'bg-purple-500 text-white'
-                            }`}>
-                              {media.type === 'image' ? '📷' : '🎥'}
-                            </div>
                           </div>
                         ))}
+                        {itemMedia.length > 6 && (
+                          <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm">
+                            +{itemMedia.length - 6}
+                          </div>
+                        )}
                       </div>
                     )}
-                    
-                    {/* Media Count */}
-                    <div className="text-center mt-4 flex justify-center gap-2 sm:gap-4">
-                      {getItemImages(selectedItem).length > 0 && (
-                        <span className="text-xs sm:text-sm text-gray-600 bg-blue-100 px-2 sm:px-3 py-1 rounded-full">
-                          📸 {getItemImages(selectedItem).length} image{getItemImages(selectedItem).length !== 1 ? 's' : ''}
-                        </span>
-                      )}
-                      {getItemVideos(selectedItem).length > 0 && (
-                        <span className="text-xs sm:text-sm text-gray-600 bg-purple-100 px-2 sm:px-3 py-1 rounded-full">
-                          🎥 {getItemVideos(selectedItem).length} video{getItemVideos(selectedItem).length !== 1 ? 's' : ''}
-                        </span>
-                      )}
-                    </div>
                   </div>
                 );
               })()}
 
-              {/* Item Name */}
-              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-amber-900 mb-6 sm:mb-8 text-center bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{selectedItem.name}</h3>
-
-              {/* Details Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base">🆔</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block text-sm sm:text-base">ID</span>
-                      <span className="text-base sm:text-lg font-semibold">{selectedItem.id}</span>
-                    </div>
-                  </p>
-                </div>
-                <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base">✨</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block text-sm sm:text-base">Type</span>
-                      <span className="text-base sm:text-lg font-semibold">{selectedItem.type}</span>
-                    </div>
-                  </p>
-                </div>
-                <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base">🥇</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block text-sm sm:text-base">Metal</span>
-                      <span className="text-base sm:text-lg font-semibold">{selectedItem.metal}</span>
-                    </div>
-                  </p>
-                </div>
-                <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base">💎</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block text-sm sm:text-base">Carat</span>
-                      <span className="text-base sm:text-lg font-semibold">{selectedItem.carat}</span>
-                    </div>
-                  </p>
-                </div>
-                <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base">⚖️</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block text-sm sm:text-base">Weight</span>
-                      <span className="text-base sm:text-lg font-semibold">{selectedItem.weight}g</span>
-                    </div>
-                  </p>
-                </div>
-                {selectedItem.stoneWeight && (
-                  <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base">💎</div>
-                      <div>
-                        <span className="font-bold text-amber-800 block text-sm sm:text-base">Stone</span>
-                        <span className="text-base sm:text-lg font-semibold">{selectedItem.stoneWeight}g</span>
-                      </div>
-                    </p>
+              {/* Compact Details Section */}
+              <div className="lg:w-1/3 p-4 bg-amber-50/50">
+                <div className="space-y-3 text-sm">
+                  <div className="bg-white p-3 rounded-lg border border-amber-200">
+                    <div className="font-bold text-amber-800">ID</div>
+                    <div>{selectedItem.id}</div>
                   </div>
-                )}
-                <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base">🏷️</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block text-sm sm:text-base">Category</span>
-                      <span className="text-base sm:text-lg font-semibold">{selectedItem.category?.main}
-                        {selectedItem.category?.sub && ` - ${selectedItem.category.sub}`}</span>
-                    </div>
-                  </p>
-                </div>
-                <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base">👤</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block text-sm sm:text-base">Gender</span>
-                      <span className="text-base sm:text-lg font-semibold">{selectedItem.gender}</span>
-                    </div>
-                  </p>
-                </div>
-                <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 bg-purple-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base">🔥</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block text-sm sm:text-base">Popularity</span>
-                      <span className="text-base sm:text-lg font-semibold">{selectedItem.clickCount || 0} views</span>
-                    </div>
-                  </p>
-                </div>
-                {/* Design Ownership Display */}
-                <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
-                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base ${
-                      selectedItem.isOurDesign === false ? 'bg-orange-500' : 'bg-green-500'
-                    }`}>
-                      {selectedItem.isOurDesign === false ? '👤' : '🏪'}
-                    </div>
-                    <div>
-                      <span className="font-bold text-amber-800 block text-sm sm:text-base">Design</span>
-                      <span className="text-base sm:text-lg font-semibold">
-                        {selectedItem.isOurDesign === false ? 'Others Design' : 'In House'}
-                      </span>
-                    </div>
-                  </p>
-                </div>
-                {selectedItem.orderNo !== undefined && selectedItem.orderNo !== null && (
-                  <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base">📋</div>
-                      <div>
-                        <span className="font-bold text-amber-800 block text-sm sm:text-base">Order No</span>
-                        <span className="text-base sm:text-lg font-semibold">{selectedItem.orderNo}</span>
-                      </div>
-                    </p>
+                  
+                  <div className="bg-white p-3 rounded-lg border border-amber-200">
+                    <div className="font-bold text-amber-800">Weight</div>
+                    <div>{selectedItem.weight}g</div>
                   </div>
-                )}
-                {selectedItem.date && (
-                  <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
-                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base">📅</div>
-                      <div>
-                        <span className="font-bold text-amber-800 block text-sm sm:text-base">Uploaded</span>
-                        <span className="text-base sm:text-lg font-semibold">{new Date(selectedItem.date).toLocaleDateString()}</span>
-                      </div>
-                    </p>
+                  
+                  <div className="bg-white p-3 rounded-lg border border-amber-200">
+                    <div className="font-bold text-amber-800">Category</div>
+                    <div>{selectedItem.category?.main}{selectedItem.category?.sub && ` - ${selectedItem.category.sub}`}</div>
                   </div>
-                )}
+                  
+                  <div className="bg-white p-3 rounded-lg border border-amber-200">
+                    <div className="font-bold text-amber-800">Metal</div>
+                    <div>{selectedItem.metal}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border border-amber-200">
+                    <div className="font-bold text-amber-800">Type</div>
+                    <div>{selectedItem.type}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border border-amber-200">
+                    <div className="font-bold text-amber-800">Gender</div>
+                    <div>{selectedItem.gender}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border border-amber-200">
+                    <div className="font-bold text-amber-800">Popularity</div>
+                    <div>{selectedItem.clickCount || 0} views</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border border-amber-200">
+                    <div className="font-bold text-amber-800">Design</div>
+                    <div>{selectedItem.isOurDesign === false ? 'Others Design' : 'In House'}</div>
+                  </div>
+                  
+                  {selectedItem.carat && (
+                    <div className="bg-white p-3 rounded-lg border border-amber-200">
+                      <div className="font-bold text-amber-800">Carat</div>
+                      <div>{selectedItem.carat}</div>
+                    </div>
+                  )}
+                  
+                  {selectedItem.stoneWeight && (
+                    <div className="bg-white p-3 rounded-lg border border-amber-200">
+                      <div className="font-bold text-amber-800">Stone Weight</div>
+                      <div>{selectedItem.stoneWeight}g</div>
+                    </div>
+                  )}
+                  
+                  {selectedItem.orderNo !== undefined && selectedItem.orderNo !== null && (
+                    <div className="bg-white p-3 rounded-lg border border-amber-200">
+                      <div className="font-bold text-amber-800">Order No</div>
+                      <div>{selectedItem.orderNo}</div>
+                    </div>
+                  )}
+                  
+                  {selectedItem.date && (
+                    <div className="bg-white p-3 rounded-lg border border-amber-200">
+                      <div className="font-bold text-amber-800">Date Added</div>
+                      <div>{new Date(selectedItem.date).toLocaleDateString()}</div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Enhanced Media Gallery Modal with Lazy Loading */}
+      {/* Media Gallery Modal */}
       {modalMedia.length > 0 && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[999] flex items-center justify-center">
           <div className="relative max-w-6xl max-h-[90vh] w-full mx-2 sm:mx-4">
             {/* Close Button */}
             <button
               onClick={closeMediaModal}
-              className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300 transform hover:scale-110"
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
             >
               <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1319,7 +1248,7 @@ function UserCatalogue() {
               <>
                 <button
                   onClick={() => navigateMedia('prev')}
-                  className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300 hover:scale-110"
+                  className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
                 >
                   <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1327,7 +1256,7 @@ function UserCatalogue() {
                 </button>
                 <button
                   onClick={() => navigateMedia('next')}
-                  className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300 hover:scale-110"
+                  className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
                 >
                   <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1343,57 +1272,22 @@ function UserCatalogue() {
                   src={modalMedia[currentMediaIndex].src}
                   alt={`Gallery ${currentMediaIndex + 1}`}
                   loading="lazy"
-                  className="max-w-full max-h-full object-contain rounded-xl sm:rounded-2xl shadow-2xl border-2 sm:border-4 border-white"
+                  className="max-w-full max-h-full object-contain rounded-xl border-4 border-white"
                 />
               ) : (
                 <video
                   src={modalMedia[currentMediaIndex].src}
                   controls
                   autoPlay
-                  className="max-w-full max-h-full object-contain rounded-xl sm:rounded-2xl shadow-2xl border-2 sm:border-4 border-white"
+                  className="max-w-full max-h-full object-contain rounded-xl border-4 border-white"
                 />
               )}
             </div>
 
-            {/* Media Counter and Type */}
+            {/* Media Counter */}
             {modalMedia.length > 1 && (
-              <div className="absolute bottom-16 sm:bottom-20 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-3 sm:px-4 py-2 rounded-full flex items-center gap-2">
-                <span className={`px-2 py-1 rounded text-xs font-bold ${
-                  modalMedia[currentMediaIndex].type === 'image' ? 'bg-blue-500' : 'bg-purple-500'
-                }`}>
-                  {modalMedia[currentMediaIndex].type === 'image' ? '📷' : '🎥'}
-                </span>
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full">
                 {currentMediaIndex + 1} / {modalMedia.length}
-              </div>
-            )}
-
-            {/* Thumbnail Navigation with Lazy Loading */}
-            {modalMedia.length > 1 && (
-              <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 flex gap-1 sm:gap-2 bg-black/30 p-2 sm:p-3 rounded-xl sm:rounded-2xl max-w-full overflow-x-auto">
-                {modalMedia.map((media, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentMediaIndex(index)}
-                    className={`w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg overflow-hidden border-2 transition-all duration-300 flex-shrink-0 ${
-                      index === currentMediaIndex ? 'border-white scale-110' : 'border-gray-400 hover:border-white'
-                    }`}
-                  >
-                    {media.type === 'image' ? (
-                      <img
-                        src={media.src}
-                        alt={`Thumbnail ${index + 1}`}
-                        loading="lazy"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-                ))}
               </div>
             )}
           </div>
