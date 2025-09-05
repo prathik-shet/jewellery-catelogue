@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 
 function UserCatalogue() {
@@ -14,9 +14,17 @@ function UserCatalogue() {
   const [selectedGender, setSelectedGender] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchId, setSearchId] = useState('');
+  const [designFilter, setDesignFilter] = useState('');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(false);
   
   // Enhanced modal media handling
-  const [modalMedia, setModalMedia] = useState([]); // Combined images and videos
+  const [modalMedia, setModalMedia] = useState([]);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   
   const [gridCols, setGridCols] = useState(2);
@@ -24,7 +32,6 @@ function UserCatalogue() {
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [showSortPanel, setShowSortPanel] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [designFilter, setDesignFilter] = useState('');
 
   const categories = [
     'All Jewellery',
@@ -45,29 +52,85 @@ function UserCatalogue() {
   const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
   const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
 
+  // Optimized API call with pagination and filters
+  const fetchJewellery = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        sortField: sortField || 'clickCount',
+        sortOrder: sortOrder || 'desc',
+        ...(sortByDate && { sortByDate }),
+        ...(selectedCategory.length > 0 && { categories: selectedCategory.join(',') }),
+        ...(selectedSubCategory && { subCategory: selectedSubCategory }),
+        ...(selectedType && { type: selectedType }),
+        ...(selectedGender && { gender: selectedGender }),
+        ...(metalFilter && { metal: metalFilter }),
+        ...(stoneFilter && { stone: stoneFilter }),
+        ...(designFilter && { design: designFilter }),
+        ...(weightRanges.length > 0 && { weightRanges: weightRanges.join(',') }),
+        ...(searchQuery && { search: searchQuery }),
+        ...(searchId && { searchId: searchId }),
+      });
+
+      const res = await axios.get(`/api/jewellery?${params}`);
+      const data = res.data;
+
+      if (data && Array.isArray(data.items)) {
+        setJewellery(data.items);
+        setTotalItems(data.totalItems || 0);
+        setTotalPages(data.totalPages || 1);
+      } else if (Array.isArray(data)) {
+        setJewellery(data);
+        setTotalItems(data.length);
+        setTotalPages(Math.ceil(data.length / itemsPerPage));
+      } else {
+        console.error('Unexpected response format:', data);
+        setJewellery([]);
+        setTotalItems(0);
+        setTotalPages(0);
+      }
+    } catch (error) {
+      console.error('Failed to load jewellery:', error);
+      setJewellery([]);
+      setTotalItems(0);
+      setTotalPages(0);
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    currentPage,
+    itemsPerPage,
+    sortField,
+    sortOrder,
+    sortByDate,
+    selectedCategory,
+    selectedSubCategory,
+    selectedType,
+    selectedGender,
+    metalFilter,
+    stoneFilter,
+    designFilter,
+    weightRanges,
+    searchQuery,
+    searchId
+  ]);
+
+  // Reset to first page when filters change
+  const resetToFirstPage = useCallback(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [currentPage]);
+
   useEffect(() => {
     fetchJewellery();
-  }, []);
+  }, [fetchJewellery]);
 
-  const fetchJewellery = async () => {
-  try {
-    const res = await axios.get(`/api/jewellery`);
-    const data = res.data;
-
-    if (Array.isArray(data)) {
-      setJewellery(data);
-    } else if (data && Array.isArray(data.items)) {
-      setJewellery(data.items);
-    } else {
-      console.error('Unexpected response format:', data);
-      setJewellery([]);
-    }
-  } catch (error) {
-    console.error('Failed to load jewellery:', error);
-    alert('Failed to load jewellery.');
-    setJewellery([]);
-  }
-};
+  useEffect(() => {
+    resetToFirstPage();
+  }, [selectedCategory, selectedSubCategory, selectedType, selectedGender, metalFilter, stoneFilter, designFilter, weightRanges, searchQuery, searchId, sortField, sortOrder, sortByDate, resetToFirstPage]);
 
   const handleItemClick = async (item) => {
     setSelectedItem(item);
@@ -93,18 +156,16 @@ function UserCatalogue() {
     }
   };
 
-  // Enhanced helper function to get all media (images + videos) from an item
+  // Optimized helper functions for media handling
   const getItemMedia = (item) => {
     const media = [];
     
-    // Add images
     if (item.images && Array.isArray(item.images) && item.images.length > 0) {
       item.images.forEach(img => media.push({ type: 'image', src: img }));
     } else if (item.image) {
       media.push({ type: 'image', src: item.image });
     }
     
-    // Add videos
     if (item.videos && Array.isArray(item.videos) && item.videos.length > 0) {
       item.videos.forEach(vid => media.push({ type: 'video', src: vid }));
     }
@@ -112,7 +173,6 @@ function UserCatalogue() {
     return media;
   };
 
-  // Helper function to get all images from an item
   const getItemImages = (item) => {
     if (item.images && Array.isArray(item.images) && item.images.length > 0) {
       return item.images;
@@ -122,7 +182,6 @@ function UserCatalogue() {
     return [];
   };
 
-  // Helper function to get all videos from an item
   const getItemVideos = (item) => {
     if (item.videos && Array.isArray(item.videos) && item.videos.length > 0) {
       return item.videos;
@@ -130,31 +189,62 @@ function UserCatalogue() {
     return [];
   };
 
-  // Helper function to get the main image
   const getMainImage = (item) => {
     const images = getItemImages(item);
     return images.length > 0 ? images[0] : null;
   };
 
-  const getAllCategories = () => {
-    if (!Array.isArray(jewellery)) {
-      return categories.filter(cat => cat !== 'All Jewellery' && cat !== 'Custom');
+  // Pagination handlers
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      // Smooth scroll to top when changing pages
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      goToPage(currentPage + 1);
+    }
+  };
+
+  // Generate pagination range
+  const getPaginationRange = () => {
+    const range = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        range.push(i);
+      }
+    } else {
+      const start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+      const end = Math.min(totalPages, start + maxVisible - 1);
+      
+      for (let i = start; i <= end; i++) {
+        range.push(i);
+      }
     }
     
+    return range;
+  };
+
+  const getAllCategories = () => {
     const baseCategories = categories.filter(cat => cat !== 'All Jewellery');
-    const customCategories = jewellery
-      .map(item => item.category?.main)
-      .filter(cat => cat && !baseCategories.includes(cat))
-      .filter((cat, index, arr) => arr.indexOf(cat) === index);
-    
-    return [...baseCategories.filter(cat => cat !== 'Custom'), ...customCategories];
+    // Note: For pagination, we might not have all categories in current page
+    // You might want to fetch categories separately from backend
+    return baseCategories;
   };
 
   const getAllSubCategories = () => {
-    if (!Array.isArray(jewellery)) {
-      return [];
-    }
-    
+    // For pagination, we might need to fetch subcategories separately
     const subCategories = jewellery
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
@@ -164,10 +254,6 @@ function UserCatalogue() {
   };
 
   const getFilteredSubCategories = () => {
-    if (!Array.isArray(jewellery)) {
-      return [];
-    }
-    
     if (selectedCategory.length === 0) {
       return getAllSubCategories();
     }
@@ -192,12 +278,14 @@ function UserCatalogue() {
     setSearchQuery('');
     setSearchId('');
     setDesignFilter('');
+    setCurrentPage(1);
   };
 
   const clearAllSorts = () => {
     setSortField('clickCount');
     setSortOrder('desc');
     setSortByDate('');
+    setCurrentPage(1);
   };
 
   const getActiveSortDescription = () => {
@@ -212,19 +300,16 @@ function UserCatalogue() {
     return 'Most Popular First';
   };
 
-  // Enhanced media gallery modal
   const openMediaModal = (media, startIndex = 0) => {
     setModalMedia(media);
     setCurrentMediaIndex(startIndex);
   };
 
-  // Close media modal
   const closeMediaModal = () => {
     setModalMedia([]);
     setCurrentMediaIndex(0);
   };
 
-  // Navigate media in modal
   const navigateMedia = (direction) => {
     if (direction === 'next') {
       setCurrentMediaIndex(prev => (prev + 1) % modalMedia.length);
@@ -232,145 +317,6 @@ function UserCatalogue() {
       setCurrentMediaIndex(prev => (prev - 1 + modalMedia.length) % modalMedia.length);
     }
   };
-
-  const filterJewellery = () => {
-    if (!Array.isArray(jewellery)) {
-      console.error('Jewellery is not an array:', jewellery);
-      return [];
-    }
-    
-    let filtered = [...jewellery];
-
-    if (selectedCategory.length > 0) {
-      filtered = filtered.filter((item) =>
-        selectedCategory.includes(item.category?.main)
-      );
-    }
-
-    if (selectedSubCategory) {
-      filtered = filtered.filter(
-        (item) =>
-          item.category?.sub &&
-          item.category.sub.toLowerCase() === selectedSubCategory.toLowerCase()
-      );
-    }
-
-    if (selectedType && selectedType !== 'All') {
-      filtered = filtered.filter(
-        (item) => item.type && item.type.toLowerCase() === selectedType.toLowerCase()
-      );
-    }
-
-    if (selectedGender) {
-      filtered = filtered.filter((item) => item.gender === selectedGender);
-    }
-
-    if (metalFilter && metalFilter !== 'All') {
-      filtered = filtered.filter(
-        (item) => item.metal && item.metal.toLowerCase() === metalFilter.toLowerCase()
-      );
-    }
-
-    if (stoneFilter === 'with') {
-      filtered = filtered.filter((item) => item.stoneWeight != null);
-    } else if (stoneFilter === 'without') {
-      filtered = filtered.filter((item) => item.stoneWeight == null);
-    }
-
-    if (designFilter === 'our') {
-      filtered = filtered.filter((item) => item.isOurDesign === true);
-    } else if (designFilter === 'Others') {
-      filtered = filtered.filter((item) => item.isOurDesign === false);
-    }
-
-    if (weightRanges.length > 0) {
-      filtered = filtered.filter((item) => {
-        const w = parseFloat(item.weight);
-        if (isNaN(w)) return false;
-        return weightRanges.some((range) => {
-          const [min, max] = range.split('-');
-          return max === '+'
-            ? w >= parseFloat(min)
-            : w >= parseFloat(min) && w <= parseFloat(max);
-        });
-      });
-    }
-
-    if (searchQuery) {
-      filtered = filtered.filter((item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (searchId) {
-      filtered = filtered.filter(
-        (item) => item.id?.toLowerCase().includes(searchId.toLowerCase())
-      );
-    }
-
-    // Sorting logic
-    if (sortField === 'orderNo') {
-      if (sortOrder === 'asc') {
-        filtered.sort((a, b) => {
-          const aOrder = a.orderNo !== undefined && a.orderNo !== null ? a.orderNo : 0;
-          const bOrder = b.orderNo !== undefined && b.orderNo !== null ? b.orderNo : 0;
-          return aOrder - bOrder;
-        });
-      } else if (sortOrder === 'desc') {
-        filtered.sort((a, b) => {
-          const aOrder = a.orderNo !== undefined && a.orderNo !== null ? a.orderNo : 0;
-          const bOrder = b.orderNo !== undefined && b.orderNo !== null ? b.orderNo : 0;
-          return bOrder - aOrder;
-        });
-      }
-    } else if (sortField === 'weight') {
-      if (sortOrder === 'asc') {
-        filtered.sort((a, b) => {
-          const aWeight = parseFloat(a.weight) || 0;
-          const bWeight = parseFloat(b.weight) || 0;
-          return aWeight - bWeight;
-        });
-      } else if (sortOrder === 'desc') {
-        filtered.sort((a, b) => {
-          const aWeight = parseFloat(a.weight) || 0;
-          const bWeight = parseFloat(b.weight) || 0;
-          return bWeight - aWeight;
-        });
-      }
-    } else if (sortField === 'clickCount') {
-      if (sortOrder === 'desc') {
-        filtered.sort((a, b) => {
-          const aClicks = a.clickCount || 0;
-          const bClicks = b.clickCount || 0;
-          return bClicks - aClicks;
-        });
-      } else if (sortOrder === 'asc') {
-        filtered.sort((a, b) => {
-          const aClicks = a.clickCount || 0;
-          const bClicks = b.clickCount || 0;
-          return aClicks - bClicks;
-        });
-      }
-    }
-
-    if (sortByDate === 'newest') {
-      filtered.sort((a, b) => {
-        const aDate = a.date ? new Date(a.date) : new Date(0);
-        const bDate = b.date ? new Date(b.date) : new Date(0);
-        return bDate - aDate;
-      });
-    } else if (sortByDate === 'oldest') {
-      filtered.sort((a, b) => {
-        const aDate = a.date ? new Date(a.date) : new Date(0);
-        const bDate = b.date ? new Date(b.date) : new Date(0);
-        return aDate - bDate;
-      });
-    }
-
-    return filtered;
-  };
-
-  const filteredJewellery = filterJewellery();
 
   return (
     <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 min-h-screen">
@@ -381,6 +327,7 @@ function UserCatalogue() {
             <img
               src="./logo.png"
               alt="Logo"
+              loading="lazy"
               className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-3 border-white shadow-xl ring-4 ring-amber-200/50"
             />
             <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>
@@ -630,7 +577,7 @@ function UserCatalogue() {
           {/* Vertical Divider */}
           <div className="w-px h-8 bg-white/50"></div>
 
-          {/* Sort By Dropdown - Fixed Positioning */}
+          {/* Sort By Dropdown */}
           <div className="relative">
             <button
               onClick={() => {
@@ -670,7 +617,7 @@ function UserCatalogue() {
               </svg>
             </button>
 
-            {/* Sort Dropdown Panel - Fixed to match Filter positioning */}
+            {/* Sort Dropdown Panel */}
             {showSortPanel && (
               <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white/95 backdrop-blur-md border-2 border-purple-300 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]">
                 <div className="space-y-4">
@@ -822,7 +769,7 @@ function UserCatalogue() {
                     </div>
                   </div>
 
-                  {/* Grid Columns - Simplified */}
+                  {/* Grid Columns */}
                   <div>
                     <label className="block font-bold text-purple-700 mb-2">
                       Grid Layout
@@ -876,11 +823,49 @@ function UserCatalogue() {
         />
       )}
 
-      {/* Content with proper spacing to avoid overlap */}
+      {/* Content with proper spacing */}
       <div className="pt-60 sm:pt-64">
-        {/* Enhanced Cards Grid with Simplified Grid Options */}
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-amber-500 border-t-transparent mx-auto mb-4"></div>
+              <p className="text-lg font-semibold text-amber-700">Loading jewellery...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Results Info */}
+        {!loading && (
+          <div className="px-4 sm:px-6 mb-6">
+            <div className="bg-gradient-to-r from-white/90 to-amber-50/90 backdrop-blur-sm rounded-2xl p-4 border-2 border-amber-200 shadow-lg">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-amber-800">
+                      Showing {jewellery.length} of {totalItems} items
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600 bg-white/80 px-3 py-2 rounded-lg border border-amber-200">
+                  {getActiveSortDescription()}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Cards Grid */}
         <div
-          className={`gap-4 sm:gap-6 lg:gap-8 px-4 sm:px-6 pb-20 ${
+          className={`gap-4 sm:gap-6 lg:gap-8 px-4 sm:px-6 pb-8 ${
             gridCols === 1
               ? 'grid grid-cols-1'
               : gridCols === 2
@@ -890,14 +875,14 @@ function UserCatalogue() {
               : 'grid grid-cols-1 sm:grid-cols-2'
           }`}
         >
-          {filteredJewellery.length === 0 ? (
+          {!loading && jewellery.length === 0 ? (
             <div className="col-span-full text-center py-20">
               <div className="text-6xl sm:text-8xl mb-6 animate-bounce">💎</div>
               <p className="text-xl sm:text-2xl font-bold text-gray-600 mb-2">No jewellery items found.</p>
               <p className="text-gray-500 text-base sm:text-lg">Try adjusting your filters or search terms.</p>
             </div>
           ) : (
-            filteredJewellery.map((item) => {
+            jewellery.map((item) => {
               const itemImages = getItemImages(item);
               const itemVideos = getItemVideos(item);
               const mainImage = getMainImage(item);
@@ -911,19 +896,19 @@ function UserCatalogue() {
                   {/* Card Glow Effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   
-                  {/* Enhanced Media Section with Images and Videos Support */}
+                  {/* Enhanced Media Section with Lazy Loading */}
                   {mainImage && (
                     <div className="relative mb-4 overflow-hidden rounded-xl sm:rounded-2xl">
                       <img
                         src={mainImage}
                         alt={item.name}
+                        loading="lazy"
                         className="w-full h-32 sm:h-40 lg:h-48 object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       
-                      {/* Enhanced Media Indicators */}
+                      {/* Media Indicators */}
                       <div className="absolute top-2 left-2 flex gap-1 sm:gap-2">
-                        {/* Images Count */}
                         {itemImages.length > 0 && (
                           <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -933,7 +918,6 @@ function UserCatalogue() {
                           </div>
                         )}
                         
-                        {/* Videos Count */}
                         {itemVideos.length > 0 && (
                           <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -987,13 +971,103 @@ function UserCatalogue() {
             })
           )}
         </div>
+
+        {/* Enhanced Pagination Controls */}
+        {!loading && totalPages > 1 && (
+          <div className="px-4 sm:px-6 pb-8">
+            <div className="bg-gradient-to-r from-white/95 via-amber-50/95 to-orange-50/95 backdrop-blur-md rounded-2xl p-6 border-2 border-amber-300 shadow-2xl">
+              <div className="flex flex-col items-center gap-6">
+                {/* Pagination Info */}
+                <div className="text-center">
+                  <p className="text-lg font-bold text-amber-800 mb-2">
+                    Page {currentPage} of {totalPages}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Showing {Math.min(itemsPerPage, jewellery.length)} of {totalItems} items
+                  </p>
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                  {/* Previous Button */}
+                  <button
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 ${
+                      currentPage === 1
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 shadow-lg'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Previous
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {getPaginationRange().map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => goToPage(page)}
+                        className={`w-10 h-10 rounded-lg font-bold transition-all duration-300 ${
+                          page === currentPage
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg transform scale-110'
+                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-amber-50 hover:border-amber-300'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 ${
+                      currentPage === totalPages
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 shadow-lg'
+                    }`}
+                  >
+                    Next
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Quick Jump to Page */}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-gray-700">Go to page:</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={totalPages}
+                    value={currentPage}
+                    onChange={(e) => {
+                      const page = parseInt(e.target.value);
+                      if (page >= 1 && page <= totalPages) {
+                        goToPage(page);
+                      }
+                    }}
+                    className="w-16 px-2 py-1 text-center border border-gray-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                  />
+                  <span className="text-sm text-gray-600">of {totalPages}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Enhanced Item Details Popup with Media Gallery (Images + Videos) - No Admin Actions */}
+      {/* Enhanced Item Details Popup with Lazy Loading */}
       {selectedItem && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2 sm:p-4">
           <div className="bg-gradient-to-br from-white via-amber-50 to-orange-50 rounded-2xl sm:rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-y-auto border-2 sm:border-4 border-amber-400 shadow-2xl">
-            {/* Enhanced Popup Header */}
+            {/* Popup Header */}
             <div className="sticky top-0 bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400 p-4 sm:p-6 border-b-2 border-amber-500 flex items-center justify-between rounded-t-2xl sm:rounded-t-3xl z-10">
               <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white flex items-center gap-2 sm:gap-4 drop-shadow-lg">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center">
@@ -1013,9 +1087,9 @@ function UserCatalogue() {
               </button>
             </div>
 
-            {/* Enhanced Popup Content */}
+            {/* Popup Content */}
             <div className="p-4 sm:p-6 lg:p-8">
-              {/* Enhanced Media Gallery Section (Images + Videos) */}
+              {/* Media Gallery Section with Lazy Loading */}
               {(() => {
                 const itemMedia = getItemMedia(selectedItem);
                 return itemMedia.length > 0 && (
@@ -1026,6 +1100,7 @@ function UserCatalogue() {
                         <img
                           src={itemMedia[0].src}
                           alt={selectedItem.name}
+                          loading="lazy"
                           onClick={() => openMediaModal(itemMedia, 0)}
                           className="max-w-full h-48 sm:h-64 lg:h-80 object-cover rounded-xl sm:rounded-2xl mx-auto cursor-pointer border-2 sm:border-4 border-amber-200 hover:border-amber-400 transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105"
                         />
@@ -1039,7 +1114,7 @@ function UserCatalogue() {
                       )}
                     </div>
                     
-                    {/* Media Thumbnails */}
+                    {/* Media Thumbnails with Lazy Loading */}
                     {itemMedia.length > 1 && (
                       <div className="flex justify-center gap-2 sm:gap-3 flex-wrap">
                         {itemMedia.map((media, index) => (
@@ -1052,6 +1127,7 @@ function UserCatalogue() {
                               <img
                                 src={media.src}
                                 alt={`${selectedItem.name} ${index + 1}`}
+                                loading="lazy"
                                 className="w-full h-full object-cover"
                               />
                             ) : (
@@ -1091,10 +1167,10 @@ function UserCatalogue() {
                 );
               })()}
 
-              {/* Enhanced Item Name */}
+              {/* Item Name */}
               <h3 className="text-2xl sm:text-3xl lg:text-4xl font-black text-amber-900 mb-6 sm:mb-8 text-center bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{selectedItem.name}</h3>
 
-              {/* Enhanced Details Grid */}
+              {/* Details Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                 <div className="bg-gradient-to-r from-white to-amber-50 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
                   <p className="flex items-center gap-2 sm:gap-3 text-gray-700">
@@ -1224,7 +1300,7 @@ function UserCatalogue() {
         </div>
       )}
 
-      {/* Enhanced Media Gallery Modal (Images + Videos) */}
+      {/* Enhanced Media Gallery Modal with Lazy Loading */}
       {modalMedia.length > 0 && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[999] flex items-center justify-center">
           <div className="relative max-w-6xl max-h-[90vh] w-full mx-2 sm:mx-4">
@@ -1266,6 +1342,7 @@ function UserCatalogue() {
                 <img
                   src={modalMedia[currentMediaIndex].src}
                   alt={`Gallery ${currentMediaIndex + 1}`}
+                  loading="lazy"
                   className="max-w-full max-h-full object-contain rounded-xl sm:rounded-2xl shadow-2xl border-2 sm:border-4 border-white"
                 />
               ) : (
@@ -1290,7 +1367,7 @@ function UserCatalogue() {
               </div>
             )}
 
-            {/* Thumbnail Navigation */}
+            {/* Thumbnail Navigation with Lazy Loading */}
             {modalMedia.length > 1 && (
               <div className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 flex gap-1 sm:gap-2 bg-black/30 p-2 sm:p-3 rounded-xl sm:rounded-2xl max-w-full overflow-x-auto">
                 {modalMedia.map((media, index) => (
@@ -1305,6 +1382,7 @@ function UserCatalogue() {
                       <img
                         src={media.src}
                         alt={`Thumbnail ${index + 1}`}
+                        loading="lazy"
                         className="w-full h-full object-cover"
                       />
                     ) : (

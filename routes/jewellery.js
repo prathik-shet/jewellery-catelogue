@@ -2,12 +2,11 @@ const express = require("express");
 const router = express.Router();
 const Jewellery = require("../models/Jewellery");
 
-// ✅ Enhanced CORS middleware for better network support
+// Enhanced CORS middleware for better network support
 router.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH,OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With');
-  
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
@@ -15,7 +14,7 @@ router.use((req, res, next) => {
   }
 });
 
-// ✅ CREATE jewellery item with multiple images and videos
+// CREATE jewellery item with multiple images and videos
 router.post("/", async (req, res) => {
   try {
     const {
@@ -24,15 +23,15 @@ router.post("/", async (req, res) => {
       category,
       weight,
       image,
-      images, // ✅ Multiple images
-      videos, // ✅ NEW: Multiple videos
+      images,
+      videos,
       gender,
       stoneWeight,
       type,
       metal,
       carat,
       orderNo,
-      isOurDesign, // ✅ Design ownership
+      isOurDesign,
     } = req.body;
 
     if (
@@ -44,23 +43,20 @@ router.post("/", async (req, res) => {
       !carat
     ) {
       return res.status(400).json({
-        error:
-          "ID, name, main category, metal, carat, and weight are required.",
+        error: "ID, name, main category, metal, carat, and weight are required.",
       });
     }
 
-    // ✅ Handle multiple images
     let finalImages = [];
     if (images && Array.isArray(images)) {
-      finalImages = images.slice(0, 10); // Limit to 10 images
+      finalImages = images.slice(0, 10);
     } else if (image) {
       finalImages = [image];
     }
 
-    // ✅ NEW: Handle multiple videos
     let finalVideos = [];
     if (videos && Array.isArray(videos)) {
-      finalVideos = videos.slice(0, 5); // Limit to 5 videos
+      finalVideos = videos.slice(0, 5);
     }
 
     const newItem = new Jewellery({
@@ -68,16 +64,16 @@ router.post("/", async (req, res) => {
       name,
       category,
       weight: parseFloat(weight),
-      image: finalImages[0] || null, // Main image for backward compatibility
-      images: finalImages, // ✅ Multiple images array
-      videos: finalVideos, // ✅ NEW: Multiple videos array
+      image: finalImages[0] || null,
+      images: finalImages,
+      videos: finalVideos,
       gender: gender || "Unisex",
       stoneWeight: stoneWeight ? parseFloat(stoneWeight) : null,
       type: type || "normal",
       metal,
       carat: parseInt(carat),
       orderNo: orderNo !== undefined && orderNo !== null ? parseInt(orderNo) : null,
-      isOurDesign: isOurDesign !== undefined ? Boolean(isOurDesign) : true, // ✅ Design ownership
+      isOurDesign: isOurDesign !== undefined ? Boolean(isOurDesign) : true,
       clickCount: 0,
       date: new Date(),
     });
@@ -93,7 +89,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// ✅ PATCH route to increment click count (popularity)
+// PATCH route to increment click count (popularity)
 router.patch("/:id/click", async (req, res) => {
   try {
     const updated = await Jewellery.findByIdAndUpdate(
@@ -119,7 +115,7 @@ router.patch("/:id/click", async (req, res) => {
   }
 });
 
-// ✅ READ jewellery items with enhanced filters and sorting
+// READ jewellery items with enhanced filters and sorting
 router.get("/", async (req, res) => {
   try {
     const {
@@ -131,7 +127,7 @@ router.get("/", async (req, res) => {
       maxWeight,
       weightRanges,
       stone,
-      metal, // ✅ Metal filter
+      metal,
       sortBy,
       sortField,
       sortOrder,
@@ -139,14 +135,14 @@ router.get("/", async (req, res) => {
       order,
       search,
       searchId,
-      isOurDesign, // ✅ Filter by design ownership
+      isOurDesign,
       page = 1,
-      pageSize = 1000,
+      pageSize = 20,
     } = req.query;
 
     const query = {};
 
-    // ✅ Category Main - support multiple categories
+    // Category Main - support multiple categories
     if (categoryMain) {
       let categories;
       if (Array.isArray(categoryMain)) {
@@ -156,38 +152,37 @@ router.get("/", async (req, res) => {
           ? categoryMain.split(",").map((c) => c.trim()).filter(c => c)
           : [categoryMain.trim()];
       }
-
       if (categories && categories.length > 0) {
         query["category.main"] = { $in: categories };
       }
     }
 
-    // ✅ Subcategory filter
+    // Subcategory filter
     if (categorySub && categorySub.trim()) {
       query["category.sub"] = { $regex: categorySub.trim(), $options: "i" };
     }
 
-    // ✅ Type filter
+    // Type filter
     if (type && type.trim() && type !== 'All') {
       query.type = { $regex: type.trim(), $options: "i" };
     }
 
-    // ✅ Gender filter
+    // Gender filter
     if (gender && gender.trim() && gender !== "All") {
       query.gender = gender.trim();
     }
 
-    // ✅ Metal filter
+    // Metal filter
     if (metal && metal.trim() && metal !== 'All') {
       query.metal = { $regex: metal.trim(), $options: "i" };
     }
 
-    // ✅ Design ownership filter
+    // Design ownership filter
     if (isOurDesign !== undefined && isOurDesign !== '') {
       query.isOurDesign = isOurDesign === 'true';
     }
 
-    // ✅ Stone filter
+    // Stone filter
     if (stone === "with") {
       query.stoneWeight = { $ne: null, $exists: true };
     } else if (stone === "without") {
@@ -197,24 +192,22 @@ router.get("/", async (req, res) => {
       ];
     }
 
-    // ✅ Search by Name
+    // Search by Name
     if (search && search.trim()) {
       query.name = { $regex: search.trim(), $options: "i" };
     }
 
-    // ✅ Search by ID
+    // Search by ID
     if (searchId && searchId.trim()) {
       query.id = { $regex: searchId.trim(), $options: "i" };
     }
 
-    // ✅ Weight filter
+    // Weight filter
     if (weightRanges) {
       const ranges = Array.isArray(weightRanges) 
         ? weightRanges 
         : weightRanges.split(',').map(r => r.trim());
-      
       const weightConditions = [];
-      
       ranges.forEach(range => {
         if (range.includes('-')) {
           const [min, max] = range.split('-');
@@ -230,7 +223,6 @@ router.get("/", async (req, res) => {
           }
         }
       });
-      
       if (weightConditions.length > 0) {
         query.$or = query.$or ? [...query.$or, ...weightConditions] : weightConditions;
       }
@@ -240,9 +232,8 @@ router.get("/", async (req, res) => {
       if (maxWeight) query.weight.$lte = parseFloat(maxWeight);
     }
 
-    // ✅ Enhanced Sorting Logic
+    // Enhanced Sorting Logic
     let sortOptions = {};
-    
     if (sortByDate === 'newest') {
       sortOptions = { date: -1, _id: -1 };
     } else if (sortByDate === 'oldest') {
@@ -266,7 +257,6 @@ router.get("/", async (req, res) => {
       { 
         $addFields: {
           clickCount: { $ifNull: ["$clickCount", 0] },
-          // ✅ Ensure images array exists
           images: { 
             $cond: {
               if: { $isArray: "$images" },
@@ -274,7 +264,6 @@ router.get("/", async (req, res) => {
               else: { $cond: { if: "$image", then: ["$image"], else: [] } }
             }
           },
-          // ✅ NEW: Ensure videos array exists
           videos: { 
             $cond: {
               if: { $isArray: "$videos" },
@@ -306,7 +295,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ✅ UPDATE jewellery item with multiple images and videos
+// UPDATE jewellery item with multiple images and videos
 router.put("/:id", async (req, res) => {
   try {
     const {
@@ -315,15 +304,15 @@ router.put("/:id", async (req, res) => {
       category,
       weight,
       image,
-      images, // ✅ Multiple images
-      videos, // ✅ NEW: Multiple videos
+      images,
+      videos,
       gender,
       stoneWeight,
       type,
       metal,
       carat,
       orderNo,
-      isOurDesign, // ✅ Design ownership
+      isOurDesign,
     } = req.body;
 
     if (
@@ -335,12 +324,10 @@ router.put("/:id", async (req, res) => {
       !carat
     ) {
       return res.status(400).json({
-        error:
-          "ID, name, main category, metal, carat, and weight are required.",
+        error: "ID, name, main category, metal, carat, and weight are required.",
       });
     }
 
-    // ✅ Handle multiple images
     let finalImages = [];
     if (images && Array.isArray(images)) {
       finalImages = images.slice(0, 10);
@@ -348,7 +335,6 @@ router.put("/:id", async (req, res) => {
       finalImages = [image];
     }
 
-    // ✅ NEW: Handle multiple videos
     let finalVideos = [];
     if (videos && Array.isArray(videos)) {
       finalVideos = videos.slice(0, 5);
@@ -365,17 +351,15 @@ router.put("/:id", async (req, res) => {
       metal,
       carat: parseInt(carat),
       orderNo: orderNo !== undefined && orderNo !== null ? parseInt(orderNo) : null,
-      isOurDesign: isOurDesign !== undefined ? Boolean(isOurDesign) : true, // ✅ Design ownership
+      isOurDesign: isOurDesign !== undefined ? Boolean(isOurDesign) : true,
       updatedAt: new Date(),
     };
 
-    // ✅ Update images
     if (finalImages.length > 0) {
       updatedItem.images = finalImages;
-      updatedItem.image = finalImages[0]; // Main image for backward compatibility
+      updatedItem.image = finalImages[0];
     }
 
-    // ✅ NEW: Update videos
     if (finalVideos.length > 0) {
       updatedItem.videos = finalVideos;
     }
@@ -400,14 +384,13 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// ✅ DELETE jewellery item
+// DELETE jewellery item
 router.delete("/:id", async (req, res) => {
   try {
     const deleted = await Jewellery.findByIdAndDelete(req.params.id);
     if (!deleted) {
       return res.status(404).json({ error: "Item not found." });
     }
-
     res.json({ message: "Item deleted successfully.", deletedItem: deleted });
   } catch (err) {
     console.error("Error deleting item:", err);
@@ -415,38 +398,31 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// ✅ GET statistics
+// GET statistics
 router.get("/stats", async (req, res) => {
   try {
     const totalItems = await Jewellery.countDocuments();
     const totalWeight = await Jewellery.aggregate([
       { $group: { _id: null, total: { $sum: "$weight" } } }
     ]);
-    
     const categoryStats = await Jewellery.aggregate([
       { $group: { _id: "$category.main", count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
-
     const typeStats = await Jewellery.aggregate([
       { $group: { _id: "$type", count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
-
-    // ✅ Design ownership stats
     const designStats = await Jewellery.aggregate([
       { $group: { _id: "$isOurDesign", count: { $sum: 1 } } },
       { $sort: { _id: -1 } }
     ]);
-
     const popularityStats = await Jewellery.aggregate([
       { $addFields: { clickCount: { $ifNull: ["$clickCount", 0] } } },
       { $sort: { clickCount: -1 } },
       { $limit: 10 },
       { $project: { name: 1, clickCount: 1, category: 1, isOurDesign: 1 } }
     ]);
-
-    // ✅ NEW: Media stats (images and videos)
     const mediaStats = await Jewellery.aggregate([
       {
         $project: {
@@ -464,7 +440,6 @@ router.get("/stats", async (req, res) => {
         }
       }
     ]);
-
     res.json({
       totalItems,
       totalWeight: totalWeight[0]?.total || 0,
