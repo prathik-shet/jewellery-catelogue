@@ -97,8 +97,8 @@ function UserCatalogue() {
     return mockItems;
   };
 
-  // Filter mock data based on current filters
-  const filterMockData = (allData) => {
+  // Filter mock data based on current filters - wrapped in useCallback
+  const filterMockData = useCallback((allData) => {
     return allData.filter(item => {
       // Search query filter
       if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -168,10 +168,21 @@ function UserCatalogue() {
       
       return true;
     });
-  };
+  }, [
+    searchQuery,
+    searchId,
+    selectedCategory,
+    selectedSubCategory,
+    selectedType,
+    selectedGender,
+    metalFilter,
+    stoneFilter,
+    designFilter,
+    weightRanges
+  ]);
 
-  // Sort mock data
-  const sortMockData = (data) => {
+  // Sort mock data - wrapped in useCallback
+  const sortMockData = useCallback((data) => {
     const sortedData = [...data];
     
     if (sortByDate === 'newest') {
@@ -195,7 +206,7 @@ function UserCatalogue() {
         }
       });
     }
-  };
+  }, [sortByDate, sortField, sortOrder]);
 
   // Enhanced fetch function with mock data fallback
   const fetchJewellery = useCallback(async () => {
@@ -345,7 +356,9 @@ function UserCatalogue() {
     designFilter,
     weightRanges,
     searchQuery,
-    searchId
+    searchId,
+    filterMockData,
+    sortMockData
   ]);
 
   // Reset to first page when filters change
@@ -543,7 +556,7 @@ function UserCatalogue() {
         <div className="flex items-center gap-4 justify-center sm:justify-start">
           <div className="relative">
             <img
-              src="https://images.pexels.com/photos/1458915/pexels-photo-1458915.jpeg?auto=compress&cs=tinysrgb&w=80"
+              src="logo.png"
               alt="Logo"
               loading="lazy"
               className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-3 border-white shadow-xl ring-4 ring-amber-200/50"
@@ -1252,10 +1265,10 @@ function UserCatalogue() {
         )}
       </div>
 
-      {/* Compact Item Details Popup */}
+      {/* Improved Item Details Popup with Two Columns and Larger Image */}
       {selectedItem && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
             {/* Compact Header */}
             <div className="bg-gradient-to-r from-amber-400 to-orange-400 p-3 flex items-center justify-between">
               <h2 className="text-lg font-black text-white truncate">
@@ -1272,8 +1285,8 @@ function UserCatalogue() {
             </div>
 
             <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-              {/* Image Section - 70% width on large screens */}
-              <div className="lg:w-2/3 p-4 flex flex-col">
+              {/* Image Section - 60% width on large screens, larger image */}
+              <div className="lg:w-3/5 p-6 flex flex-col">
                 {(() => {
                   const itemMedia = getItemMedia(selectedItem);
                   const mainImage = getMainImage(selectedItem);
@@ -1282,14 +1295,14 @@ function UserCatalogue() {
                   
                   return (
                     <>
-                      {/* Main Image */}
+                      {/* Main Image - Much Larger */}
                       <div className="flex-1 flex items-center justify-center mb-4">
                         <img
                           src={mainImage}
                           alt={selectedItem.name}
                           loading="lazy"
                           onClick={() => openMediaModal(itemMedia, 0)}
-                          className="max-w-full max-h-80 object-contain rounded-xl cursor-pointer border border-amber-200 hover:border-amber-400 transition-all duration-300 shadow-lg"
+                          className="max-w-full max-h-96 object-contain rounded-xl cursor-pointer border border-amber-200 hover:border-amber-400 transition-all duration-300 shadow-lg"
                         />
                       </div>
                       
@@ -1300,7 +1313,7 @@ function UserCatalogue() {
                             <div
                               key={index + 1}
                               onClick={() => openMediaModal(itemMedia, index + 1)}
-                              className="w-12 h-12 rounded-lg cursor-pointer border border-amber-200 hover:border-amber-400 transition-all duration-300 overflow-hidden flex-shrink-0"
+                              className="w-16 h-16 rounded-lg cursor-pointer border border-amber-200 hover:border-amber-400 transition-all duration-300 overflow-hidden flex-shrink-0"
                             >
                               {media.type === 'image' ? (
                                 <img
@@ -1311,7 +1324,7 @@ function UserCatalogue() {
                                 />
                               ) : (
                                 <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
-                                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
                                   </svg>
                                 </div>
@@ -1319,7 +1332,7 @@ function UserCatalogue() {
                             </div>
                           ))}
                           {itemMedia.length > 5 && (
-                            <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs">
+                            <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs">
                               +{itemMedia.length - 5}
                             </div>
                           )}
@@ -1330,55 +1343,74 @@ function UserCatalogue() {
                 })()}
               </div>
 
-              {/* Compact Details Section - 30% width on large screens */}
-              <div className="lg:w-1/3 p-4 bg-gray-50 overflow-y-auto">
-                <div className="grid grid-cols-1 gap-2 text-sm">
-                  <div className="bg-white p-2 rounded border">
-                    <span className="font-semibold text-gray-700">ID:</span> {selectedItem.id}
+              {/* Details Section - 40% width, Two Columns Layout */}
+              <div className="lg:w-2/5 p-6 bg-gray-50 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="col-span-2 bg-white p-3 rounded-lg border-2 border-amber-200">
+                    <span className="font-semibold text-gray-700">ID:</span>
+                    <div className="font-bold text-amber-700 mt-1">{selectedItem.id}</div>
                   </div>
-                  <div className="bg-white p-2 rounded border">
-                    <span className="font-semibold text-gray-700">Weight:</span> {selectedItem.weight}g
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Weight</span>
+                    <div className="font-bold text-amber-700">{selectedItem.weight}g</div>
                   </div>
-                  <div className="bg-white p-2 rounded border">
-                    <span className="font-semibold text-gray-700">Category:</span> {selectedItem.category?.main}{selectedItem.category?.sub && ` - ${selectedItem.category.sub}`}
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Metal</span>
+                    <div className="font-bold text-amber-700 capitalize">{selectedItem.metal}</div>
                   </div>
-                  <div className="bg-white p-2 rounded border">
-                    <span className="font-semibold text-gray-700">Metal:</span> {selectedItem.metal}
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Type</span>
+                    <div className="font-bold text-amber-700 capitalize">{selectedItem.type}</div>
                   </div>
-                  <div className="bg-white p-2 rounded border">
-                    <span className="font-semibold text-gray-700">Type:</span> {selectedItem.type}
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Gender</span>
+                    <div className="font-bold text-amber-700">{selectedItem.gender}</div>
                   </div>
-                  <div className="bg-white p-2 rounded border">
-                    <span className="font-semibold text-gray-700">Gender:</span> {selectedItem.gender}
+                  
+                  <div className="col-span-2 bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Category</span>
+                    <div className="font-bold text-amber-700">{selectedItem.category?.main}{selectedItem.category?.sub && ` - ${selectedItem.category.sub}`}</div>
                   </div>
-                  <div className="bg-white p-2 rounded border">
-                    <span className="font-semibold text-gray-700">Views:</span> {selectedItem.clickCount || 0}
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Views</span>
+                    <div className="font-bold text-amber-700">{selectedItem.clickCount || 0}</div>
                   </div>
-                  <div className="bg-white p-2 rounded border">
-                    <span className="font-semibold text-gray-700">Design:</span> {selectedItem.isOurDesign === false ? 'Others' : 'In House'}
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Design</span>
+                    <div className="font-bold text-amber-700">{selectedItem.isOurDesign === false ? 'Others' : 'In House'}</div>
                   </div>
                   
                   {selectedItem.carat && (
-                    <div className="bg-white p-2 rounded border">
-                      <span className="font-semibold text-gray-700">Carat:</span> {selectedItem.carat}
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Carat</span>
+                      <div className="font-bold text-amber-700">{selectedItem.carat}</div>
                     </div>
                   )}
                   
                   {selectedItem.stoneWeight && (
-                    <div className="bg-white p-2 rounded border">
-                      <span className="font-semibold text-gray-700">Stone Weight:</span> {selectedItem.stoneWeight}g
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Stone Weight</span>
+                      <div className="font-bold text-amber-700">{selectedItem.stoneWeight}g</div>
                     </div>
                   )}
                   
                   {selectedItem.orderNo !== undefined && selectedItem.orderNo !== null && (
-                    <div className="bg-white p-2 rounded border">
-                      <span className="font-semibold text-gray-700">Order No:</span> {selectedItem.orderNo}
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Order No</span>
+                      <div className="font-bold text-amber-700">{selectedItem.orderNo}</div>
                     </div>
                   )}
                   
                   {selectedItem.date && (
-                    <div className="bg-white p-2 rounded border">
-                      <span className="font-semibold text-gray-700">Date:</span> {new Date(selectedItem.date).toLocaleDateString()}
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Date</span>
+                      <div className="font-bold text-amber-700">{new Date(selectedItem.date).toLocaleDateString()}</div>
                     </div>
                   )}
                 </div>
