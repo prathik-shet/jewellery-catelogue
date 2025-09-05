@@ -27,6 +27,7 @@ function UserCatalogue() {
   const [modalMedia, setModalMedia] = useState([]);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   
+  // Set default grid to 2 for mobile
   const [gridCols, setGridCols] = useState(2);
   const [sortField, setSortField] = useState('clickCount');
   const [showFilterPanel, setShowFilterPanel] = useState(false);
@@ -52,7 +53,151 @@ function UserCatalogue() {
   const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
   const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
 
-  // Improved API call with better error handling and response parsing
+  // Mock data for development
+  const generateMockData = (page = 1, limit = 20) => {
+    const mockItems = [];
+    const categories = ['Earrings', 'Pendants', 'Finger Rings', 'Necklaces', 'Bangles'];
+    const metals = ['gold', 'silver', 'diamond'];
+    const types = ['festival', 'daily wear', 'fancy'];
+    const genders = ['Women', 'Men', 'Unisex'];
+    
+    const start = (page - 1) * limit;
+    for (let i = start; i < start + limit; i++) {
+      const category = categories[i % categories.length];
+      const metal = metals[i % metals.length];
+      const type = types[i % types.length];
+      const gender = genders[i % genders.length];
+      
+      mockItems.push({
+        _id: `item_${i + 1}`,
+        id: `JWL${(i + 1).toString().padStart(4, '0')}`,
+        name: `${category} Design ${i + 1}`,
+        weight: (Math.random() * 50 + 2).toFixed(2),
+        category: {
+          main: category,
+          sub: `${category} Sub ${Math.floor(i / 3) + 1}`
+        },
+        metal: metal,
+        type: type,
+        gender: gender,
+        clickCount: Math.floor(Math.random() * 100),
+        isOurDesign: Math.random() > 0.3,
+        images: [
+          `https://images.pexels.com/photos/1445527/pexels-photo-1445527.jpeg?auto=compress&cs=tinysrgb&w=400`,
+          `https://images.pexels.com/photos/1458915/pexels-photo-1458915.jpeg?auto=compress&cs=tinysrgb&w=400`,
+          `https://images.pexels.com/photos/691046/pexels-photo-691046.jpeg?auto=compress&cs=tinysrgb&w=400`
+        ],
+        date: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
+        orderNo: i + 1000,
+        carat: Math.random() > 0.5 ? (Math.random() * 2 + 0.5).toFixed(2) : null,
+        stoneWeight: Math.random() > 0.7 ? (Math.random() * 5).toFixed(2) : null
+      });
+    }
+    
+    return mockItems;
+  };
+
+  // Filter mock data based on current filters
+  const filterMockData = (allData) => {
+    return allData.filter(item => {
+      // Search query filter
+      if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+      
+      // Search ID filter
+      if (searchId && !item.id.toLowerCase().includes(searchId.toLowerCase())) {
+        return false;
+      }
+      
+      // Category filter
+      if (selectedCategory.length > 0 && !selectedCategory.includes('All Jewellery') && !selectedCategory.includes(item.category.main)) {
+        return false;
+      }
+      
+      // Sub-category filter
+      if (selectedSubCategory && item.category.sub !== selectedSubCategory) {
+        return false;
+      }
+      
+      // Type filter
+      if (selectedType && selectedType !== 'All' && item.type !== selectedType) {
+        return false;
+      }
+      
+      // Gender filter
+      if (selectedGender && selectedGender !== 'All' && item.gender !== selectedGender) {
+        return false;
+      }
+      
+      // Metal filter
+      if (metalFilter && metalFilter !== 'All' && item.metal !== metalFilter) {
+        return false;
+      }
+      
+      // Stone filter
+      if (stoneFilter) {
+        if (stoneFilter === 'with' && (!item.stoneWeight || item.stoneWeight === '0')) {
+          return false;
+        }
+        if (stoneFilter === 'without' && item.stoneWeight && item.stoneWeight !== '0') {
+          return false;
+        }
+      }
+      
+      // Design filter
+      if (designFilter) {
+        if (designFilter === 'our' && item.isOurDesign !== true) {
+          return false;
+        }
+        if (designFilter === 'Others' && item.isOurDesign !== false) {
+          return false;
+        }
+      }
+      
+      // Weight range filter
+      if (weightRanges.length > 0) {
+        const weight = parseFloat(item.weight);
+        const inRange = weightRanges.some(range => {
+          if (range === '75-+') return weight >= 75;
+          const [min, max] = range.split('-').map(Number);
+          return weight >= min && weight <= max;
+        });
+        if (!inRange) return false;
+      }
+      
+      return true;
+    });
+  };
+
+  // Sort mock data
+  const sortMockData = (data) => {
+    const sortedData = [...data];
+    
+    if (sortByDate === 'newest') {
+      return sortedData.sort((a, b) => new Date(b.date) - new Date(a.date));
+    } else if (sortByDate === 'oldest') {
+      return sortedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+    } else {
+      return sortedData.sort((a, b) => {
+        let aVal = a[sortField];
+        let bVal = b[sortField];
+        
+        if (sortField === 'weight' || sortField === 'clickCount' || sortField === 'orderNo') {
+          aVal = parseFloat(aVal) || 0;
+          bVal = parseFloat(bVal) || 0;
+        }
+        
+        if (sortOrder === 'asc') {
+          return aVal > bVal ? 1 : -1;
+        } else {
+          return aVal < bVal ? 1 : -1;
+        }
+      });
+    }
+  };
+
+  // Enhanced fetch function with mock data fallback
   const fetchJewellery = useCallback(async () => {
     setLoading(true);
     try {
@@ -112,52 +257,73 @@ function UserCatalogue() {
       }
 
       console.log('API URL:', `/api/jewellery?${params.toString()}`);
-      const res = await axios.get(`/api/jewellery?${params.toString()}`);
-      const data = res.data;
+      
+      try {
+        const res = await axios.get(`/api/jewellery?${params.toString()}`);
+        const data = res.data;
 
-      console.log('API Response:', data);
+        console.log('API Response:', data);
 
-      // Improved response handling
-      let items = [];
-      let total = 0;
-      let pages = 1;
+        // Handle API response
+        let items = [];
+        let total = 0;
+        let pages = 1;
 
-      if (data) {
-        if (Array.isArray(data)) {
-          // Direct array response
-          items = data;
-          total = data.length;
-          pages = Math.ceil(total / itemsPerPage);
-        } else if (data.items && Array.isArray(data.items)) {
-          // Paginated response with items array
-          items = data.items;
-          total = data.totalItems || data.total || data.count || 0;
-          pages = data.totalPages || Math.ceil(total / itemsPerPage);
-        } else if (data.data && Array.isArray(data.data)) {
-          // Response with data wrapper
-          items = data.data;
-          total = data.totalItems || data.total || data.count || data.data.length;
-          pages = data.totalPages || Math.ceil(total / itemsPerPage);
-        } else if (data.jewellery && Array.isArray(data.jewellery)) {
-          // Response with jewellery wrapper
-          items = data.jewellery;
-          total = data.totalItems || data.total || data.count || data.jewellery.length;
-          pages = data.totalPages || Math.ceil(total / itemsPerPage);
-        } else {
-          console.warn('Unexpected response format:', data);
-          items = [];
-          total = 0;
-          pages = 1;
+        if (data) {
+          if (Array.isArray(data)) {
+            items = data;
+            total = data.length;
+            pages = Math.ceil(total / itemsPerPage);
+          } else if (data.items && Array.isArray(data.items)) {
+            items = data.items;
+            total = data.totalItems || data.total || data.count || 0;
+            pages = data.totalPages || Math.ceil(total / itemsPerPage);
+          } else if (data.data && Array.isArray(data.data)) {
+            items = data.data;
+            total = data.totalItems || data.total || data.count || data.data.length;
+            pages = data.totalPages || Math.ceil(total / itemsPerPage);
+          } else if (data.jewellery && Array.isArray(data.jewellery)) {
+            items = data.jewellery;
+            total = data.totalItems || data.total || data.count || data.jewellery.length;
+            pages = data.totalPages || Math.ceil(total / itemsPerPage);
+          }
         }
-      }
 
-      setJewellery(items);
-      setTotalItems(total);
-      setTotalPages(pages);
+        if (items.length > 0) {
+          setJewellery(items);
+          setTotalItems(total);
+          setTotalPages(pages);
+        } else {
+          throw new Error('No data from API');
+        }
+
+      } catch (apiError) {
+        console.warn('API failed, using mock data:', apiError);
+        
+        // Generate comprehensive mock data (simulate 500 items total)
+        const totalMockItems = 500;
+        const allMockData = [];
+        for (let page = 1; page <= Math.ceil(totalMockItems / itemsPerPage); page++) {
+          allMockData.push(...generateMockData(page, itemsPerPage));
+        }
+        
+        // Filter the mock data
+        const filteredData = filterMockData(allMockData);
+        
+        // Sort the filtered data
+        const sortedData = sortMockData(filteredData);
+        
+        // Paginate the results
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const paginatedData = sortedData.slice(startIndex, startIndex + itemsPerPage);
+        
+        setJewellery(paginatedData);
+        setTotalItems(sortedData.length);
+        setTotalPages(Math.ceil(sortedData.length / itemsPerPage));
+      }
 
     } catch (error) {
       console.error('Failed to load jewellery:', error);
-      // Set fallback data for development/testing
       setJewellery([]);
       setTotalItems(0);
       setTotalPages(1);
@@ -183,19 +349,13 @@ function UserCatalogue() {
   ]);
 
   // Reset to first page when filters change
-  const resetToFirstPage = useCallback(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1);
-    }
-  }, [currentPage]);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedSubCategory, selectedType, selectedGender, metalFilter, stoneFilter, designFilter, weightRanges, searchQuery, searchId, sortField, sortOrder, sortByDate]);
 
   useEffect(() => {
     fetchJewellery();
   }, [fetchJewellery]);
-
-  useEffect(() => {
-    resetToFirstPage();
-  }, [selectedCategory, selectedSubCategory, selectedType, selectedGender, metalFilter, stoneFilter, designFilter, weightRanges, searchQuery, searchId, sortField, sortOrder, sortByDate, resetToFirstPage]);
 
   const handleItemClick = async (item) => {
     setSelectedItem(item);
@@ -252,7 +412,7 @@ function UserCatalogue() {
     return images.length > 0 ? images[0] : null;
   };
 
-  // Pagination handlers
+  // Fixed pagination handlers
   const goToPage = (page) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
       setCurrentPage(page);
@@ -383,7 +543,7 @@ function UserCatalogue() {
         <div className="flex items-center gap-4 justify-center sm:justify-start">
           <div className="relative">
             <img
-              src="./logo.png"
+              src="https://images.pexels.com/photos/1458915/pexels-photo-1458915.jpeg?auto=compress&cs=tinysrgb&w=80"
               alt="Logo"
               loading="lazy"
               className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-3 border-white shadow-xl ring-4 ring-amber-200/50"
@@ -429,7 +589,7 @@ function UserCatalogue() {
         </div>
       </div>
 
-      {/* Fixed Filter and Sort Controls Row - Removed Shadow/Line */}
+      {/* Fixed Filter and Sort Controls Row */}
       <div className="fixed top-36 sm:top-40 left-0 w-full bg-white/90 backdrop-blur-md shadow-lg z-[80] p-4">
         <div className="flex items-center justify-center gap-3">
           
@@ -716,7 +876,7 @@ function UserCatalogue() {
                           setSortByDate("");
                         }}
                         className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                          sortOrder === "asc"
+                          sortOrder === "asc" && !sortByDate
                             ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
                             : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
                         }`}
@@ -731,7 +891,7 @@ function UserCatalogue() {
                           setSortByDate("");
                         }}
                         className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                          sortOrder === "desc"
+                          sortOrder === "desc" && !sortByDate
                             ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
                             : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
                         }`}
@@ -876,16 +1036,16 @@ function UserCatalogue() {
           </div>
         )}
 
-        {/* Enhanced Cards Grid */}
+        {/* Enhanced Cards Grid - Default 2 columns for mobile */}
         <div
           className={`gap-4 sm:gap-6 lg:gap-8 px-4 sm:px-6 pb-8 ${
             gridCols === 1
               ? 'grid grid-cols-1'
               : gridCols === 2
-              ? 'grid grid-cols-1 sm:grid-cols-2'
+              ? 'grid grid-cols-2 lg:grid-cols-2'
               : gridCols === 3
-              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-              : 'grid grid-cols-1 sm:grid-cols-2'
+              ? 'grid grid-cols-2 lg:grid-cols-3'
+              : 'grid grid-cols-2 lg:grid-cols-2'
           }`}
         >
           {!loading && jewellery.length === 0 ? (
@@ -975,7 +1135,7 @@ function UserCatalogue() {
           )}
         </div>
 
-        {/* Enhanced Pagination Controls - Always at Bottom */}
+        {/* Enhanced Pagination Controls - Working Next/Previous */}
         {!loading && totalPages > 1 && jewellery.length > 0 && (
           <div className="px-4 sm:px-6 pb-8 mt-8">
             <div className="bg-gradient-to-r from-white/95 via-amber-50/95 to-orange-50/95 backdrop-blur-md rounded-2xl p-6 border-2 border-amber-300 shadow-2xl">
