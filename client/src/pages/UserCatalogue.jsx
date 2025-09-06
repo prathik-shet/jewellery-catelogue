@@ -22,6 +22,7 @@ function UserCatalogue() {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [isDataFetched, setIsDataFetched] = useState(false);
   
   // Enhanced modal media handling
   const [modalMedia, setModalMedia] = useState([]);
@@ -211,6 +212,8 @@ function UserCatalogue() {
   // Enhanced fetch function with mock data fallback
   const fetchJewellery = useCallback(async () => {
     setLoading(true);
+    // Set isDataFetched to false at the beginning of the fetch
+    setIsDataFetched(false); 
     try {
       const params = new URLSearchParams();
       
@@ -344,6 +347,8 @@ function UserCatalogue() {
       setTotalPages(1);
     } finally {
       setLoading(false);
+      // Set isDataFetched to true after the fetch is complete
+      setIsDataFetched(true);
     }
   }, [
     currentPage,
@@ -1024,7 +1029,7 @@ function UserCatalogue() {
         )}
 
         {/* Results Info - Only show if items exist */}
-        {!loading && totalItems > 0 && (
+        {isDataFetched && totalItems > 0 && (
           <div className="px-4 sm:px-6 mb-6">
             <div className="bg-gradient-to-r from-white/90 to-amber-50/90 backdrop-blur-sm rounded-2xl p-4 border-2 border-amber-200 shadow-lg">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -1153,7 +1158,7 @@ function UserCatalogue() {
         </div>
 
         {/* Enhanced Pagination Controls - Working Next/Previous */}
-        {!loading && totalPages > 1 && jewellery.length > 0 && (
+        {isDataFetched && totalPages > 1 && jewellery.length > 0 && (
           <div className="px-4 sm:px-6 pb-8 mt-8">
             <div className="bg-gradient-to-r from-white/95 via-amber-50/95 to-orange-50/95 backdrop-blur-md rounded-2xl p-6 border-2 border-amber-300 shadow-2xl">
               <div className="flex flex-col items-center gap-6">
@@ -1426,7 +1431,7 @@ function UserCatalogue() {
 
       {/* Media Gallery Modal */}
       {modalMedia.length > 0 && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[999] flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[999] flex items-center justify-center">
           <div className="relative max-w-6xl max-h-[90vh] w-full mx-2 sm:mx-4">
             {/* Close Button */}
             <button
