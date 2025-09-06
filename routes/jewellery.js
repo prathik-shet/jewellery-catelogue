@@ -142,18 +142,18 @@ router.get("/", async (req, res) => {
 
     const query = {};
 
-    // Category Main - support multiple categories
+    // Category Main - support multiple catagories
     if (catagories) {
-      let categories;
+      let catagories;
       if (Array.isArray(catagories)) {
-        categories = catagories;
+        catagories = catagories;
       } else if (typeof catagories === 'string') {
-        categories = catagories.includes(',') 
+        catagories = catagories.includes(',') 
           ? catagories.split(",").map((c) => c.trim()).filter(c => c)
           : [catagories.trim()];
       }
-      if (categories && categories.length > 0) {
-        query["category.main"] = { $in: categories };
+      if (catagories && catagories.length > 0) {
+        query["category.main"] = { $in: catagories };
       }
     }
 

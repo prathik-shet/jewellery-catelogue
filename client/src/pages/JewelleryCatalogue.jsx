@@ -34,7 +34,7 @@ function JewelleryCatalogue() {
   const [selectedItem, setSelectedItem] = useState(null);
   const [designFilter, setDesignFilter] = useState('');
 
-  const categories = [
+  const catagories = [
     'All Jewellery',
     'Earrings',
     'Pendants',
@@ -150,64 +150,64 @@ function JewelleryCatalogue() {
     return images.length > 0 ? images[0] : null;
   };
 
-  const getAllCategories = () => {
+  const getAllcatagories = () => {
     if (!Array.isArray(jewellery)) {
-      return categories.filter(cat => cat !== 'All Jewellery' && cat !== 'Custom');
+      return catagories.filter(cat => cat !== 'All Jewellery' && cat !== 'Custom');
     }
     
-    const baseCategories = categories.filter(cat => cat !== 'All Jewellery');
-    const customCategories = jewellery
+    const basecatagories = catagories.filter(cat => cat !== 'All Jewellery');
+    const customcatagories = jewellery
       .map(item => item.category?.main)
-      .filter(cat => cat && !baseCategories.includes(cat))
+      .filter(cat => cat && !basecatagories.includes(cat))
       .filter((cat, index, arr) => arr.indexOf(cat) === index);
     
-    return [...baseCategories.filter(cat => cat !== 'Custom'), ...customCategories];
+    return [...basecatagories.filter(cat => cat !== 'Custom'), ...customcatagories];
   };
 
-  const getAllSubCategories = () => {
+  const getAllSubcatagories = () => {
     if (!Array.isArray(jewellery)) {
       return [];
     }
     
-    const subCategories = jewellery
+    const subcatagories = jewellery
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index);
     
-    return subCategories.sort();
+    return subcatagories.sort();
   };
 
-  const getFilteredSubCategories = () => {
+  const getFilteredSubcatagories = () => {
     if (!Array.isArray(jewellery)) {
       return [];
     }
     
     if (selectedCategory.length === 0) {
-      return getAllSubCategories();
+      return getAllSubcatagories();
     }
     
-    const filteredSubCategories = jewellery
+    const filteredSubcatagories = jewellery
       .filter(item => selectedCategory.includes(item.category?.main))
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index);
     
-    return filteredSubCategories.sort();
+    return filteredSubcatagories.sort();
   };
 
-  // ✅ NEW: Get existing sub-categories for the selected main category
-  const getSubCategoriesForMainCategory = (mainCategory) => {
+  // ✅ NEW: Get existing sub-catagories for the selected main category
+  const getSubcatagoriesForMainCategory = (mainCategory) => {
     if (!Array.isArray(jewellery) || !mainCategory || mainCategory === 'Custom') {
       return [];
     }
     
-    const subCategories = jewellery
+    const subcatagories = jewellery
       .filter(item => item.category?.main === mainCategory)
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index);
     
-    return subCategories.sort();
+    return subcatagories.sort();
   };
 
   const clearAllFilters = () => {
@@ -362,7 +362,7 @@ function JewelleryCatalogue() {
     setSelectedItem(null);
     setImageFiles([]);
     setVideoFiles([]); // ✅ NEW: Clear video files
-    if (!categories.includes(item.category?.main)) {
+    if (!catagories.includes(item.category?.main)) {
       setCustomCategory(item.category?.main);
       setNewItem((prev) => ({
         ...prev,
@@ -891,14 +891,14 @@ function JewelleryCatalogue() {
               <div className="w-6 h-6 bg-amber-500 rounded-lg flex items-center justify-center">
                 🏷️
               </div>
-              Filter Categories
+              Filter catagories
             </span>
             <svg className="w-5 h-5 transform group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
           <div className="absolute z-[70] hidden group-hover:block bg-white/95 backdrop-blur-md border-2 border-amber-400 rounded-2xl shadow-2xl max-h-72 overflow-y-auto top-full mt-2 w-64 p-4">
-            {getAllCategories().map((cat) => (
+            {getAllcatagories().map((cat) => (
               <label
                 key={cat}
                 className="flex items-center text-sm gap-3 text-gray-700 hover:bg-amber-50 p-3 rounded-xl transition-all duration-200 cursor-pointer font-medium"
@@ -933,8 +933,8 @@ function JewelleryCatalogue() {
             onChange={(e) => setSelectedSubCategory(e.target.value)}
             className="w-full p-4 border-2 border-amber-400 rounded-2xl w-64 bg-gradient-to-r from-amber-50 to-orange-50 focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 shadow-lg font-semibold text-gray-700 hover:shadow-xl"
           >
-            <option value="">🔍 All Sub-Categories</option>
-            {getFilteredSubCategories().map((subCat) => (
+            <option value="">🔍 All Sub-catagories</option>
+            {getFilteredSubcatagories().map((subCat) => (
               <option key={subCat} value={subCat}>
                 {subCat}
               </option>
@@ -1654,7 +1654,7 @@ function JewelleryCatalogue() {
               required
             >
               <option value="">🏷️ Select Main Category*</option>
-              {categories.slice(1).map((cat) => (
+              {catagories.slice(1).map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
                 </option>
@@ -1684,7 +1684,7 @@ function JewelleryCatalogue() {
                   className="w-full border-2 border-amber-300 p-4 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 font-medium text-lg shadow-lg"
                 >
                   <option value="">Select existing sub-category</option>
-                  {getSubCategoriesForMainCategory(newItem.category.main).map((subCat) => (
+                  {getSubcatagoriesForMainCategory(newItem.category.main).map((subCat) => (
                     <option key={subCat} value={subCat}>
                       {subCat}
                     </option>

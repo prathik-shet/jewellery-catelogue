@@ -34,7 +34,7 @@ function UserCatalogue() {
   const [showSortPanel, setShowSortPanel] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  const categories = [
+  const catagories = [
     'All Jewellery',
     'Earrings',
     'Pendants',
@@ -56,14 +56,14 @@ function UserCatalogue() {
   // Mock data for development
   const generateMockData = (page = 1, pageSize = 20) => {
     const mockItems = [];
-    const categories = ['Earrings', 'Pendants', 'Finger Rings', 'Necklaces', 'Bangles'];
+    const catagories = ['Earrings', 'Pendants', 'Finger Rings', 'Necklaces', 'Bangles'];
     const metals = ['gold', 'silver', 'diamond'];
     const types = ['festival', 'daily wear', 'fancy'];
     const genders = ['Women', 'Men', 'Unisex'];
     
     const start = (page - 1) * pageSize;
     for (let i = start; i < start + pageSize; i++) {
-      const category = categories[i % categories.length];
+      const category = catagories[i % catagories.length];
       const metal = metals[i % metals.length];
       const type = types[i % types.length];
       const gender = genders[i % genders.length];
@@ -228,7 +228,7 @@ function UserCatalogue() {
 
       // Add filters only if they have valid values
       if (selectedCategory.length > 0 && !selectedCategory.includes('All Jewellery')) {
-        params.append('categories', selectedCategory.join(','));
+        params.append('catagories', selectedCategory.join(','));
       }
       
       if (selectedSubCategory && selectedSubCategory.trim() !== '') {
@@ -470,32 +470,32 @@ function UserCatalogue() {
     return range;
   };
 
-  const getAllCategories = () => {
-    const baseCategories = categories.filter(cat => cat !== 'All Jewellery');
-    return baseCategories;
+  const getAllcatagories = () => {
+    const basecatagories = catagories.filter(cat => cat !== 'All Jewellery');
+    return basecatagories;
   };
 
-  const getAllSubCategories = () => {
-    const subCategories = jewellery
+  const getAllSubcatagories = () => {
+    const subcatagories = jewellery
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index);
     
-    return subCategories.sort();
+    return subcatagories.sort();
   };
 
-  const getFilteredSubCategories = () => {
+  const getFilteredSubcatagories = () => {
     if (selectedCategory.length === 0) {
-      return getAllSubCategories();
+      return getAllSubcatagories();
     }
     
-    const filteredSubCategories = jewellery
+    const filteredSubcatagories = jewellery
       .filter(item => selectedCategory.includes(item.category?.main))
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index);
     
-    return filteredSubCategories.sort();
+    return filteredSubcatagories.sort();
   };
 
   const clearAllFilters = () => {
@@ -631,9 +631,9 @@ function UserCatalogue() {
                   
                   {/* Category Multi-Select */}
                   <div>
-                    <label className="block font-bold text-blue-700 mb-2">Categories</label>
+                    <label className="block font-bold text-blue-700 mb-2">catagories</label>
                     <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-gray-50">
-                      {getAllCategories().map((cat) => (
+                      {getAllcatagories().map((cat) => (
                         <label key={cat} className="flex items-center gap-2 text-sm p-1 hover:bg-blue-50 rounded cursor-pointer">
                           <input
                             type="checkbox"
@@ -666,8 +666,8 @@ function UserCatalogue() {
                       onChange={(e) => setSelectedSubCategory(e.target.value)}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                     >
-                      <option value="">All Sub-Categories</option>
-                      {getFilteredSubCategories().map((subCat) => (
+                      <option value="">All Sub-catagories</option>
+                      {getFilteredSubcatagories().map((subCat) => (
                         <option key={subCat} value={subCat}>{subCat}</option>
                       ))}
                     </select>
