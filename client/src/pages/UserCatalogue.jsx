@@ -6,7 +6,7 @@ function UserCatalogue() {
   const [sortOrder, setSortOrder] = useState('desc');
   const [sortByDate, setSortByDate] = useState('');
   const [stoneFilter, setStoneFilter] = useState('');
-  const [metalFilter, setMetalFilter] = useState(''); 
+  const [metalFilter, setMetalFilter] = useState('');
   const [weightRanges, setWeightRanges] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
@@ -297,6 +297,10 @@ function UserCatalogue() {
             items = data.jewellery;
             total = data.totalItems || data.total || data.count || data.jewellery.length;
             pages = data.totalPages || Math.ceil(total / itemsPerPage);
+          } else if (data.pagination && data.items) {
+             items = data.items;
+             total = data.pagination.totalCount;
+             pages = data.pagination.totalPages;
           }
         }
 
