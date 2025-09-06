@@ -109,10 +109,6 @@ router.get("/", async (req, res) => {
 
     let query = {};
     
-    // =================== FIX STARTS HERE ===================
-    // Switched to an $and array to correctly combine complex filters ($or conditions)
-    // without them conflicting with each other. This fixes the bug where selecting
-    // "Without Stone" and a "Weight Range" would use OR instead of AND.
     const andConditions = [];
 
     // Category Main - support multiple categories
@@ -150,7 +146,6 @@ router.get("/", async (req, res) => {
 
     // Stone filter
     if (stone === "with") {
-      // Improved logic: ensures stoneWeight exists and is greater than 0.
       andConditions.push({ stoneWeight: { $gt: 0 } });
     } else if (stone === "without") {
       andConditions.push({
@@ -162,7 +157,7 @@ router.get("/", async (req, res) => {
       });
     }
 
-    // Weight ranges filter - now safely adds its own $or condition to the main $and array
+    // Weight ranges filter
     if (weightRanges) {
         const ranges = weightRanges.split(',').map(r => r.trim());
         const weightConditions = ranges.map(range => {
@@ -178,12 +173,9 @@ router.get("/", async (req, res) => {
         }
     }
     
-    // If we have any conditions, build the final query object
     if (andConditions.length > 0) {
         query = { $and: andConditions };
     }
-    // =================== FIX ENDS HERE ===================
-
 
     // Enhanced Sorting Logic
     let sortOptions = {};
@@ -202,7 +194,6 @@ router.get("/", async (req, res) => {
     const pageSizeNum = parseInt(pageSize);
     const skip = (pageNum - 1) * pageSizeNum;
     
-    // Use $facet to perform the query and count in one stage
     const [result] = await Jewellery.aggregate([
       { $match: query },
       { 
@@ -240,16 +231,24 @@ router.get("/", async (req, res) => {
 
     const totalItems = result.totalCount[0]?.count || 0;
     const items = result.items || [];
+    const totalPages = Math.ceil(totalItems / pageSizeNum);
 
+    // =================== FIX STARTS HERE ===================
+    // Added `totalItems` and `totalPages` to the top level of the response.
+    // This matches the structure the frontend component expects, fixing the issue
+    // where the total count was being read as 0.
     res.json({
       items,
+      totalItems,
+      totalPages,
       pagination: {
         page: pageNum,
         pageSize: pageSizeNum,
         totalCount: totalItems,
-        totalPages: Math.ceil(totalItems / pageSizeNum)
+        totalPages: totalPages
       }
     });
+    // =================== FIX ENDS HERE ===================
   } catch (err) {
     console.error("Error fetching items:", err);
     res.status(500).json({ error: "Failed to fetch items: " + err.message });
