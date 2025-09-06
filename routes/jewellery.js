@@ -120,8 +120,8 @@ router.get("/", async (req, res) => {
   try {
     const {
       type,
-      categoryMain,
-      categorySub,
+      catagories,
+      subCategory,
       gender,
       minWeight,
       maxWeight,
@@ -143,14 +143,14 @@ router.get("/", async (req, res) => {
     const query = {};
 
     // Category Main - support multiple categories
-    if (categoryMain) {
+    if (catagories) {
       let categories;
-      if (Array.isArray(categoryMain)) {
-        categories = categoryMain;
-      } else if (typeof categoryMain === 'string') {
-        categories = categoryMain.includes(',') 
-          ? categoryMain.split(",").map((c) => c.trim()).filter(c => c)
-          : [categoryMain.trim()];
+      if (Array.isArray(catagories)) {
+        categories = catagories;
+      } else if (typeof catagories === 'string') {
+        categories = catagories.includes(',') 
+          ? catagories.split(",").map((c) => c.trim()).filter(c => c)
+          : [catagories.trim()];
       }
       if (categories && categories.length > 0) {
         query["category.main"] = { $in: categories };
@@ -158,8 +158,8 @@ router.get("/", async (req, res) => {
     }
 
     // Subcategory filter
-    if (categorySub && categorySub.trim()) {
-      query["category.sub"] = { $regex: categorySub.trim(), $options: "i" };
+    if (subCategory && subCategory.trim()) {
+      query["category.sub"] = { $regex: subCategory.trim(), $options: "i" };
     }
 
     // Type filter

@@ -54,15 +54,15 @@ function UserCatalogue() {
   const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
 
   // Mock data for development
-  const generateMockData = (page = 1, limit = 20) => {
+  const generateMockData = (page = 1, pageSize = 20) => {
     const mockItems = [];
     const categories = ['Earrings', 'Pendants', 'Finger Rings', 'Necklaces', 'Bangles'];
     const metals = ['gold', 'silver', 'diamond'];
     const types = ['festival', 'daily wear', 'fancy'];
     const genders = ['Women', 'Men', 'Unisex'];
     
-    const start = (page - 1) * limit;
-    for (let i = start; i < start + limit; i++) {
+    const start = (page - 1) * pageSize;
+    for (let i = start; i < start + pageSize; i++) {
       const category = categories[i % categories.length];
       const metal = metals[i % metals.length];
       const type = types[i % types.length];
@@ -216,7 +216,7 @@ function UserCatalogue() {
       
       // Always add basic pagination params
       params.append('page', currentPage.toString());
-      params.append('limit', itemsPerPage.toString());
+      params.append('pageSize', itemsPerPage.toString());
       
       // Add sort parameters
       if (sortByDate) {

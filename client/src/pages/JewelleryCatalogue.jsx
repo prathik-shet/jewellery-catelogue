@@ -225,13 +225,13 @@ function JewelleryCatalogue() {
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (name === 'categoryMain') {
+    if (name === 'catagories') {
       setNewItem((prev) => ({
         ...prev,
         category: { ...prev.category, main: value, sub: '' }, // ✅ Clear sub when main changes
       }));
       if (value !== 'Custom') setCustomCategory('');
-    } else if (name === 'categorySub') {
+    } else if (name === 'subCategory') {
       setNewItem((prev) => ({
         ...prev,
         category: { ...prev.category, sub: value },
@@ -1647,7 +1647,7 @@ function JewelleryCatalogue() {
               required
             />
             <select
-              name="categoryMain"
+              name="catagories"
               value={newItem.category?.main || ''}
               onChange={handleFormChange}
               className="w-full border-2 border-amber-300 p-4 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 font-medium text-lg shadow-lg"
@@ -1678,7 +1678,7 @@ function JewelleryCatalogue() {
                   🏷️ Sub-Category (select existing or type new)
                 </label>
                 <select
-                  name="categorySub"
+                  name="subCategory"
                   value={newItem.category?.sub || ''}
                   onChange={handleFormChange}
                   className="w-full border-2 border-amber-300 p-4 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 font-medium text-lg shadow-lg"
@@ -1691,7 +1691,7 @@ function JewelleryCatalogue() {
                   ))}
                 </select>
                 <input
-                  name="categorySub"
+                  name="subCategory"
                   className="w-full border-2 border-amber-300 p-4 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 font-medium text-lg shadow-lg"
                   placeholder="Or type new sub-category"
                   value={newItem.category?.sub || ''}
