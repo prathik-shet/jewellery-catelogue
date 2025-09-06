@@ -18,30 +18,11 @@ router.use((req, res, next) => {
 router.post("/", async (req, res) => {
   try {
     const {
-      id,
-      name,
-      category,
-      weight,
-      image,
-      images,
-      videos,
-      gender,
-      stoneWeight,
-      type,
-      metal,
-      carat,
-      orderNo,
-      isOurDesign,
+      id, name, category, weight, image, images, videos, gender,
+      stoneWeight, type, metal, carat, orderNo, isOurDesign,
     } = req.body;
 
-    if (
-      !id ||
-      !name ||
-      !category?.main ||
-      weight === undefined ||
-      !metal ||
-      !carat
-    ) {
+    if (!id || !name || !category?.main || weight === undefined || !metal || !carat) {
       return res.status(400).json({
         error: "ID, name, main category, metal, carat, and weight are required.",
       });
@@ -119,113 +100,90 @@ router.patch("/:id/click", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const {
-      type,
-      catagories,
-      subCategory,
-      gender,
-      minWeight,
-      maxWeight,
-      weightRanges,
-      stone,
-      metal,
-      sortBy,
-      sortField,
-      sortOrder,
-      sortByDate,
-      order,
-      search,
-      searchId,
-      isOurDesign,
+      type, catagories, subCategory, gender,
+      weightRanges, stone, metal, sortField, sortOrder,
+      sortByDate, search, searchId, design,
       page = 1,
       pageSize = 20,
     } = req.query;
 
-    const query = {};
+    let query = {};
+    
+    // =================== FIX STARTS HERE ===================
+    // Switched to an $and array to correctly combine complex filters ($or conditions)
+    // without them conflicting with each other. This fixes the bug where selecting
+    // "Without Stone" and a "Weight Range" would use OR instead of AND.
+    const andConditions = [];
 
-    // Category Main - support multiple catagories
+    // Category Main - support multiple categories
     if (catagories) {
-      const categoryArray = Array.isArray(catagories) 
-        ? catagories 
-        : catagories.split(",").map((c) => c.trim()).filter(c => c);
-      if (categoryArray && categoryArray.length > 0) {
-        query["category.main"] = { $in: categoryArray };
+      const categoryArray = catagories.split(",").map((c) => c.trim()).filter(c => c);
+      if (categoryArray.length > 0) {
+        andConditions.push({ "category.main": { $in: categoryArray } });
       }
     }
 
-    // Subcategory filter
+    // Add simple key-value filters to the 'and' array
     if (subCategory && subCategory.trim()) {
-      query["category.sub"] = { $regex: subCategory.trim(), $options: "i" };
+      andConditions.push({ "category.sub": { $regex: subCategory.trim(), $options: "i" } });
     }
-
-    // Type filter
     if (type && type.trim() && type !== 'All') {
-      query.type = { $regex: type.trim(), $options: "i" };
+      andConditions.push({ type: { $regex: type.trim(), $options: "i" } });
     }
-
-    // Gender filter
     if (gender && gender.trim() && gender !== "All") {
-      query.gender = gender.trim();
+      andConditions.push({ gender: gender.trim() });
     }
-
-    // Metal filter
     if (metal && metal.trim() && metal !== 'All') {
-      query.metal = { $regex: metal.trim(), $options: "i" };
+      andConditions.push({ metal: { $regex: metal.trim(), $options: "i" } });
     }
-
-    // Design ownership filter
-    if (isOurDesign !== undefined && isOurDesign !== '') {
-      query.isOurDesign = isOurDesign === 'true';
+    if (design === 'our') {
+      andConditions.push({ isOurDesign: true });
+    } else if (design === 'Others') {
+      andConditions.push({ isOurDesign: false });
+    }
+    if (search && search.trim()) {
+      andConditions.push({ name: { $regex: search.trim(), $options: "i" } });
+    }
+    if (searchId && searchId.trim()) {
+      andConditions.push({ id: { $regex: searchId.trim(), $options: "i" } });
     }
 
     // Stone filter
     if (stone === "with") {
-      query.stoneWeight = { $ne: null, $exists: true };
+      // Improved logic: ensures stoneWeight exists and is greater than 0.
+      andConditions.push({ stoneWeight: { $gt: 0 } });
     } else if (stone === "without") {
-      query.$or = [
-        { stoneWeight: null },
-        { stoneWeight: { $exists: false } }
-      ];
-    }
-
-    // Search by Name
-    if (search && search.trim()) {
-      query.name = { $regex: search.trim(), $options: "i" };
-    }
-
-    // Search by ID
-    if (searchId && searchId.trim()) {
-      query.id = { $regex: searchId.trim(), $options: "i" };
-    }
-
-    // Weight filter
-    if (weightRanges) {
-      const ranges = Array.isArray(weightRanges) 
-        ? weightRanges 
-        : weightRanges.split(',').map(r => r.trim());
-      const weightConditions = [];
-      ranges.forEach(range => {
-        if (range.includes('-')) {
-          const [min, max] = range.split('-');
-          if (max === '+') {
-            weightConditions.push({ weight: { $gte: parseFloat(min) } });
-          } else {
-            weightConditions.push({ 
-              weight: { 
-                $gte: parseFloat(min), 
-                $lte: parseFloat(max) 
-              } 
-            });
-          }
-        }
+      andConditions.push({
+        $or: [
+          { stoneWeight: null },
+          { stoneWeight: { $exists: false } },
+          { stoneWeight: 0 }
+        ]
       });
-      if (weightConditions.length > 0) {
-        query.$or = query.$or ? [...query.$or, ...weightConditions] : weightConditions;
-      }
-    } else if (minWeight || maxWeight) {
-      query.weight = {};
-      if (minWeight) query.weight.$gte = parseFloat(minWeight);
-      if (maxWeight) query.weight.$lte = parseFloat(maxWeight);
     }
+
+    // Weight ranges filter - now safely adds its own $or condition to the main $and array
+    if (weightRanges) {
+        const ranges = weightRanges.split(',').map(r => r.trim());
+        const weightConditions = ranges.map(range => {
+            if (range.endsWith('-+')) {
+                const min = parseFloat(range.replace('-+', ''));
+                return { weight: { $gte: min } };
+            }
+            const [min, max] = range.split('-').map(parseFloat);
+            return { weight: { $gte: min, $lte: max } };
+        });
+        if (weightConditions.length > 0) {
+            andConditions.push({ $or: weightConditions });
+        }
+    }
+    
+    // If we have any conditions, build the final query object
+    if (andConditions.length > 0) {
+        query = { $and: andConditions };
+    }
+    // =================== FIX ENDS HERE ===================
+
 
     // Enhanced Sorting Logic
     let sortOptions = {};
@@ -233,14 +191,9 @@ router.get("/", async (req, res) => {
       sortOptions = { date: -1, _id: -1 };
     } else if (sortByDate === 'oldest') {
       sortOptions = { date: 1, _id: 1 };
-    } else if (sortField && (sortField === 'weight' || sortField === 'orderNo' || sortField === 'clickCount')) {
-      const direction = sortOrder === 'desc' ? -1 : 1;
+    } else if (sortField) {
+      const direction = sortOrder === 'asc' ? 1 : -1;
       sortOptions = { [sortField]: direction, _id: direction };
-    } else if (sortBy) {
-      const allowedSortFields = ["weight", "stoneWeight", "date", "orderNo", "clickCount"];
-      const field = allowedSortFields.includes(sortBy) ? sortBy : "clickCount";
-      const direction = order === "desc" ? -1 : 1;
-      sortOptions = { [field]: direction };
     } else {
       sortOptions = { clickCount: -1, _id: -1 };
     }
@@ -248,7 +201,7 @@ router.get("/", async (req, res) => {
     const pageNum = parseInt(page);
     const pageSizeNum = parseInt(pageSize);
     const skip = (pageNum - 1) * pageSizeNum;
-
+    
     // Use $facet to perform the query and count in one stage
     const [result] = await Jewellery.aggregate([
       { $match: query },
@@ -285,7 +238,7 @@ router.get("/", async (req, res) => {
       }
     ]);
 
-    const totalCount = result.totalCount[0]?.count || 0;
+    const totalItems = result.totalCount[0]?.count || 0;
     const items = result.items || [];
 
     res.json({
@@ -293,8 +246,8 @@ router.get("/", async (req, res) => {
       pagination: {
         page: pageNum,
         pageSize: pageSizeNum,
-        totalCount,
-        totalPages: Math.ceil(totalCount / pageSizeNum)
+        totalCount: totalItems,
+        totalPages: Math.ceil(totalItems / pageSizeNum)
       }
     });
   } catch (err) {
@@ -307,30 +260,11 @@ router.get("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const {
-      id,
-      name,
-      category,
-      weight,
-      image,
-      images,
-      videos,
-      gender,
-      stoneWeight,
-      type,
-      metal,
-      carat,
-      orderNo,
-      isOurDesign,
+      id, name, category, weight, image, images, videos, gender,
+      stoneWeight, type, metal, carat, orderNo, isOurDesign,
     } = req.body;
 
-    if (
-      !id ||
-      !name ||
-      !category?.main ||
-      weight === undefined ||
-      !metal ||
-      !carat
-    ) {
+    if (!id || !name || !category?.main || weight === undefined || !metal || !carat) {
       return res.status(400).json({
         error: "ID, name, main category, metal, carat, and weight are required.",
       });
@@ -464,3 +398,4 @@ router.get("/stats", async (req, res) => {
 });
 
 module.exports = router;
+
