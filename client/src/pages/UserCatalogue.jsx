@@ -284,11 +284,13 @@ function UserCatalogue() {
         let pages = 1;
 
         if (data) {
-          if (Array.isArray(data)) {
-            items = data;
-            total = data.length;
-            pages = Math.ceil(total / itemsPerPage);
-          } else if (data.items && Array.isArray(data.items)) {
+          // =================== KEY CHANGE STARTS HERE ===================
+          // The faulty `if (Array.isArray(data))` block has been removed.
+          // The code now expects a structured response object to correctly
+          // calculate pagination. Your API should return data in a format
+          // that one of these `else if` blocks can handle.
+          
+          if (data.items && Array.isArray(data.items)) {
             items = data.items;
             total = data.totalItems || data.total || data.count || 0;
             pages = data.totalPages || Math.ceil(total / itemsPerPage);
@@ -301,10 +303,12 @@ function UserCatalogue() {
             total = data.totalItems || data.total || data.count || data.jewellery.length;
             pages = data.totalPages || Math.ceil(total / itemsPerPage);
           } else if (data.pagination && data.items) {
-             items = data.items;
-             total = data.pagination.totalCount;
-             pages = data.pagination.totalPages;
+            items = data.items;
+            total = data.pagination.totalCount;
+            pages = data.pagination.totalPages;
           }
+          
+          // =================== KEY CHANGE ENDS HERE ===================
         }
 
         if (items.length > 0) {
@@ -312,7 +316,7 @@ function UserCatalogue() {
           setTotalItems(total);
           setTotalPages(pages);
         } else {
-          throw new Error('No data from API');
+          throw new Error('No data from API or unrecognized format');
         }
 
       } catch (apiError) {
@@ -1002,506 +1006,499 @@ function UserCatalogue() {
               </div>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Overlay for closing dropdowns */}
-          {(showFilterPanel || showSortPanel) && (
-            <div 
-              className="fixed inset-0 z-[70]" 
-              onClick={() => {
-                setShowFilterPanel(false);
-                setShowSortPanel(false);
-              }}
-            />
-          )}
+      {/* Overlay for closing dropdowns */}
+      {(showFilterPanel || showSortPanel) && (
+        <div 
+          className="fixed inset-0 z-[70]" 
+          onClick={() => {
+            setShowFilterPanel(false);
+            setShowSortPanel(false);
+          }}
+        />
+      )}
 
-          {/* Content with proper spacing */}
-          <div className="pt-56 sm:pt-60">
-            {/* Loading State */}
-            {loading && (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-amber-500 border-t-transparent mx-auto mb-4"></div>
-                  <p className="text-lg font-semibold text-amber-700">Loading jewellery...</p>
-                </div>
-              </div>
-            )}
-
-            {/* Results Info - Only show if items exist */}
-            {isDataFetched && totalItems > 0 && (
-              <div className="px-4 sm:px-6 mb-6">
-                <div className="bg-gradient-to-r from-white/90 to-amber-50/90 backdrop-blur-sm rounded-2xl p-4 border-2 border-amber-200 shadow-lg">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-lg font-bold text-amber-800">
-                          Showing {jewellery.length} of {totalItems} items
-                        </p>
-                        {totalPages > 1 && (
-                          <p className="text-sm text-gray-600">
-                            Page {currentPage} of {totalPages}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-600 bg-white/80 px-3 py-2 rounded-lg border border-amber-200">
-                      {getActiveSortDescription()}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Enhanced Cards Grid - Default 2 columns for mobile */}
-            <div
-              className={`gap-4 sm:gap-6 lg:gap-8 px-4 sm:px-6 pb-8 ${
-                gridCols === 1
-                  ? 'grid grid-cols-1'
-                  : gridCols === 2
-                  ? 'grid grid-cols-2 lg:grid-cols-2'
-                  : gridCols === 3
-                  ? 'grid grid-cols-2 lg:grid-cols-3'
-                  : 'grid grid-cols-2 lg:grid-cols-2'
-              }`}
-            >
-              {!loading && jewellery.length === 0 ? (
-                <div className="col-span-full text-center py-20">
-                  <div className="text-6xl sm:text-8xl mb-6 animate-bounce">💎</div>
-                  <p className="text-xl sm:text-2xl font-bold text-gray-600 mb-2">No jewellery items found.</p>
-                  <p className="text-gray-500 text-base sm:text-lg">Try adjusting your filters or search terms.</p>
-                  <button
-                    onClick={clearAllFilters}
-                    className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-300"
-                  >
-                    Clear All Filters
-                  </button>
-                </div>
-              ) : (
-                jewellery.map((item) => {
-                  const itemImages = getItemImages(item);
-                  const mainImage = getMainImage(item);
-                  
-                  return (
-                    <div
-                      key={item._id}
-                      onClick={() => handleItemClick(item)}
-                      className="bg-gradient-to-br from-white via-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-500 cursor-pointer group overflow-hidden relative"
-                    >
-                      {/* Card Glow Effect */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                      
-                      {/* Enhanced Media Section with Bigger Images */}
-                      {mainImage && (
-                        <div className="relative mb-3 overflow-hidden rounded-xl sm:rounded-2xl">
-                          <img
-                            src={mainImage}
-                            alt={item.name}
-                            loading="lazy"
-                            className="w-full h-48 sm:h-56 lg:h-64 object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500"
-                            onError={(e) => {
-                              e.target.src = 'https://placehold.co/400x400/D4B891/6F4E37?text=Image+Not+Found';
-                              e.target.onerror = null;
-                            }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                          
-                          {/* Media Indicators */}
-                          <div className="absolute top-2 left-2 flex gap-1">
-                            {itemImages.length > 0 && (
-                              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                {itemImages.length}
-                              </div>
-                            )}
-                          </div>
-                          
-                          {/* Popularity badge */}
-                          {item.clickCount > 0 && (
-                            <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
-                              🔥 {item.clickCount}
-                            </div>
-                          )}
-                          
-                          {/* Design Ownership Badge */}
-                          <div className={`absolute bottom-2 left-2 px-2 py-1 rounded-full text-xs font-bold shadow-lg ${
-                            item.isOurDesign === false 
-                              ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' 
-                              : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                          }`}>
-                            {item.isOurDesign === false ? '👤' : '🏪'}
-                          </div>
-                        </div>
-                      )}
-                      
-                      {/* Minimal Text Section */}
-                      <div className="space-y-1">
-                        <h2 className="text-base sm:text-lg font-bold text-amber-900 truncate group-hover:text-amber-800 transition-colors duration-300">
-                          {item.name}
-                        </h2>
-                        
-                        <div className="flex items-center justify-between text-xs text-gray-600">
-                          <span className="font-semibold text-amber-700">{item.weight}g</span>
-                          <span className="font-semibold">{item.category?.main}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
+      {/* Content with proper spacing */}
+      <div className="pt-56 sm:pt-60">
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-amber-500 border-t-transparent mx-auto mb-4"></div>
+              <p className="text-lg font-semibold text-amber-700">Loading jewellery...</p>
             </div>
+          </div>
+        )}
 
-            {/* Enhanced Pagination Controls - Working Next/Previous */}
-            {isDataFetched && totalPages > 1 && jewellery.length > 0 && (
-              <div className="px-4 sm:px-6 pb-8 mt-8">
-                <div className="bg-gradient-to-r from-white/95 via-amber-50/95 to-orange-50/95 backdrop-blur-md rounded-2xl p-6 border-2 border-amber-300 shadow-2xl">
-                  <div className="flex flex-col items-center gap-6">
-                    {/* Pagination Info */}
-                    <div className="text-center">
-                      <p className="text-lg font-bold text-amber-800 mb-2">
+        {/* Results Info - Only show if items exist */}
+        {isDataFetched && totalItems > 0 && (
+          <div className="px-4 sm:px-6 mb-6">
+            <div className="bg-gradient-to-r from-white/90 to-amber-50/90 backdrop-blur-sm rounded-2xl p-4 border-2 border-amber-200 shadow-lg">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-amber-800">
+                      Showing {jewellery.length} of {totalItems} items
+                    </p>
+                    {totalPages > 1 && (
+                      <p className="text-sm text-gray-600">
                         Page {currentPage} of {totalPages}
                       </p>
-                      {totalPages > 1 && (
-                        <p className="text-sm text-gray-600">
-                          Showing {jewellery.length} items per page • {totalItems} total items
-                        </p>
-                      )}
-                    </div>
+                    )}
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600 bg-white/80 px-3 py-2 rounded-lg border border-amber-200">
+                  {getActiveSortDescription()}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
-                    {/* Pagination Controls */}
-                    <div className="flex items-center gap-2 flex-wrap justify-center">
-                      {/* Previous Button */}
-                      <button
-                        onClick={goToPreviousPage}
-                        disabled={currentPage === 1}
-                        className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 ${
-                          currentPage === 1
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 shadow-lg'
-                        }`}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                        Previous
-                      </button>
-
-                      {/* Page Numbers */}
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {/* First page if not in range */}
-                        {!getPaginationRange().includes(1) && totalPages > 5 && (
-                          <>
-                            <button
-                              onClick={() => goToPage(1)}
-                              className="w-10 h-10 rounded-lg font-bold transition-all duration-300 bg-white text-gray-700 border border-gray-300 hover:bg-amber-50 hover:border-amber-300"
-                            >
-                              1
-                            </button>
-                            <span className="px-2 text-gray-500">...</span>
-                          </>
-                        )}
-
-                        {getPaginationRange().map((page) => (
-                          <button
-                            key={page}
-                            onClick={() => goToPage(page)}
-                            className={`w-10 h-10 rounded-lg font-bold transition-all duration-300 ${
-                              page === currentPage
-                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg transform scale-110'
-                                : 'bg-white text-gray-700 border border-gray-300 hover:bg-amber-50 hover:border-amber-300'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        ))}
-
-                        {/* Last page if not in range */}
-                        {!getPaginationRange().includes(totalPages) && totalPages > 5 && (
-                          <>
-                            <span className="px-2 text-gray-500">...</span>
-                            <button
-                              onClick={() => goToPage(totalPages)}
-                              className="w-10 h-10 rounded-lg font-bold transition-all duration-300 bg-white text-gray-700 border border-gray-300 hover:bg-amber-50 hover:border-amber-300"
-                            >
-                              {totalPages}
-                            </button>
-                          </>
+        {/* Enhanced Cards Grid - Default 2 columns for mobile */}
+        <div
+          className={`gap-4 sm:gap-6 lg:gap-8 px-4 sm:px-6 pb-8 ${
+            gridCols === 1
+              ? 'grid grid-cols-1'
+              : gridCols === 2
+              ? 'grid grid-cols-2 lg:grid-cols-2'
+              : gridCols === 3
+              ? 'grid grid-cols-2 lg:grid-cols-3'
+              : 'grid grid-cols-2 lg:grid-cols-2'
+          }`}
+        >
+          {!loading && jewellery.length === 0 ? (
+            <div className="col-span-full text-center py-20">
+              <div className="text-6xl sm:text-8xl mb-6 animate-bounce">💎</div>
+              <p className="text-xl sm:text-2xl font-bold text-gray-600 mb-2">No jewellery items found.</p>
+              <p className="text-gray-500 text-base sm:text-lg">Try adjusting your filters or search terms.</p>
+              <button
+                onClick={clearAllFilters}
+                className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-300"
+              >
+                Clear All Filters
+              </button>
+            </div>
+          ) : (
+            jewellery.map((item) => {
+              const itemImages = getItemImages(item);
+              const mainImage = getMainImage(item);
+              
+              return (
+                <div
+                  key={item._id}
+                  onClick={() => handleItemClick(item)}
+                  className="bg-gradient-to-br from-white via-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-500 cursor-pointer group overflow-hidden relative"
+                >
+                  {/* Card Glow Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  {/* Enhanced Media Section with Bigger Images */}
+                  {mainImage && (
+                    <div className="relative mb-3 overflow-hidden rounded-xl sm:rounded-2xl">
+                      <img
+                        src={mainImage}
+                        alt={item.name}
+                        loading="lazy"
+                        className="w-full h-48 sm:h-56 lg:h-64 object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      
+                      {/* Media Indicators */}
+                      <div className="absolute top-2 left-2 flex gap-1">
+                        {itemImages.length > 0 && (
+                          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {itemImages.length}
+                          </div>
                         )}
                       </div>
-
-                      {/* Next Button */}
-                      <button
-                        onClick={goToNextPage}
-                        disabled={currentPage === totalPages}
-                        className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 ${
-                          currentPage === totalPages
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 shadow-lg'
-                        }`}
-                      >
-                        Next
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
+                      
+                      {/* Popularity badge */}
+                      {item.clickCount > 0 && (
+                        <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
+                          🔥 {item.clickCount}
+                        </div>
+                      )}
+                      
+                      {/* Design Ownership Badge */}
+                      <div className={`absolute bottom-2 left-2 px-2 py-1 rounded-full text-xs font-bold shadow-lg ${
+                        item.isOurDesign === false 
+                          ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' 
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                      }`}>
+                        {item.isOurDesign === false ? '👤' : '🏪'}
+                      </div>
                     </div>
-
-                    {/* Quick Jump to Page */}
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold text-gray-700">Jump to page:</span>
-                      <input
-                        type="number"
-                        min="1"
-                        max={totalPages}
-                        placeholder={currentPage.toString()}
-                        onChange={(e) => {
-                          const page = parseInt(e.target.value);
-                          if (page >= 1 && page <= totalPages) {
-                            goToPage(page);
-                          }
-                        }}
-                        className="w-20 px-2 py-1 text-center border border-gray-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
-                      />
-                      <span className="text-sm text-gray-600">of {totalPages}</span>
+                  )}
+                  
+                  {/* Minimal Text Section */}
+                  <div className="space-y-1">
+                    <h2 className="text-base sm:text-lg font-bold text-amber-900 truncate group-hover:text-amber-800 transition-colors duration-300">
+                      {item.name}
+                    </h2>
+                    
+                    <div className="flex items-center justify-between text-xs text-gray-600">
+                      <span className="font-semibold text-amber-700">{item.weight}g</span>
+                      <span className="font-semibold">{item.category?.main}</span>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              );
+            })
+          )}
+        </div>
 
-          {/* Improved Item Details Popup with Two Columns and Larger Image */}
-          {selectedItem && (
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2">
-              <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
-                {/* Compact Header */}
-                <div className="bg-gradient-to-r from-amber-400 to-orange-400 p-3 flex items-center justify-between">
-                  <h2 className="text-lg font-black text-white truncate">
-                    {selectedItem.name}
-                  </h2>
+        {/* Enhanced Pagination Controls - Working Next/Previous */}
+        {isDataFetched && totalPages > 1 && jewellery.length > 0 && (
+          <div className="px-4 sm:px-6 pb-8 mt-8">
+            <div className="bg-gradient-to-r from-white/95 via-amber-50/95 to-orange-50/95 backdrop-blur-md rounded-2xl p-6 border-2 border-amber-300 shadow-2xl">
+              <div className="flex flex-col items-center gap-6">
+                {/* Pagination Info */}
+                <div className="text-center">
+                  <p className="text-lg font-bold text-amber-800 mb-2">
+                    Page {currentPage} of {totalPages}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Showing {jewellery.length} items per page • {totalItems} total items
+                  </p>
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                  {/* Previous Button */}
                   <button
-                    onClick={() => setSelectedItem(null)}
-                    className="text-white hover:text-red-200 transition-colors duration-200 flex-shrink-0"
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 ${
+                      currentPage === 1
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 shadow-lg'
+                    }`}
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Previous
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {/* First page if not in range */}
+                    {!getPaginationRange().includes(1) && totalPages > 5 && (
+                      <>
+                        <button
+                          onClick={() => goToPage(1)}
+                          className="w-10 h-10 rounded-lg font-bold transition-all duration-300 bg-white text-gray-700 border border-gray-300 hover:bg-amber-50 hover:border-amber-300"
+                        >
+                          1
+                        </button>
+                        <span className="px-2 text-gray-500">...</span>
+                      </>
+                    )}
+
+                    {getPaginationRange().map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => goToPage(page)}
+                        className={`w-10 h-10 rounded-lg font-bold transition-all duration-300 ${
+                          page === currentPage
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg transform scale-110'
+                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-amber-50 hover:border-amber-300'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    {/* Last page if not in range */}
+                    {!getPaginationRange().includes(totalPages) && totalPages > 5 && (
+                      <>
+                        <span className="px-2 text-gray-500">...</span>
+                        <button
+                          onClick={() => goToPage(totalPages)}
+                          className="w-10 h-10 rounded-lg font-bold transition-all duration-300 bg-white text-gray-700 border border-gray-300 hover:bg-amber-50 hover:border-amber-300"
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 ${
+                      currentPage === totalPages
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 shadow-lg'
+                    }`}
+                  >
+                    Next
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </button>
                 </div>
 
-                <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-                  {/* Image Section - 60% width on large screens, larger image */}
-                  <div className="lg:w-3/5 p-6 flex flex-col">
-                    {(() => {
-                      const itemMedia = getItemMedia(selectedItem);
-                      const mainImage = getItemImages(selectedItem).length > 0 ? getItemImages(selectedItem)[0] : null;
+                {/* Quick Jump to Page */}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-gray-700">Jump to page:</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={totalPages}
+                    placeholder={currentPage.toString()}
+                    onChange={(e) => {
+                      const page = parseInt(e.target.value);
+                      if (page >= 1 && page <= totalPages) {
+                        goToPage(page);
+                      }
+                    }}
+                    className="w-20 px-2 py-1 text-center border border-gray-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                  />
+                  <span className="text-sm text-gray-600">of {totalPages}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Improved Item Details Popup with Two Columns and Larger Image */}
+      {selectedItem && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2">
+          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            {/* Compact Header */}
+            <div className="bg-gradient-to-r from-amber-400 to-orange-400 p-3 flex items-center justify-between">
+              <h2 className="text-lg font-black text-white truncate">
+                {selectedItem.name}
+              </h2>
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="text-white hover:text-red-200 transition-colors duration-200 flex-shrink-0"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+              {/* Image Section - 60% width on large screens, larger image */}
+              <div className="lg:w-3/5 p-6 flex flex-col">
+                {(() => {
+                  const itemMedia = getItemMedia(selectedItem);
+                  const mainImage = getMainImage(selectedItem);
+                  
+                  if (!mainImage) return null;
+                  
+                  return (
+                    <>
+                      {/* Main Image - Much Larger */}
+                      <div className="flex-1 flex items-center justify-center mb-4">
+                        <img
+                          src={mainImage}
+                          alt={selectedItem.name}
+                          loading="lazy"
+                          onClick={() => openMediaModal(itemMedia, 0)}
+                          className="max-w-full max-h-96 object-contain rounded-xl cursor-pointer border border-amber-200 hover:border-amber-400 transition-all duration-300 shadow-lg"
+                        />
+                      </div>
                       
-                      if (!mainImage) return null;
-                      
-                      return (
-                        <>
-                          {/* Main Image - Much Larger */}
-                          <div className="flex-1 flex items-center justify-center mb-4">
-                            <img
-                              src={mainImage}
-                              alt={selectedItem.name}
-                              loading="lazy"
-                              onClick={() => openMediaModal(itemMedia, 0)}
-                              className="max-w-full max-h-96 object-contain rounded-xl cursor-pointer border border-amber-200 hover:border-amber-400 transition-all duration-300 shadow-lg"
-                            />
-                          </div>
-                          
-                          {/* Thumbnail Gallery */}
-                          {itemMedia.length > 1 && (
-                            <div className="flex justify-center gap-2 flex-wrap">
-                              {itemMedia.slice(0, 5).map((media, index) => (
-                                <div
-                                  key={index}
-                                  onClick={() => openMediaModal(itemMedia, index)}
-                                  className="w-16 h-16 rounded-lg cursor-pointer border border-amber-200 hover:border-amber-400 transition-all duration-300 overflow-hidden flex-shrink-0"
-                                >
-                                  {media.type === 'image' ? (
-                                    <img
-                                      src={media.src}
-                                      alt={`${selectedItem.name} ${index + 1}`}
-                                      loading="lazy"
-                                      className="w-full h-full object-cover"
-                                      onError={(e) => {
-                                        e.target.src = 'https://placehold.co/400x400/D4B891/6F4E37?text=Image+Not+Found';
-                                        e.target.onerror = null;
-                                      }}
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
-                                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
-                                      </svg>
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                              {itemMedia.length > 5 && (
-                                <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs">
-                                  +{itemMedia.length - 5}
+                      {/* Thumbnail Gallery */}
+                      {itemMedia.length > 1 && (
+                        <div className="flex justify-center gap-2 flex-wrap">
+                          {itemMedia.slice(1, 5).map((media, index) => (
+                            <div
+                              key={index + 1}
+                              onClick={() => openMediaModal(itemMedia, index + 1)}
+                              className="w-16 h-16 rounded-lg cursor-pointer border border-amber-200 hover:border-amber-400 transition-all duration-300 overflow-hidden flex-shrink-0"
+                            >
+                              {media.type === 'image' ? (
+                                <img
+                                  src={media.src}
+                                  alt={`${selectedItem.name} ${index + 2}`}
+                                  loading="lazy"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
+                                  </svg>
                                 </div>
                               )}
                             </div>
+                          ))}
+                          {itemMedia.length > 5 && (
+                            <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs">
+                              +{itemMedia.length - 5}
+                            </div>
                           )}
-                        </>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Details Section - 40% width, Two Columns Layout */}
-                  <div className="lg:w-2/5 p-6 bg-gray-50 overflow-y-auto">
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div className="col-span-2 bg-white p-3 rounded-lg border-2 border-amber-200">
-                        <span className="font-semibold text-gray-700">ID:</span>
-                        <div className="font-bold text-amber-700 mt-1">{selectedItem.id}</div>
-                      </div>
-                      
-                      <div className="bg-white p-3 rounded-lg border">
-                        <span className="font-semibold text-gray-700 text-xs">Weight</span>
-                        <div className="font-bold text-amber-700">{selectedItem.weight}g</div>
-                      </div>
-                      
-                      <div className="bg-white p-3 rounded-lg border">
-                        <span className="font-semibold text-gray-700 text-xs">Metal</span>
-                        <div className="font-bold text-amber-700 capitalize">{selectedItem.metal}</div>
-                      </div>
-                      
-                      <div className="bg-white p-3 rounded-lg border">
-                        <span className="font-semibold text-gray-700 text-xs">Type</span>
-                        <div className="font-bold text-amber-700 capitalize">{selectedItem.type}</div>
-                      </div>
-                      
-                      <div className="bg-white p-3 rounded-lg border">
-                        <span className="font-semibold text-gray-700 text-xs">Gender</span>
-                        <div className="font-bold text-amber-700">{selectedItem.gender}</div>
-                      </div>
-                      
-                      <div className="col-span-2 bg-white p-3 rounded-lg border">
-                        <span className="font-semibold text-gray-700 text-xs">Category</span>
-                        <div className="font-bold text-amber-700">{selectedItem.category?.main}{selectedItem.category?.sub && ` - ${selectedItem.category.sub}`}</div>
-                      </div>
-                      
-                      <div className="bg-white p-3 rounded-lg border">
-                        <span className="font-semibold text-gray-700 text-xs">Views</span>
-                        <div className="font-bold text-amber-700">{selectedItem.clickCount || 0}</div>
-                      </div>
-                      
-                      <div className="bg-white p-3 rounded-lg border">
-                        <span className="font-semibold text-gray-700 text-xs">Design</span>
-                        <div className="font-bold text-amber-700">{selectedItem.isOurDesign === false ? 'Others' : 'In House'}</div>
-                      </div>
-                      
-                      {selectedItem.carat && (
-                        <div className="bg-white p-3 rounded-lg border">
-                          <span className="font-semibold text-gray-700 text-xs">Carat</span>
-                          <div className="font-bold text-amber-700">{selectedItem.carat}</div>
                         </div>
                       )}
-                      
-                      {selectedItem.stoneWeight && (
-                        <div className="bg-white p-3 rounded-lg border">
-                          <span className="font-semibold text-gray-700 text-xs">Stone Weight</span>
-                          <div className="font-bold text-amber-700">{selectedItem.stoneWeight}g</div>
-                        </div>
-                      )}
-                      
-                      {selectedItem.orderNo !== undefined && selectedItem.orderNo !== null && (
-                        <div className="bg-white p-3 rounded-lg border">
-                          <span className="font-semibold text-gray-700 text-xs">Order No</span>
-                          <div className="font-bold text-amber-700">{selectedItem.orderNo}</div>
-                        </div>
-                      )}
-                      
-                      {selectedItem.date && (
-                        <div className="bg-white p-3 rounded-lg border">
-                          <span className="font-semibold text-gray-700 text-xs">Date</span>
-                          <div className="font-bold text-amber-700">{new Date(selectedItem.date).toLocaleDateString()}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                    </>
+                  );
+                })()}
               </div>
-            </div>
-          )}
 
-          {/* Media Gallery Modal */}
-          {modalMedia.length > 0 && (
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[999] flex items-center justify-center">
-              <div className="relative max-w-6xl max-h-[90vh] w-full mx-2 sm:mx-4">
-                {/* Close Button */}
-                <button
-                  onClick={closeMediaModal}
-                  className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
-                >
-                  <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-
-                {/* Navigation Arrows */}
-                {modalMedia.length > 1 && (
-                  <>
-                    <button
-                      onClick={() => navigateMedia('prev')}
-                      className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
-                    >
-                      <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => navigateMedia('next')}
-                      className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
-                    >
-                      <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </>
-                )}
-
-                {/* Main Media */}
-                <div className="flex items-center justify-center h-full">
-                  {modalMedia[currentMediaIndex].type === 'image' ? (
-                    <img
-                      src={modalMedia[currentMediaIndex].src}
-                      alt={`Gallery ${currentMediaIndex + 1}`}
-                      loading="lazy"
-                      className="max-w-full max-h-full object-contain rounded-xl border-4 border-white"
-                    />
-                  ) : (
-                    <video
-                      src={modalMedia[currentMediaIndex].src}
-                      controls
-                      autoPlay
-                      className="max-w-full max-h-full object-contain rounded-xl border-4 border-white"
-                    />
+              {/* Details Section - 40% width, Two Columns Layout */}
+              <div className="lg:w-2/5 p-6 bg-gray-50 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="col-span-2 bg-white p-3 rounded-lg border-2 border-amber-200">
+                    <span className="font-semibold text-gray-700">ID:</span>
+                    <div className="font-bold text-amber-700 mt-1">{selectedItem.id}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Weight</span>
+                    <div className="font-bold text-amber-700">{selectedItem.weight}g</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Metal</span>
+                    <div className="font-bold text-amber-700 capitalize">{selectedItem.metal}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Type</span>
+                    <div className="font-bold text-amber-700 capitalize">{selectedItem.type}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Gender</span>
+                    <div className="font-bold text-amber-700">{selectedItem.gender}</div>
+                  </div>
+                  
+                  <div className="col-span-2 bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Category</span>
+                    <div className="font-bold text-amber-700">{selectedItem.category?.main}{selectedItem.category?.sub && ` - ${selectedItem.category.sub}`}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Views</span>
+                    <div className="font-bold text-amber-700">{selectedItem.clickCount || 0}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Design</span>
+                    <div className="font-bold text-amber-700">{selectedItem.isOurDesign === false ? 'Others' : 'In House'}</div>
+                  </div>
+                  
+                  {selectedItem.carat && (
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Carat</span>
+                      <div className="font-bold text-amber-700">{selectedItem.carat}</div>
+                    </div>
+                  )}
+                  
+                  {selectedItem.stoneWeight && (
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Stone Weight</span>
+                      <div className="font-bold text-amber-700">{selectedItem.stoneWeight}g</div>
+                    </div>
+                  )}
+                  
+                  {selectedItem.orderNo !== undefined && selectedItem.orderNo !== null && (
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Order No</span>
+                      <div className="font-bold text-amber-700">{selectedItem.orderNo}</div>
+                    </div>
+                  )}
+                  
+                  {selectedItem.date && (
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Date</span>
+                      <div className="font-bold text-amber-700">{new Date(selectedItem.date).toLocaleDateString()}</div>
+                    </div>
                   )}
                 </div>
-
-                {/* Media Counter */}
-                {modalMedia.length > 1 && (
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full">
-                    {currentMediaIndex + 1} / {modalMedia.length}
-                  </div>
-                )}
               </div>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Media Gallery Modal */}
+      {modalMedia.length > 0 && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[999] flex items-center justify-center">
+          <div className="relative max-w-6xl max-h-[90vh] w-full mx-2 sm:mx-4">
+            {/* Close Button */}
+            <button
+              onClick={closeMediaModal}
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
+            >
+              <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Navigation Arrows */}
+            {modalMedia.length > 1 && (
+              <>
+                <button
+                  onClick={() => navigateMedia('prev')}
+                  className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
+                >
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => navigateMedia('next')}
+                  className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
+                >
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+
+            {/* Main Media */}
+            <div className="flex items-center justify-center h-full">
+              {modalMedia[currentMediaIndex].type === 'image' ? (
+                <img
+                  src={modalMedia[currentMediaIndex].src}
+                  alt={`Gallery ${currentMediaIndex + 1}`}
+                  loading="lazy"
+                  className="max-w-full max-h-full object-contain rounded-xl border-4 border-white"
+                />
+              ) : (
+                <video
+                  src={modalMedia[currentMediaIndex].src}
+                  controls
+                  autoPlay
+                  className="max-w-full max-h-full object-contain rounded-xl border-4 border-white"
+                />
+              )}
+            </div>
+
+            {/* Media Counter */}
+            {modalMedia.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full">
+                {currentMediaIndex + 1} / {modalMedia.length}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-    
+
 export default UserCatalogue;
