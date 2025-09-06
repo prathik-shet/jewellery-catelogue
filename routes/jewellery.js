@@ -245,9 +245,12 @@ router.get("/", async (req, res) => {
       sortOptions = { clickCount: -1, _id: -1 };
     }
 
-    const skip = (parseInt(page) - 1) * parseInt(pageSize);
+    const pageNum = parseInt(page);
+    const pageSizeNum = parseInt(pageSize);
+    const skip = (pageNum - 1) * pageSizeNum;
 
-    const items = await Jewellery.aggregate([
+    // Use $facet to perform the query and count in one stage
+    const [result] = await Jewellery.aggregate([
       { $match: query },
       { 
         $addFields: {
@@ -268,20 +271,30 @@ router.get("/", async (req, res) => {
           }
         }
       },
-      { $sort: sortOptions },
-      { $skip: skip },
-      { $limit: parseInt(pageSize) }
+      {
+        $facet: {
+          items: [
+            { $sort: sortOptions },
+            { $skip: skip },
+            { $limit: pageSizeNum }
+          ],
+          totalCount: [
+            { $count: "count" }
+          ]
+        }
+      }
     ]);
 
-    const totalCount = await Jewellery.countDocuments(query);
+    const totalCount = result.totalCount[0]?.count || 0;
+    const items = result.items || [];
 
     res.json({
       items,
       pagination: {
-        page: parseInt(page),
-        pageSize: parseInt(pageSize),
+        page: pageNum,
+        pageSize: pageSizeNum,
         totalCount,
-        totalPages: Math.ceil(totalCount / parseInt(pageSize))
+        totalPages: Math.ceil(totalCount / pageSizeNum)
       }
     });
   } catch (err) {
