@@ -33,7 +33,14 @@ function UserCatalogue() {
   const [sortField, setSortField] = useState('clickCount');
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [showSortPanel, setShowSortPanel] = useState(false);
+  
+  // Enhanced item selection with navigation
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItemIndex, setSelectedItemIndex] = useState(-1);
+  
+  // Touch/swipe handling
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
   const catagories = [
     'All Jewellery',
@@ -198,8 +205,10 @@ function UserCatalogue() {
     fetchJewellery();
   }, [fetchJewellery]);
 
-  const handleItemClick = async (item) => {
+  // Enhanced item click handler with index tracking
+  const handleItemClick = async (item, index) => {
     setSelectedItem(item);
+    setSelectedItemIndex(index);
     
     try {
       const token = localStorage.getItem('token');
@@ -222,6 +231,78 @@ function UserCatalogue() {
       ));
     }
   };
+
+  // Navigation functions for item details modal
+  const navigateToItem = (direction) => {
+    let newIndex = selectedItemIndex;
+    
+    if (direction === 'next') {
+      newIndex = selectedItemIndex + 1;
+      if (newIndex >= jewellery.length) {
+        newIndex = 0; // Wrap to first item
+      }
+    } else if (direction === 'prev') {
+      newIndex = selectedItemIndex - 1;
+      if (newIndex < 0) {
+        newIndex = jewellery.length - 1; // Wrap to last item
+      }
+    }
+    
+    if (newIndex !== selectedItemIndex && jewellery[newIndex]) {
+      setSelectedItem(jewellery[newIndex]);
+      setSelectedItemIndex(newIndex);
+      
+      // Update click count for the new item
+      handleItemClick(jewellery[newIndex], newIndex);
+    }
+  };
+
+  // Touch event handlers for swipe detection
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    
+    if (isLeftSwipe) {
+      navigateToItem('next');
+    } else if (isRightSwipe) {
+      navigateToItem('prev');
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (!selectedItem) return;
+      
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateToItem('prev');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateToItem('next');
+      } else if (e.key === 'Escape') {
+        setSelectedItem(null);
+        setSelectedItemIndex(-1);
+      }
+    };
+
+    if (selectedItem) {
+      document.addEventListener('keydown', handleKeyPress);
+      return () => document.removeEventListener('keydown', handleKeyPress);
+    }
+  }, [selectedItem, selectedItemIndex, jewellery]);
 
   // Helper functions for media handling
   const getItemMedia = (item) => {
@@ -385,7 +466,7 @@ function UserCatalogue() {
         <div className="flex items-center gap-4 justify-center sm:justify-start">
           <div className="relative">
             <img
-              src="logo.png"
+              src="https://images.pexels.com/photos/1721558/pexels-photo-1721558.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop"
               alt="Logo"
               loading="lazy"
               className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-3 border-white shadow-xl ring-4 ring-amber-200/50"
@@ -460,7 +541,7 @@ function UserCatalogue() {
                   
                   {/* Category Multi-Select */}
                   <div>
-                    <label className="block font-bold text-blue-700 mb-2">catagories</label>
+                    <label className="block font-bold text-blue-700 mb-2">Categories</label>
                     <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-gray-50">
                       {getAllcatagories().map((cat) => (
                         <label key={cat} className="flex items-center gap-2 text-sm p-1 hover:bg-blue-50 rounded cursor-pointer">
@@ -495,7 +576,7 @@ function UserCatalogue() {
                       onChange={(e) => setSelectedSubCategory(e.target.value)}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                     >
-                      <option value="">All Sub-catagories</option>
+                      <option value="">All Sub-Categories</option>
                       {getFilteredSubcatagories().map((subCat) => (
                         <option key={subCat} value={subCat}>{subCat}</option>
                       ))}
@@ -903,14 +984,14 @@ function UserCatalogue() {
               </button>
             </div>
           ) : (
-            jewellery.map((item) => {
+            jewellery.map((item, index) => {
               const itemImages = getItemImages(item);
               const mainImage = getMainImage(item);
               
               return (
                 <div
                   key={item._id}
-                  onClick={() => handleItemClick(item)}
+                  onClick={() => handleItemClick(item, index)}
                   className="bg-gradient-to-br from-white via-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-500 cursor-pointer group overflow-hidden relative"
                 >
                   {/* Card Glow Effect */}
@@ -1094,23 +1175,59 @@ function UserCatalogue() {
         )}
       </div>
 
-      {/* Improved Item Details Popup with Two Columns and Larger Image */}
+      {/* Enhanced Item Details Popup with Navigation and Swipe Support */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2">
+        <div 
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
           <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
-            {/* Compact Header */}
+            {/* Enhanced Header with Navigation */}
             <div className="bg-gradient-to-r from-amber-400 to-orange-400 p-3 flex items-center justify-between">
-              <h2 className="text-lg font-black text-white truncate">
-                {selectedItem.name}
-              </h2>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="text-white hover:text-red-200 transition-colors duration-200 flex-shrink-0"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => navigateToItem('prev')}
+                  className="text-white hover:text-amber-200 transition-colors duration-200 p-1 rounded-lg hover:bg-black/10"
+                  title="Previous Item (← or swipe right)"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                
+                <h2 className="text-lg font-black text-white truncate max-w-md">
+                  {selectedItem.name}
+                </h2>
+                
+                <button
+                  onClick={() => navigateToItem('next')}
+                  className="text-white hover:text-amber-200 transition-colors duration-200 p-1 rounded-lg hover:bg-black/10"
+                  title="Next Item (→ or swipe left)"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="text-white text-sm font-semibold bg-black/20 px-3 py-1 rounded-full">
+                  {selectedItemIndex + 1} / {jewellery.length}
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedItem(null);
+                    setSelectedItemIndex(-1);
+                  }}
+                  className="text-white hover:text-red-200 transition-colors duration-200 flex-shrink-0"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
@@ -1167,6 +1284,13 @@ function UserCatalogue() {
                           )}
                         </div>
                       )}
+                      
+                      {/* Swipe Instructions */}
+                      <div className="mt-4 text-center">
+                        <p className="text-xs text-gray-500">
+                          Swipe left/right to navigate • Use ←/→ keys • Tap image for gallery
+                        </p>
+                      </div>
                     </>
                   );
                 })()}
@@ -1184,7 +1308,7 @@ function UserCatalogue() {
                     <span className="font-semibold text-gray-700 text-xs">Weight</span>
                     <div className="font-bold text-amber-700">{selectedItem.weight}g</div>
                   </div>
-
+                  
                   {selectedItem.stoneWeight && (
                     <div className="bg-white p-3 rounded-lg border">
                       <span className="font-semibold text-gray-700 text-xs">Stone Weight</span>
@@ -1198,7 +1322,6 @@ function UserCatalogue() {
                       <div className="font-bold text-amber-700">{selectedItem.carat}</div>
                     </div>
                   )}
-                  
                   <div className="bg-white p-3 rounded-lg border">
                     <span className="font-semibold text-gray-700 text-xs">Metal</span>
                     <div className="font-bold text-amber-700 capitalize">{selectedItem.metal}</div>
@@ -1228,10 +1351,6 @@ function UserCatalogue() {
                     <span className="font-semibold text-gray-700 text-xs">Design</span>
                     <div className="font-bold text-amber-700">{selectedItem.isOurDesign === false ? 'Others' : 'In House'}</div>
                   </div>
-                  
-                  
-                  
-                  
                   
                   {selectedItem.orderNo !== undefined && selectedItem.orderNo !== null && (
                     <div className="bg-white p-3 rounded-lg border">
