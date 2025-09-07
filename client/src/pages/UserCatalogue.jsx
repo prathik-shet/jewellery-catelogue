@@ -1184,6 +1184,20 @@ function UserCatalogue() {
                     <span className="font-semibold text-gray-700 text-xs">Weight</span>
                     <div className="font-bold text-amber-700">{selectedItem.weight}g</div>
                   </div>
+
+                  {selectedItem.stoneWeight && (
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Stone Weight</span>
+                      <div className="font-bold text-amber-700">{selectedItem.stoneWeight}g</div>
+                    </div>
+                  )}
+                  
+                  {selectedItem.carat && (
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Carat</span>
+                      <div className="font-bold text-amber-700">{selectedItem.carat}</div>
+                    </div>
+                  )}
                   
                   <div className="bg-white p-3 rounded-lg border">
                     <span className="font-semibold text-gray-700 text-xs">Metal</span>
@@ -1215,19 +1229,9 @@ function UserCatalogue() {
                     <div className="font-bold text-amber-700">{selectedItem.isOurDesign === false ? 'Others' : 'In House'}</div>
                   </div>
                   
-                  {selectedItem.carat && (
-                    <div className="bg-white p-3 rounded-lg border">
-                      <span className="font-semibold text-gray-700 text-xs">Carat</span>
-                      <div className="font-bold text-amber-700">{selectedItem.carat}</div>
-                    </div>
-                  )}
                   
-                  {selectedItem.stoneWeight && (
-                    <div className="bg-white p-3 rounded-lg border">
-                      <span className="font-semibold text-gray-700 text-xs">Stone Weight</span>
-                      <div className="font-bold text-amber-700">{selectedItem.stoneWeight}g</div>
-                    </div>
-                  )}
+                  
+                  
                   
                   {selectedItem.orderNo !== undefined && selectedItem.orderNo !== null && (
                     <div className="bg-white p-3 rounded-lg border">
