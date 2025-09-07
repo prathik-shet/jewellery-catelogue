@@ -54,166 +54,10 @@ function UserCatalogue() {
   const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
   const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
 
-  // Mock data for development
-  const generateMockData = (page = 1, pageSize = 20) => {
-    const mockItems = [];
-    const catagories = ['Earrings', 'Pendants', 'Finger Rings', 'Necklaces', 'Bangles'];
-    const metals = ['gold', 'silver', 'diamond'];
-    const types = ['festival', 'daily wear', 'fancy'];
-    const genders = ['Women', 'Men', 'Unisex'];
-    
-    const start = (page - 1) * pageSize;
-    for (let i = start; i < start + pageSize; i++) {
-      const category = catagories[i % catagories.length];
-      const metal = metals[i % metals.length];
-      const type = types[i % types.length];
-      const gender = genders[i % genders.length];
-      
-      mockItems.push({
-        _id: `item_${i + 1}`,
-        id: `JWL${(i + 1).toString().padStart(4, '0')}`,
-        name: `${category} Design ${i + 1}`,
-        weight: (Math.random() * 50 + 2).toFixed(2),
-        category: {
-          main: category,
-          sub: `${category} Sub ${Math.floor(i / 3) + 1}`
-        },
-        metal: metal,
-        type: type,
-        gender: gender,
-        clickCount: Math.floor(Math.random() * 100),
-        isOurDesign: Math.random() > 0.3,
-        images: [
-          `https://images.pexels.com/photos/1445527/pexels-photo-1445527.jpeg?auto=compress&cs=tinysrgb&w=400`,
-          `https://images.pexels.com/photos/1458915/pexels-photo-1458915.jpeg?auto=compress&cs=tinysrgb&w=400`,
-          `https://images.pexels.com/photos/691046/pexels-photo-691046.jpeg?auto=compress&cs=tinysrgb&w=400`
-        ],
-        date: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-        orderNo: i + 1000,
-        carat: Math.random() > 0.5 ? (Math.random() * 2 + 0.5).toFixed(2) : null,
-        stoneWeight: Math.random() > 0.7 ? (Math.random() * 5).toFixed(2) : null
-      });
-    }
-    
-    return mockItems;
-  };
-
-  // Filter mock data based on current filters - wrapped in useCallback
-  const filterMockData = useCallback((allData) => {
-    return allData.filter(item => {
-      // Search query filter
-      if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-        return false;
-      }
-      
-      // Search ID filter
-      if (searchId && !item.id.toLowerCase().includes(searchId.toLowerCase())) {
-        return false;
-      }
-      
-      // Category filter
-      if (selectedCategory.length > 0 && !selectedCategory.includes('All Jewellery') && !selectedCategory.includes(item.category.main)) {
-        return false;
-      }
-      
-      // Sub-category filter
-      if (selectedSubCategory && item.category.sub !== selectedSubCategory) {
-        return false;
-      }
-      
-      // Type filter
-      if (selectedType && selectedType !== 'All' && item.type !== selectedType) {
-        return false;
-      }
-      
-      // Gender filter
-      if (selectedGender && selectedGender !== 'All' && item.gender !== selectedGender) {
-        return false;
-      }
-      
-      // Metal filter
-      if (metalFilter && metalFilter !== 'All' && item.metal !== metalFilter) {
-        return false;
-      }
-      
-      // Stone filter
-      if (stoneFilter) {
-        if (stoneFilter === 'with' && (!item.stoneWeight || item.stoneWeight === '0')) {
-          return false;
-        }
-        if (stoneFilter === 'without' && item.stoneWeight && item.stoneWeight !== '0') {
-          return false;
-        }
-      }
-      
-      // Design filter
-      if (designFilter) {
-        if (designFilter === 'our' && item.isOurDesign !== true) {
-          return false;
-        }
-        if (designFilter === 'Others' && item.isOurDesign !== false) {
-          return false;
-        }
-      }
-      
-      // Weight range filter
-      if (weightRanges.length > 0) {
-        const weight = parseFloat(item.weight);
-        const inRange = weightRanges.some(range => {
-          if (range === '75-+') return weight >= 75;
-          const [min, max] = range.split('-').map(Number);
-          return weight >= min && weight <= max;
-        });
-        if (!inRange) return false;
-      }
-      
-      return true;
-    });
-  }, [
-    searchQuery,
-    searchId,
-    selectedCategory,
-    selectedSubCategory,
-    selectedType,
-    selectedGender,
-    metalFilter,
-    stoneFilter,
-    designFilter,
-    weightRanges
-  ]);
-
-  // Sort mock data - wrapped in useCallback
-  const sortMockData = useCallback((data) => {
-    const sortedData = [...data];
-    
-    if (sortByDate === 'newest') {
-      return sortedData.sort((a, b) => new Date(b.date) - new Date(a.date));
-    } else if (sortByDate === 'oldest') {
-      return sortedData.sort((a, b) => new Date(a.date) - new Date(b.date));
-    } else {
-      return sortedData.sort((a, b) => {
-        let aVal = a[sortField];
-        let bVal = b[sortField];
-        
-        if (sortField === 'weight' || sortField === 'clickCount' || sortField === 'orderNo') {
-          aVal = parseFloat(aVal) || 0;
-          bVal = parseFloat(bVal) || 0;
-        }
-        
-        if (sortOrder === 'asc') {
-          return aVal > bVal ? 1 : -1;
-        } else {
-          return aVal < bVal ? 1 : -1;
-        }
-      });
-    }
-  }, [sortByDate, sortField, sortOrder]);
-
-  // Enhanced fetch function with mock data fallback
+  // Fetch function now relies solely on the API
   const fetchJewellery = useCallback(async () => {
     setLoading(true);
-    // Set isDataFetched to false at the beginning of the fetch
-    setIsDataFetched(false); 
+    setIsDataFetched(false);
     try {
       const params = new URLSearchParams();
       
@@ -272,86 +116,59 @@ function UserCatalogue() {
 
       console.log('API URL:', `/api/jewellery?${params.toString()}`);
       
-      try {
-        const res = await axios.get(`/api/jewellery?${params.toString()}`);
-        const data = res.data;
+      const res = await axios.get(`/api/jewellery?${params.toString()}`);
+      const data = res.data;
 
-        console.log('API Response:', data);
+      console.log('API Response:', data);
 
-        // Handle API response
-        let items = [];
-        let total = 0;
-        let pages = 1;
+      // Handle API response
+      let items = [];
+      let total = 0;
+      let pages = 1;
 
-        if (data) {
-          // =================== KEY CHANGE STARTS HERE ===================
-          // The faulty `if (Array.isArray(data))` block has been removed.
-          // The code now expects a structured response object to correctly
-          // calculate pagination. Your API should return data in a format
-          // that one of these `else if` blocks can handle.
-          
-          if (data.items && Array.isArray(data.items)) {
-            items = data.items;
-            total = data.totalItems || data.total || data.count || 0;
-            pages = data.totalPages || Math.ceil(total / itemsPerPage);
-          } else if (data.data && Array.isArray(data.data)) {
-            items = data.data;
-            total = data.totalItems || data.total || data.count || data.data.length;
-            pages = data.totalPages || Math.ceil(total / itemsPerPage);
-          } else if (data.jewellery && Array.isArray(data.jewellery)) {
-            items = data.jewellery;
-            total = data.totalItems || data.total || data.count || data.jewellery.length;
-            pages = data.totalPages || Math.ceil(total / itemsPerPage);
-          } else if (data.pagination && data.items) {
-            items = data.items;
-            total = data.pagination.totalCount;
-            pages = data.pagination.totalPages;
-          }
-          
-          // =================== KEY CHANGE ENDS HERE ===================
+      if (data) {
+        if (Array.isArray(data)) {
+          items = data;
+          total = data.length;
+          pages = Math.ceil(total / itemsPerPage);
+        } else if (data.items && Array.isArray(data.items)) {
+          items = data.items;
+          total = data.totalItems || data.total || data.count || 0;
+          pages = data.totalPages || Math.ceil(total / itemsPerPage);
+        } else if (data.data && Array.isArray(data.data)) {
+          items = data.data;
+          total = data.totalItems || data.total || data.count || data.data.length;
+          pages = data.totalPages || Math.ceil(total / itemsPerPage);
+        } else if (data.jewellery && Array.isArray(data.jewellery)) {
+          items = data.jewellery;
+          total = data.totalItems || data.total || data.count || data.jewellery.length;
+          pages = data.totalPages || Math.ceil(total / itemsPerPage);
+        } else if (data.pagination && data.items) {
+           items = data.items;
+           total = data.pagination.totalCount;
+           pages = data.pagination.totalPages;
         }
+      }
 
-        if (items.length > 0) {
-          setJewellery(items);
-          setTotalItems(total);
-          setTotalPages(pages);
-        } else {
-          throw new Error('No data from API or unrecognized format');
-        }
-
-      } catch (apiError) {
-        console.warn('API failed, using mock data:', apiError);
-        
-        // Generate comprehensive mock data (simulate 500 items total)
-        const totalMockItems = 500;
-        const allMockData = [];
-        for (let page = 1; page <= Math.ceil(totalMockItems / itemsPerPage); page++) {
-          allMockData.push(...generateMockData(page, itemsPerPage));
-        }
-        
-        // Filter the mock data
-        const filteredData = filterMockData(allMockData);
-        
-        // Sort the filtered data
-        const sortedData = sortMockData(filteredData);
-        
-        // Paginate the results
-        const startIndex = (currentPage - 1) * itemsPerPage;
-        const paginatedData = sortedData.slice(startIndex, startIndex + itemsPerPage);
-        
-        setJewellery(paginatedData);
-        setTotalItems(sortedData.length);
-        setTotalPages(Math.ceil(sortedData.length / itemsPerPage));
+      if (items.length > 0) {
+        setJewellery(items);
+        setTotalItems(total);
+        setTotalPages(pages);
+      } else {
+        // If API returns no items, clear the state
+        setJewellery([]);
+        setTotalItems(0);
+        setTotalPages(1);
       }
 
     } catch (error) {
       console.error('Failed to load jewellery:', error);
+      // In case of an error, reset to an empty state
       setJewellery([]);
       setTotalItems(0);
       setTotalPages(1);
     } finally {
       setLoading(false);
-      // Set isDataFetched to true after the fetch is complete
       setIsDataFetched(true);
     }
   }, [
@@ -370,8 +187,6 @@ function UserCatalogue() {
     weightRanges,
     searchQuery,
     searchId,
-    filterMockData,
-    sortMockData
   ]);
 
   // Reset to first page when filters change
@@ -399,6 +214,7 @@ function UserCatalogue() {
       ));
     } catch (error) {
       console.error('Failed to update popularity:', error);
+      // Fallback to update UI optimistically
       setJewellery(prev => prev.map(jewel => 
         jewel._id === item._id 
           ? { ...jewel, clickCount: (jewel.clickCount || 0) + 1 }
