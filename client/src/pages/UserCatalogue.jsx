@@ -28,7 +28,7 @@ function UserCatalogue() {
   const [modalMedia, setModalMedia] = useState([]);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   
-  // Set default grid to 2 for mobile
+  // Updated grid system - cycles through 1, 2, 3
   const [gridCols, setGridCols] = useState(2);
   const [sortField, setSortField] = useState('clickCount');
   const [showFilterPanel, setShowFilterPanel] = useState(false);
@@ -60,6 +60,15 @@ function UserCatalogue() {
   const genders = ['All', 'Unisex', 'Women', 'Men'];
   const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
   const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
+
+  // Grid cycling function
+  const cycleGrid = () => {
+    setGridCols(prev => {
+      if (prev === 1) return 2;
+      if (prev === 2) return 3;
+      return 1;
+    });
+  };
 
   // Fetch function now relies solely on the API
   const fetchJewellery = useCallback(async () => {
@@ -466,7 +475,7 @@ function UserCatalogue() {
         <div className="flex items-center gap-4 justify-center sm:justify-start">
           <div className="relative">
             <img
-              src="https://images.pexels.com/photos/1721558/pexels-photo-1721558.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop"
+              src="logo.png"
               alt="Logo"
               loading="lazy"
               className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-3 border-white shadow-xl ring-4 ring-amber-200/50"
@@ -482,426 +491,435 @@ function UserCatalogue() {
         </div>
       </div>
 
-      {/* Search Bar - Clean Design */}
-      <div className="bg-white/90 backdrop-blur-md fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-4">
-        <div className="w-full max-w-2xl mx-auto relative">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search jewellery by name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-gray-200 rounded-2xl text-gray-800 placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-200/30 transition-all duration-300 text-sm sm:text-base font-medium"
-            />
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            {searchQuery && (
+      {/* Combined Search, Filter, Sort Controls in One Box */}
+      <div className="bg-white/95 backdrop-blur-md fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-4 border-b border-amber-200">
+        <div className="w-full max-w-5xl mx-auto">
+          {/* Search Bar Row */}
+          <div className="relative mb-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search jewellery by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-16 py-3 bg-white border-2 border-gray-200 rounded-2xl text-gray-800 placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-200/30 transition-all duration-300 text-sm sm:text-base font-medium"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              
+              {/* Grid Toggle Button - Right side of search */}
               <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                onClick={cycleGrid}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-2 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center gap-1"
+                title={`Grid: ${gridCols} column${gridCols > 1 ? 's' : ''}`}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                {gridCols === 1 && (
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+                {gridCols === 2 && (
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7" />
+                  </svg>
+                )}
+                {gridCols === 3 && (
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h4M4 12h4M4 18h4M10 6h4M10 12h4M10 18h4M16 6h4M16 12h4M16 18h4" />
+                  </svg>
+                )}
+                <span className="text-xs font-bold hidden sm:inline">{gridCols}</span>
+              </button>
+              
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-16 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Filter and Sort Controls Row */}
+          <div className="flex items-center justify-center gap-3">
+            {/* Filter By Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowFilterPanel(!showFilterPanel);
+                  setShowSortPanel(false);
+                }}
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-lg hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <span className="text-sm sm:text-base">Filter</span>
+                <svg className={`w-3 h-3 sm:w-4 sm:h-4 transform transition-transform duration-300 ${showFilterPanel ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* Fixed Filter and Sort Controls Row */}
-      <div className="fixed top-36 sm:top-40 left-0 w-full bg-white/90 backdrop-blur-md shadow-lg z-[80] p-4">
-        <div className="flex items-center justify-center gap-3">
-          
-          {/* Filter By Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => {
-                setShowFilterPanel(!showFilterPanel);
-                setShowSortPanel(false);
-              }}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-lg hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
-            >
-              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-              <span className="text-sm sm:text-base">Filter By</span>
-              <svg className={`w-3 h-3 sm:w-4 sm:h-4 transform transition-transform duration-300 ${showFilterPanel ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {/* Filter Dropdown Panel */}
-            {showFilterPanel && (
-              <div className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 border-blue-300 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]">
-                <div className="space-y-4">
-                  
-                  {/* Category Multi-Select */}
-                  <div>
-                    <label className="block font-bold text-blue-700 mb-2">Categories</label>
-                    <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-gray-50">
-                      {getAllcatagories().map((cat) => (
-                        <label key={cat} className="flex items-center gap-2 text-sm p-1 hover:bg-blue-50 rounded cursor-pointer">
-                          <input
-                            type="checkbox"
-                            value={cat}
-                            checked={selectedCategory.includes(cat)}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setSelectedCategory((prev) =>
-                                e.target.checked
-                                  ? [...prev, value]
-                                  : prev.filter((v) => v !== value)
-                              );
-                              if (!e.target.checked) {
-                                setSelectedSubCategory('');
-                              }
-                            }}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          {cat}
-                        </label>
-                      ))}
+              {/* Filter Dropdown Panel */}
+              {showFilterPanel && (
+                <div className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 border-blue-300 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]">
+                  <div className="space-y-4">
+                    
+                    {/* Category Multi-Select */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Categories</label>
+                      <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-gray-50">
+                        {getAllcatagories().map((cat) => (
+                          <label key={cat} className="flex items-center gap-2 text-sm p-1 hover:bg-blue-50 rounded cursor-pointer">
+                            <input
+                              type="checkbox"
+                              value={cat}
+                              checked={selectedCategory.includes(cat)}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setSelectedCategory((prev) =>
+                                  e.target.checked
+                                    ? [...prev, value]
+                                    : prev.filter((v) => v !== value)
+                                );
+                                if (!e.target.checked) {
+                                  setSelectedSubCategory('');
+                                }
+                              }}
+                              className="w-4 h-4 text-blue-600"
+                            />
+                            {cat}
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Sub-Category */}
-                  <div>
-                    <label className="block font-bold text-blue-700 mb-2">Sub-Category</label>
-                    <select
-                      value={selectedSubCategory}
-                      onChange={(e) => setSelectedSubCategory(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    >
-                      <option value="">All Sub-Categories</option>
-                      {getFilteredSubcatagories().map((subCat) => (
-                        <option key={subCat} value={subCat}>{subCat}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Type */}
-                  <div>
-                    <label className="block font-bold text-blue-700 mb-2">Type</label>
-                    <select
-                      value={selectedType}
-                      onChange={(e) => setSelectedType(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    >
-                      {types.map((typeOpt, i) => (
-                        <option key={i} value={typeOpt === 'All' ? '' : typeOpt}>
-                          {typeOpt === 'All' ? 'All Types' : typeOpt[0].toUpperCase() + typeOpt.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Gender */}
-                  <div>
-                    <label className="block font-bold text-blue-700 mb-2">Gender</label>
-                    <select
-                      value={selectedGender}
-                      onChange={(e) => setSelectedGender(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    >
-                      {genders.map((gender, idx) => (
-                        <option key={idx} value={gender === 'All' ? '' : gender}>
-                          {gender}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Metal */}
-                  <div>
-                    <label className="block font-bold text-blue-700 mb-2">Metal</label>
-                    <select
-                      value={metalFilter}
-                      onChange={(e) => setMetalFilter(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    >
-                      {metals.map((metal, idx) => (
-                        <option key={idx} value={metal === 'All' ? '' : metal}>
-                          {metal === 'All' ? 'All Metals' : metal[0].toUpperCase() + metal.slice(1)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Stone */}
-                  <div>
-                    <label className="block font-bold text-blue-700 mb-2">Stone</label>
-                    <select
-                      value={stoneFilter}
-                      onChange={(e) => setStoneFilter(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    >
-                      <option value="">All Stones</option>
-                      <option value="with">With Stone</option>
-                      <option value="without">Without Stone</option>
-                    </select>
-                  </div>
-
-                  {/* Design */}
-                  <div>
-                    <label className="block font-bold text-blue-700 mb-2">Design</label>
-                    <select
-                      value={designFilter}
-                      onChange={(e) => setDesignFilter(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    >
-                      <option value="">All Designs</option>
-                      <option value="our">In House</option>
-                      <option value="Others">Others Design</option>
-                    </select>
-                  </div>
-
-                  {/* Weight Range */}
-                  <div>
-                    <label className="block font-bold text-blue-700 mb-2">Weight Range</label>
-                    <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-gray-50">
-                      {[
-                        '0-2', '2-4', '4-6', '6-8', '8-10', '10-15', '15-20', '20-25',
-                        '25-30', '30-35', '35-40', '40-45', '45-50', '50-75', '75-+'
-                      ].map((range) => (
-                        <label key={range} className="flex items-center gap-2 text-sm p-1 hover:bg-blue-50 rounded cursor-pointer">
-                          <input
-                            type="checkbox"
-                            value={range}
-                            checked={weightRanges.includes(range)}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setWeightRanges((prev) =>
-                                e.target.checked
-                                  ? [...prev, value]
-                                  : prev.filter((r) => r !== value)
-                              );
-                            }}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          <span>{range.replace('-', '–').replace('+', 'g+')}g</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Search by ID */}
-                  <div>
-                    <label className="block font-bold text-blue-700 mb-2">Search by ID</label>
-                    <input
-                      type="text"
-                      placeholder="Search by ID"
-                      value={searchId}
-                      onChange={(e) => setSearchId(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                    />
-                  </div>
-
-                  {/* Clear Filters Button */}
-                  <button
-                    onClick={clearAllFilters}
-                    className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Clear All Filters
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sort By Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => {
-                setShowSortPanel(!showSortPanel);
-                setShowFilterPanel(false);
-              }}
-              className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-lg hover:from-purple-600 hover:to-pink-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
-            >
-              <svg
-                className="w-4 h-4 sm:w-5 sm:h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                />
-              </svg>
-              <span className="text-sm sm:text-base">Sort By</span>
-              <svg
-                className={`w-3 h-3 sm:w-4 sm:h-4 transform transition-transform duration-300 ${
-                  showSortPanel ? "rotate-180" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-
-            {/* Sort Dropdown Panel */}
-            {showSortPanel && (
-              <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 border-purple-300 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]">
-                <div className="space-y-4">
-                  {/* Current Sort Display */}
-                  <div className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl border border-purple-300">
-                    <h3 className="font-bold text-purple-700 mb-2">Current Sort</h3>
-                    <p className="text-purple-600 font-semibold">
-                      {getActiveSortDescription()}
-                    </p>
-                  </div>
-
-                  {/* Sort by Field */}
-                  <div>
-                    <label className="block font-bold text-purple-700 mb-2">
-                      Sort By Field
-                    </label>
-                    <select
-                      value={sortField}
-                      onChange={(e) => {
-                        setSortField(e.target.value);
-                        setSortOrder("desc");
-                        setSortByDate("");
-                      }}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-                    >
-                      <option value="clickCount">Popularity</option>
-                      <option value="weight">Weight</option>
-                      <option value="orderNo">Order Number</option>
-                    </select>
-                  </div>
-
-                  {/* Sort Direction */}
-                  <div>
-                    <label className="block font-bold text-purple-700 mb-2">
-                      Sort Direction
-                    </label>
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => {
-                          setSortOrder("asc");
-                          setSortByDate("");
-                        }}
-                        className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                          sortOrder === "asc" && !sortByDate
-                            ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
-                            : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
-                        }`}
+                    {/* Sub-Category */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Sub-Category</label>
+                      <select
+                        value={selectedSubCategory}
+                        onChange={(e) => setSelectedSubCategory(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       >
-                        {sortField === "clickCount"
-                          ? "Least Popular First"
-                          : "Low to High (Ascending)"}
-                      </button>
-                      <button
-                        onClick={() => {
+                        <option value="">All Sub-Categories</option>
+                        {getFilteredSubcatagories().map((subCat) => (
+                          <option key={subCat} value={subCat}>{subCat}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Type */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Type</label>
+                      <select
+                        value={selectedType}
+                        onChange={(e) => setSelectedType(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      >
+                        {types.map((typeOpt, i) => (
+                          <option key={i} value={typeOpt === 'All' ? '' : typeOpt}>
+                            {typeOpt === 'All' ? 'All Types' : typeOpt[0].toUpperCase() + typeOpt.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Gender */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Gender</label>
+                      <select
+                        value={selectedGender}
+                        onChange={(e) => setSelectedGender(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      >
+                        {genders.map((gender, idx) => (
+                          <option key={idx} value={gender === 'All' ? '' : gender}>
+                            {gender}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Metal */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Metal</label>
+                      <select
+                        value={metalFilter}
+                        onChange={(e) => setMetalFilter(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      >
+                        {metals.map((metal, idx) => (
+                          <option key={idx} value={metal === 'All' ? '' : metal}>
+                            {metal === 'All' ? 'All Metals' : metal[0].toUpperCase() + metal.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Stone */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Stone</label>
+                      <select
+                        value={stoneFilter}
+                        onChange={(e) => setStoneFilter(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      >
+                        <option value="">All Stones</option>
+                        <option value="with">With Stone</option>
+                        <option value="without">Without Stone</option>
+                      </select>
+                    </div>
+
+                    {/* Design */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Design</label>
+                      <select
+                        value={designFilter}
+                        onChange={(e) => setDesignFilter(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      >
+                        <option value="">All Designs</option>
+                        <option value="our">In House</option>
+                        <option value="Others">Others Design</option>
+                      </select>
+                    </div>
+
+                    {/* Weight Range */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Weight Range</label>
+                      <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-gray-50">
+                        {[
+                          '0-2', '2-4', '4-6', '6-8', '8-10', '10-15', '15-20', '20-25',
+                          '25-30', '30-35', '35-40', '40-45', '45-50', '50-75', '75-+'
+                        ].map((range) => (
+                          <label key={range} className="flex items-center gap-2 text-sm p-1 hover:bg-blue-50 rounded cursor-pointer">
+                            <input
+                              type="checkbox"
+                              value={range}
+                              checked={weightRanges.includes(range)}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setWeightRanges((prev) =>
+                                  e.target.checked
+                                    ? [...prev, value]
+                                    : prev.filter((r) => r !== value)
+                                );
+                              }}
+                              className="w-4 h-4 text-blue-600"
+                            />
+                            <span>{range.replace('-', '–').replace('+', 'g+')}g</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Search by ID */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Search by ID</label>
+                      <input
+                        type="text"
+                        placeholder="Search by ID"
+                        value={searchId}
+                        onChange={(e) => setSearchId(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      />
+                    </div>
+
+                    {/* Clear Filters Button */}
+                    <button
+                      onClick={clearAllFilters}
+                      className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Clear All Filters
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sort By Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowSortPanel(!showSortPanel);
+                  setShowFilterPanel(false);
+                }}
+                className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-lg hover:from-purple-600 hover:to-pink-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+              >
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                  />
+                </svg>
+                <span className="text-sm sm:text-base">Sort</span>
+                <svg
+                  className={`w-3 h-3 sm:w-4 sm:h-4 transform transition-transform duration-300 ${
+                    showSortPanel ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              {/* Sort Dropdown Panel */}
+              {showSortPanel && (
+                <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 border-purple-300 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]">
+                  <div className="space-y-4">
+                    {/* Current Sort Display */}
+                    <div className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl border border-purple-300">
+                      <h3 className="font-bold text-purple-700 mb-2">Current Sort</h3>
+                      <p className="text-purple-600 font-semibold">
+                        {getActiveSortDescription()}
+                      </p>
+                    </div>
+
+                    {/* Sort by Field */}
+                    <div>
+                      <label className="block font-bold text-purple-700 mb-2">
+                        Sort By Field
+                      </label>
+                      <select
+                        value={sortField}
+                        onChange={(e) => {
+                          setSortField(e.target.value);
                           setSortOrder("desc");
                           setSortByDate("");
                         }}
-                        className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                          sortOrder === "desc" && !sortByDate
-                            ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
-                            : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
-                        }`}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
                       >
-                        {sortField === "clickCount"
-                          ? "Most Popular First"
-                          : "High to Low (Descending)"}
-                      </button>
+                        <option value="clickCount">Popularity</option>
+                        <option value="weight">Weight</option>
+                        <option value="orderNo">Order Number</option>
+                      </select>
                     </div>
-                  </div>
 
-                  {/* Sort by Date */}
-                  <div>
-                    <label className="block font-bold text-purple-700 mb-2">
-                      Sort by Date
-                    </label>
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => {
-                          setSortByDate("newest");
-                          setSortOrder("");
-                          setSortField("");
-                        }}
-                        className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                          sortByDate === "newest"
-                            ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600"
-                            : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300"
-                        }`}
-                      >
-                        Newest First
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSortByDate("oldest");
-                          setSortOrder("");
-                          setSortField("");
-                        }}
-                        className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                          sortByDate === "oldest"
-                            ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600"
-                            : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300"
-                        }`}
-                      >
-                        Oldest First
-                      </button>
+                    {/* Sort Direction */}
+                    <div>
+                      <label className="block font-bold text-purple-700 mb-2">
+                        Sort Direction
+                      </label>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => {
+                            setSortOrder("asc");
+                            setSortByDate("");
+                          }}
+                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                            sortOrder === "asc" && !sortByDate
+                              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
+                          }`}
+                        >
+                          {sortField === "clickCount"
+                            ? "Least Popular First"
+                            : "Low to High (Ascending)"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortOrder("desc");
+                            setSortByDate("");
+                          }}
+                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                            sortOrder === "desc" && !sortByDate
+                              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
+                          }`}
+                        >
+                          {sortField === "clickCount"
+                            ? "Most Popular First"
+                            : "High to Low (Descending)"}
+                        </button>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Grid Columns */}
-                  <div>
-                    <label className="block font-bold text-purple-700 mb-2">
-                      Grid Layout
-                    </label>
-                    <select
-                      value={gridCols}
-                      onChange={(e) => setGridCols(Number(e.target.value))}
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-                    >
-                      <option value={1}>1 Column</option>
-                      <option value={2}>2 Columns</option>
-                      <option value={3}>3 Columns</option>
-                    </select>
-                  </div>
+                    {/* Sort by Date */}
+                    <div>
+                      <label className="block font-bold text-purple-700 mb-2">
+                        Sort by Date
+                      </label>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => {
+                            setSortByDate("newest");
+                            setSortOrder("");
+                            setSortField("");
+                          }}
+                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                            sortByDate === "newest"
+                              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600"
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300"
+                          }`}
+                        >
+                          Newest First
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortByDate("oldest");
+                            setSortOrder("");
+                            setSortField("");
+                          }}
+                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                            sortByDate === "oldest"
+                              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600"
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300"
+                          }`}
+                        >
+                          Oldest First
+                        </button>
+                      </div>
+                    </div>
 
-                  {/* Clear Sort Button */}
-                  <button
-                    onClick={clearAllSorts}
-                    className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center gap-2"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                    {/* Clear Sort Button */}
+                    <button
+                      onClick={clearAllSorts}
+                      className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center gap-2"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    Reset to Most Popular
-                  </button>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                      Reset to Most Popular
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -917,8 +935,8 @@ function UserCatalogue() {
         />
       )}
 
-      {/* Content with proper spacing */}
-      <div className="pt-56 sm:pt-60">
+      {/* Content with proper spacing for the combined control box */}
+      <div className="pt-60 sm:pt-64">
         {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-20">
@@ -946,7 +964,7 @@ function UserCatalogue() {
                     </p>
                     {totalPages > 1 && (
                       <p className="text-sm text-gray-600">
-                        Page {currentPage} of {totalPages}
+                        Page {currentPage} of {totalPages} • Grid: {gridCols} column{gridCols > 1 ? 's' : ''}
                       </p>
                     )}
                   </div>
@@ -959,16 +977,14 @@ function UserCatalogue() {
           </div>
         )}
 
-        {/* Enhanced Cards Grid - Default 2 columns for mobile */}
+        {/* Enhanced Cards Grid - Responsive for mobile */}
         <div
-          className={`gap-4 sm:gap-6 lg:gap-8 px-4 sm:px-6 pb-8 ${
+          className={`gap-3 sm:gap-4 lg:gap-6 px-3 sm:px-4 lg:px-6 pb-8 ${
             gridCols === 1
               ? 'grid grid-cols-1'
               : gridCols === 2
-              ? 'grid grid-cols-2 lg:grid-cols-2'
-              : gridCols === 3
-              ? 'grid grid-cols-2 lg:grid-cols-3'
-              : 'grid grid-cols-2 lg:grid-cols-2'
+              ? 'grid grid-cols-2'
+              : 'grid grid-cols-2 sm:grid-cols-3'
           }`}
         >
           {!loading && jewellery.length === 0 ? (
@@ -992,19 +1008,21 @@ function UserCatalogue() {
                 <div
                   key={item._id}
                   onClick={() => handleItemClick(item, index)}
-                  className="bg-gradient-to-br from-white via-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl sm:rounded-3xl p-3 sm:p-4 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-500 cursor-pointer group overflow-hidden relative"
+                  className="bg-gradient-to-br from-white via-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl sm:rounded-2xl p-2 sm:p-3 lg:p-4 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-500 cursor-pointer group overflow-hidden relative"
                 >
                   {/* Card Glow Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-2xl sm:rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   
-                  {/* Enhanced Media Section with Bigger Images */}
+                  {/* Enhanced Media Section */}
                   {mainImage && (
-                    <div className="relative mb-3 overflow-hidden rounded-xl sm:rounded-2xl">
+                    <div className="relative mb-2 sm:mb-3 overflow-hidden rounded-lg sm:rounded-xl">
                       <img
                         src={mainImage}
                         alt={item.name}
                         loading="lazy"
-                        className="w-full h-48 sm:h-56 lg:h-64 object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500"
+                        className={`w-full object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500 ${
+                          gridCols === 1 ? 'h-64 sm:h-80' : gridCols === 2 ? 'h-40 sm:h-48 lg:h-56' : 'h-32 sm:h-40 lg:h-48'
+                        }`}
                         onError={(e) => {
                           e.target.style.display = 'none';
                         }}
@@ -1012,10 +1030,10 @@ function UserCatalogue() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       
                       {/* Media Indicators */}
-                      <div className="absolute top-2 left-2 flex gap-1">
+                      <div className="absolute top-1 sm:top-2 left-1 sm:left-2 flex gap-1">
                         {itemImages.length > 0 && (
-                          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                            <svg className="w-2 h-2 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             {itemImages.length}
@@ -1025,13 +1043,13 @@ function UserCatalogue() {
                       
                       {/* Popularity badge */}
                       {item.clickCount > 0 && (
-                        <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg">
+                        <div className="absolute top-1 sm:top-2 right-1 sm:right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg">
                           🔥 {item.clickCount}
                         </div>
                       )}
                       
                       {/* Design Ownership Badge */}
-                      <div className={`absolute bottom-2 left-2 px-2 py-1 rounded-full text-xs font-bold shadow-lg ${
+                      <div className={`absolute bottom-1 sm:bottom-2 left-1 sm:left-2 px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg ${
                         item.isOurDesign === false 
                           ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' 
                           : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
@@ -1041,15 +1059,19 @@ function UserCatalogue() {
                     </div>
                   )}
                   
-                  {/* Minimal Text Section */}
+                  {/* Minimal Text Section - Responsive sizing */}
                   <div className="space-y-1">
-                    <h2 className="text-base sm:text-lg font-bold text-amber-900 truncate group-hover:text-amber-800 transition-colors duration-300">
+                    <h2 className={`font-bold text-amber-900 truncate group-hover:text-amber-800 transition-colors duration-300 ${
+                      gridCols === 1 ? 'text-lg sm:text-xl' : gridCols === 2 ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'
+                    }`}>
                       {item.name}
                     </h2>
                     
-                    <div className="flex items-center justify-between text-xs text-gray-600">
+                    <div className={`flex items-center justify-between text-gray-600 ${
+                      gridCols === 1 ? 'text-sm' : gridCols === 2 ? 'text-xs' : 'text-xs'
+                    }`}>
                       <span className="font-semibold text-amber-700">{item.weight}g</span>
-                      <span className="font-semibold">{item.category?.main}</span>
+                      <span className="font-semibold truncate ml-1">{item.category?.main}</span>
                     </div>
                   </div>
                 </div>
@@ -1058,7 +1080,7 @@ function UserCatalogue() {
           )}
         </div>
 
-        {/* Enhanced Pagination Controls - Working Next/Previous */}
+        {/* Enhanced Pagination Controls */}
         {isDataFetched && totalPages > 1 && jewellery.length > 0 && (
           <div className="px-4 sm:px-6 pb-8 mt-8">
             <div className="bg-gradient-to-r from-white/95 via-amber-50/95 to-orange-50/95 backdrop-blur-md rounded-2xl p-6 border-2 border-amber-300 shadow-2xl">
@@ -1372,14 +1394,14 @@ function UserCatalogue() {
         </div>
       )}
 
-      {/* Media Gallery Modal */}
+      {/* Enhanced Media Gallery Modal - Better orientation support */}
       {modalMedia.length > 0 && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[999] flex items-center justify-center">
-          <div className="relative max-w-6xl max-h-[90vh] w-full mx-2 sm:mx-4">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[999] flex items-center justify-center">
+          <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-4">
             {/* Close Button */}
             <button
               onClick={closeMediaModal}
-              className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
+              className="absolute top-4 right-4 z-20 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
             >
               <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1391,7 +1413,7 @@ function UserCatalogue() {
               <>
                 <button
                   onClick={() => navigateMedia('prev')}
-                  className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
                 >
                   <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1399,7 +1421,7 @@ function UserCatalogue() {
                 </button>
                 <button
                   onClick={() => navigateMedia('next')}
-                  className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
                 >
                   <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1408,28 +1430,36 @@ function UserCatalogue() {
               </>
             )}
 
-            {/* Main Media */}
-            <div className="flex items-center justify-center h-full">
+            {/* Main Media - Enhanced for both orientations */}
+            <div className="w-full h-full flex items-center justify-center">
               {modalMedia[currentMediaIndex].type === 'image' ? (
                 <img
                   src={modalMedia[currentMediaIndex].src}
                   alt={`Gallery ${currentMediaIndex + 1}`}
                   loading="lazy"
-                  className="max-w-full max-h-full object-contain rounded-xl border-4 border-white"
+                  className="max-w-full max-h-full object-contain rounded-lg border-4 border-white/20"
+                  style={{ 
+                    maxWidth: 'calc(100vw - 2rem)', 
+                    maxHeight: 'calc(100vh - 2rem)' 
+                  }}
                 />
               ) : (
                 <video
                   src={modalMedia[currentMediaIndex].src}
                   controls
                   autoPlay
-                  className="max-w-full max-h-full object-contain rounded-xl border-4 border-white"
+                  className="max-w-full max-h-full object-contain rounded-lg border-4 border-white/20"
+                  style={{ 
+                    maxWidth: 'calc(100vw - 2rem)', 
+                    maxHeight: 'calc(100vh - 2rem)' 
+                  }}
                 />
               )}
             </div>
 
             {/* Media Counter */}
             {modalMedia.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full">
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full backdrop-blur-sm">
                 {currentMediaIndex + 1} / {modalMedia.length}
               </div>
             )}
