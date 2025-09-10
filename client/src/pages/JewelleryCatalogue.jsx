@@ -59,13 +59,8 @@ function JewelleryCatalogue() {
   
   const [designFilter, setDesignFilter] = useState('');
 
-  // Dynamic data from API
-  const [categories, setCategories] = useState([]);
-  const [genders, setGenders] = useState([]);
-  const [types, setTypes] = useState([]);
-  const [metals, setMetals] = useState([]);
-
-  const defaultCategories = [
+  // Static categories - consistent with UserCatalogue
+  const catagories = [
     'All Jewellery',
     'Earrings',
     'Pendants',
@@ -80,58 +75,29 @@ function JewelleryCatalogue() {
     'Antique',
     'Custom',
   ];
-  const defaultGenders = ['All', 'Unisex', 'Women', 'Men'];
-  const defaultTypes = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
-  const defaultMetals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
+  const genders = ['All', 'Unisex', 'Women', 'Men'];
+  const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
+  const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
+
   const isAdmin = true;
 
   // Device detection and responsive handling
   useEffect(() => {
-    const handleResize = () => {
+    const checkDevice = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
       
       if (mobile && gridCols > 3) {
         setGridCols(2);
-      } else if (!mobile && gridCols === 1) {
+      } else if (!mobile && gridCols < 2) {
         setGridCols(3);
       }
     };
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
   }, [gridCols]);
-
-  // Fetch filter options from API
-  const fetchFilterOptions = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      const response = await fetch('/api/jewellery/filters', { headers });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(['All Jewellery', ...(data.categories || defaultCategories.slice(1))]);
-        setGenders(['All', ...(data.genders || defaultGenders.slice(1))]);
-        setTypes(['All', ...(data.types || defaultTypes.slice(1))]);
-        setMetals(['All', ...(data.metals || defaultMetals.slice(1))]);
-      } else {
-        // Use defaults if API fails
-        setCategories(defaultCategories);
-        setGenders(defaultGenders);
-        setTypes(defaultTypes);
-        setMetals(defaultMetals);
-      }
-    } catch (error) {
-      console.error('Failed to load filter options:', error);
-      setCategories(defaultCategories);
-      setGenders(defaultGenders);
-      setTypes(defaultTypes);
-      setMetals(defaultMetals);
-    }
-  }, []);
 
   // Enhanced grid cycling function with device-aware options
   const cycleGrid = () => {
@@ -151,28 +117,26 @@ function JewelleryCatalogue() {
 
   // Get responsive grid classes
   const getGridClasses = () => {
-    const baseClasses = 'grid gap-3 sm:gap-4 lg:gap-6 px-3 sm:px-4 lg:px-6 pb-8';
-    
     if (isMobile) {
       switch (gridCols) {
-        case 1: return `${baseClasses} grid-cols-1`;
-        case 2: return `${baseClasses} grid-cols-2`;
-        case 3: return `${baseClasses} grid-cols-3`;
-        default: return `${baseClasses} grid-cols-2`;
+        case 1: return 'grid grid-cols-1';
+        case 2: return 'grid grid-cols-2';
+        case 3: return 'grid grid-cols-2 sm:grid-cols-3';
+        default: return 'grid grid-cols-2';
       }
     } else {
       switch (gridCols) {
-        case 2: return `${baseClasses} grid-cols-2 lg:grid-cols-2`;
-        case 3: return `${baseClasses} grid-cols-2 md:grid-cols-3 lg:grid-cols-3`;
-        case 4: return `${baseClasses} grid-cols-2 md:grid-cols-3 lg:grid-cols-4`;
-        case 6: return `${baseClasses} grid-cols-2 md:grid-cols-4 lg:grid-cols-6`;
-        default: return `${baseClasses} grid-cols-2 md:grid-cols-3 lg:grid-cols-3`;
+        case 2: return 'grid grid-cols-2 lg:grid-cols-2';
+        case 3: return 'grid grid-cols-2 lg:grid-cols-3';
+        case 4: return 'grid grid-cols-2 lg:grid-cols-4';
+        case 6: return 'grid grid-cols-3 lg:grid-cols-6';
+        default: return 'grid grid-cols-2 lg:grid-cols-3';
       }
     }
   };
 
   // Get responsive image height classes
-  const getImageHeightClass = () => {
+  const getImageHeightClasses = () => {
     if (isMobile) {
       switch (gridCols) {
         case 1: return 'h-64 sm:h-80';
@@ -211,22 +175,18 @@ function JewelleryCatalogue() {
     }
   };
 
-  // Enhanced fetchJewellery with pagination
+  // Enhanced fetchJewellery - matching UserCatalogue implementation
   const fetchJewellery = useCallback(async () => {
     setLoading(true);
     setIsDataFetched(false);
     try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` })
-      };
-
       const params = new URLSearchParams();
       
+      // Always add basic pagination params
       params.append('page', currentPage.toString());
       params.append('pageSize', itemsPerPage.toString());
       
+      // Add sort parameters
       if (sortByDate) {
         params.append('sortByDate', sortByDate);
       } else {
@@ -234,8 +194,9 @@ function JewelleryCatalogue() {
         params.append('sortOrder', sortOrder || 'desc');
       }
 
+      // Add filters only if they have valid values
       if (selectedCategory.length > 0 && !selectedCategory.includes('All Jewellery')) {
-        params.append('categories', selectedCategory.join(','));
+        params.append('catagories', selectedCategory.join(','));
       }
       
       if (selectedSubCategory && selectedSubCategory.trim() !== '') {
@@ -274,24 +235,48 @@ function JewelleryCatalogue() {
         params.append('searchId', searchId.trim());
       }
 
-      const response = await fetch(`/api/jewellery?${params.toString()}`, { headers });
+      console.log('API URL:', `/api/jewellery?${params.toString()}`);
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch jewellery data');
+      const res = await axios.get(`/api/jewellery?${params.toString()}`);
+      const data = res.data;
+
+      console.log('API Response:', data);
+
+      // Handle API response - comprehensive handling like UserCatalogue
+      let items = [];
+      let total = 0;
+      let pages = 1;
+
+      if (data) {
+        if (Array.isArray(data)) {
+          items = data;
+          total = data.length;
+          pages = Math.ceil(total / itemsPerPage);
+        } else if (data.items && Array.isArray(data.items)) {
+          items = data.items;
+          total = data.totalItems || data.total || data.count || 0;
+          pages = data.totalPages || Math.ceil(total / itemsPerPage);
+        } else if (data.data && Array.isArray(data.data)) {
+          items = data.data;
+          total = data.totalItems || data.total || data.count || data.data.length;
+          pages = data.totalPages || Math.ceil(total / itemsPerPage);
+        } else if (data.jewellery && Array.isArray(data.jewellery)) {
+          items = data.jewellery;
+          total = data.totalItems || data.total || data.count || data.jewellery.length;
+          pages = data.totalPages || Math.ceil(total / itemsPerPage);
+        } else if (data.pagination && data.items) {
+           items = data.items;
+           total = data.pagination.totalCount;
+           pages = data.pagination.totalPages;
+        }
       }
 
-      const data = await response.json();
-
-      if (data.items && Array.isArray(data.items)) {
-        setJewellery(data.items);
-        setTotalItems(data.totalItems || 0);
-        setTotalPages(data.totalPages || 1);
-      } else if (Array.isArray(data)) {
-        // Fallback for direct array response
-        setJewellery(data);
-        setTotalItems(data.length);
-        setTotalPages(1);
+      if (items.length > 0) {
+        setJewellery(items);
+        setTotalItems(total);
+        setTotalPages(pages);
       } else {
+        // If API returns no items, clear the state
         setJewellery([]);
         setTotalItems(0);
         setTotalPages(1);
@@ -299,6 +284,7 @@ function JewelleryCatalogue() {
 
     } catch (error) {
       console.error('Failed to load jewellery:', error);
+      // In case of an error, reset to an empty state
       setJewellery([]);
       setTotalItems(0);
       setTotalPages(1);
@@ -330,10 +316,6 @@ function JewelleryCatalogue() {
   }, [selectedCategory, selectedSubCategory, selectedType, selectedGender, metalFilter, stoneFilter, designFilter, weightRanges, searchQuery, searchId, sortField, sortOrder, sortByDate]);
 
   useEffect(() => {
-    fetchFilterOptions();
-  }, [fetchFilterOptions]);
-
-  useEffect(() => {
     fetchJewellery();
   }, [fetchJewellery]);
 
@@ -344,24 +326,15 @@ function JewelleryCatalogue() {
     
     try {
       const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` })
-      };
-      
-      const response = await fetch(`/api/jewellery/${item._id}/click`, {
-        method: 'PATCH',
-        headers
+      const response = await axios.patch(`/api/jewellery/${item._id}/click`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        setJewellery(prev => prev.map(jewel => 
-          jewel._id === item._id 
-            ? { ...jewel, clickCount: data.clickCount || (jewel.clickCount || 0) + 1 }
-            : jewel
-        ));
-      }
+      setJewellery(prev => prev.map(jewel => 
+        jewel._id === item._id 
+          ? { ...jewel, clickCount: response.data.clickCount || (jewel.clickCount || 0) + 1 }
+          : jewel
+      ));
     } catch (error) {
       console.error('Failed to update popularity:', error);
       setJewellery(prev => prev.map(jewel => 
@@ -525,39 +498,32 @@ function JewelleryCatalogue() {
     return range;
   };
 
-  const getAllCategories = () => {
-    return categories.filter(cat => cat !== 'All Jewellery' && cat !== 'Custom');
+  const getAllcatagories = () => {
+    const basecatagories = catagories.filter(cat => cat !== 'All Jewellery');
+    return basecatagories;
   };
 
-  const getAllSubCategories = () => {
-    if (!Array.isArray(jewellery)) {
-      return [];
-    }
-    
-    const subCategories = jewellery
+  const getAllSubcatagories = () => {
+    const subcatagories = jewellery
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index);
     
-    return subCategories.sort();
+    return subcatagories.sort();
   };
 
-  const getFilteredSubCategories = () => {
-    if (!Array.isArray(jewellery)) {
-      return [];
-    }
-    
+  const getFilteredSubcatagories = () => {
     if (selectedCategory.length === 0) {
-      return getAllSubCategories();
+      return getAllSubcatagories();
     }
     
-    const filteredSubCategories = jewellery
+    const filteredSubcatagories = jewellery
       .filter(item => selectedCategory.includes(item.category?.main))
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index);
     
-    return filteredSubCategories.sort();
+    return filteredSubcatagories.sort();
   };
 
   const getSubCategoriesForMainCategory = (mainCategory) => {
@@ -622,6 +588,101 @@ function JewelleryCatalogue() {
       setCurrentMediaIndex(prev => (prev + 1) % modalMedia.length);
     } else {
       setCurrentMediaIndex(prev => (prev - 1 + modalMedia.length) % modalMedia.length);
+    }
+  };
+
+  // Get grid icon based on current state - matching UserCatalogue
+  const getGridIcon = () => {
+    if (isMobile) {
+      switch (gridCols) {
+        case 1:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          );
+        case 2:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7" />
+            </svg>
+          );
+        case 3:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h4M4 12h4M4 18h4M10 6h4M10 12h4M10 18h4M16 6h4M16 12h4M16 18h4" />
+            </svg>
+          );
+        default:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7" />
+            </svg>
+          );
+      }
+    } else {
+      switch (gridCols) {
+        case 2:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7" />
+            </svg>
+          );
+        case 3:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h4M4 12h4M4 18h4M10 6h4M10 12h4M10 18h4M16 6h4M16 12h4M16 18h4" />
+            </svg>
+          );
+        case 4:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="4" height="4" />
+              <rect x="10" y="3" width="4" height="4" />
+              <rect x="17" y="3" width="4" height="4" />
+              <rect x="3" y="10" width="4" height="4" />
+              <rect x="10" y="10" width="4" height="4" />
+              <rect x="17" y="10" width="4" height="4" />
+              <rect x="3" y="17" width="4" height="4" />
+              <rect x="10" y="17" width="4" height="4" />
+              <rect x="17" y="17" width="4" height="4" />
+            </svg>
+          );
+        case 6:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="2" y="3" width="3" height="3" />
+              <rect x="6" y="3" width="3" height="3" />
+              <rect x="10" y="3" width="3" height="3" />
+              <rect x="14" y="3" width="3" height="3" />
+              <rect x="18" y="3" width="3" height="3" />
+              <rect x="2" y="10" width="3" height="3" />
+              <rect x="6" y="10" width="3" height="3" />
+              <rect x="10" y="10" width="3" height="3" />
+              <rect x="14" y="10" width="3" height="3" />
+              <rect x="18" y="10" width="3" height="3" />
+              <rect x="2" y="17" width="3" height="3" />
+              <rect x="6" y="17" width="3" height="3" />
+              <rect x="10" y="17" width="3" height="3" />
+              <rect x="14" y="17" width="3" height="3" />
+              <rect x="18" y="17" width="3" height="3" />
+            </svg>
+          );
+        default:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="4" height="4" />
+              <rect x="10" y="3" width="4" height="4" />
+              <rect x="17" y="3" width="4" height="4" />
+              <rect x="3" y="10" width="4" height="4" />
+              <rect x="10" y="10" width="4" height="4" />
+              <rect x="17" y="10" width="4" height="4" />
+              <rect x="3" y="17" width="4" height="4" />
+              <rect x="10" y="17" width="4" height="4" />
+              <rect x="17" y="17" width="4" height="4" />
+            </svg>
+          );
+      }
     }
   };
 
@@ -758,7 +819,7 @@ function JewelleryCatalogue() {
     setSelectedItem(null);
     setImageFiles([]);
     setVideoFiles([]);
-    if (!defaultCategories.includes(item.category?.main)) {
+    if (!catagories.slice(1).includes(item.category?.main)) {
       setCustomCategory(item.category?.main);
       setNewItem((prev) => ({
         ...prev,
@@ -787,7 +848,7 @@ function JewelleryCatalogue() {
         isOurDesign: newItem.isOurDesign !== undefined ? newItem.isOurDesign : true,
       };
 
-      const token = localStorage.getToken('token');
+      const token = localStorage.getItem('token');
       
       if (imageFiles.length > 0) {
         const imagePromises = imageFiles.map(file => {
@@ -868,9 +929,9 @@ function JewelleryCatalogue() {
           </div>
           <div className="text-center sm:text-left">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-wide drop-shadow-lg">
-              VIMALESHWARA JEWELLERS
+              VIMALESHWARA JEWELLERS - ADMIN
             </h1>
-            <p className="text-amber-100 text-xs sm:text-sm font-medium">Premium Jewellery Collection</p>
+            <p className="text-amber-100 text-xs sm:text-sm font-medium">Premium Jewellery Collection Management</p>
           </div>
         </div>
       </div>
@@ -886,7 +947,7 @@ function JewelleryCatalogue() {
                 placeholder="Search jewellery by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-20 py-3 bg-white border-2 border-gray-200 rounded-2xl text-gray-800 placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-200/30 transition-all duration-300 text-sm sm:text-base font-medium"
+                className="w-full pl-12 pr-16 py-3 bg-white border-2 border-gray-200 rounded-2xl text-gray-800 placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-200/30 transition-all duration-300 text-sm sm:text-base font-medium"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -894,52 +955,20 @@ function JewelleryCatalogue() {
                 </svg>
               </div>
               
-              {/* Enhanced Grid Toggle Button */}
+              {/* Grid Toggle Button */}
               <button
                 onClick={cycleGrid}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-2 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center gap-1 min-w-[60px] justify-center"
-                title={`Grid: ${gridCols} column${gridCols > 1 ? 's' : ''} (${isMobile ? 'Mobile' : 'Desktop'} mode)`}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-2 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center gap-1"
+                title={`Grid: ${gridCols} column${gridCols > 1 ? 's' : ''} (${isMobile ? 'Mobile' : 'Desktop'})`}
               >
-                {gridCols === 1 && (
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                )}
-                {gridCols === 2 && (
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v18M3 9h18" />
-                  </svg>
-                )}
-                {gridCols === 3 && (
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h6v6H3zm8 0h6v6h-6zm-8 8h6v6H3zm8 0h6v6h-6z" />
-                  </svg>
-                )}
-                {gridCols === 4 && (
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="5" height="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="10" y="3" width="5" height="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="17" y="3" width="5" height="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="3" y="10" width="5" height="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                  </svg>
-                )}
-                {gridCols === 6 && (
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <rect x="1" y="2" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="5" y="2" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="9" y="2" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="1" y="6" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="5" y="6" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="9" y="6" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                  </svg>
-                )}
+                {getGridIcon()}
                 <span className="text-xs font-bold hidden sm:inline">{gridCols}</span>
               </button>
               
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-20 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                  className="absolute right-16 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -978,7 +1007,7 @@ function JewelleryCatalogue() {
                     <div>
                       <label className="block font-bold text-blue-700 mb-2">Categories</label>
                       <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-gray-50">
-                        {getAllCategories().map((cat) => (
+                        {getAllcatagories().map((cat) => (
                           <label key={cat} className="flex items-center gap-2 text-sm p-1 hover:bg-blue-50 rounded cursor-pointer">
                             <input
                               type="checkbox"
@@ -1012,7 +1041,7 @@ function JewelleryCatalogue() {
                         className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       >
                         <option value="">All Sub-Categories</option>
-                        {getFilteredSubCategories().map((subCat) => (
+                        {getFilteredSubcatagories().map((subCat) => (
                           <option key={subCat} value={subCat}>{subCat}</option>
                         ))}
                       </select>
@@ -1400,7 +1429,7 @@ function JewelleryCatalogue() {
         )}
 
         {/* Enhanced Responsive Cards Grid */}
-        <div className={getGridClasses()}>
+        <div className={`gap-3 sm:gap-4 lg:gap-6 px-3 sm:px-4 lg:px-6 pb-8 ${getGridClasses()}`}>
           {!loading && jewellery.length === 0 ? (
             <div className="col-span-full text-center py-20">
               <div className="text-6xl sm:text-8xl mb-6 animate-bounce">💎</div>
@@ -1435,7 +1464,7 @@ function JewelleryCatalogue() {
                         src={mainImage}
                         alt={item.name}
                         loading="lazy"
-                        className={`w-full object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500 ${getImageHeightClass()}`}
+                        className={`w-full object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500 ${getImageHeightClasses()}`}
                         onError={(e) => {
                           e.target.style.display = 'none';
                         }}
@@ -1963,7 +1992,7 @@ function JewelleryCatalogue() {
               required
             >
               <option value="">🏷️ Select Main Category*</option>
-              {defaultCategories.slice(1).map((cat) => (
+              {catagories.slice(1).map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
                 </option>

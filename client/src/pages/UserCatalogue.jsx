@@ -120,12 +120,12 @@ function UserCatalogue() {
 
   // Get responsive image height classes
   const getImageHeightClasses = () => {
-    if (isMobile) {
+     if (isMobile) {
       switch (gridCols) {
-        case 1: return 'h-64 sm:h-80';
-        case 2: return 'h-40 sm:h-48 lg:h-56';
-        case 3: return 'h-32 sm:h-40 lg:h-48';
-        default: return 'h-40 sm:h-48';
+        case 1: return { title: 'text-lg sm:text-xl', detail: 'text-sm' };
+        case 2: return { title: 'text-sm sm:text-base', detail: 'text-xs' };
+        case 3: return { title: 'text-xs sm:text-sm', detail: 'text-xs' };
+        default: return { title: 'text-sm sm:text-base', detail: 'text-xs' };
       }
     } else {
       switch (gridCols) {
@@ -1202,11 +1202,11 @@ function UserCatalogue() {
                       </div>
                       
                       {/* Popularity badge */}
-                      {item.clickCount > 0 && (
+                      {/* {item.clickCount > 0 && (
                         <div className="absolute top-1 sm:top-2 right-1 sm:right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg">
                           🔥 {item.clickCount}
                         </div>
-                      )}
+                      )} */}
                       
                       {/* Design Ownership Badge */}
                       <div className={`absolute bottom-1 sm:bottom-2 left-1 sm:left-2 px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg ${
