@@ -585,7 +585,7 @@ function UserCatalogue() {
             </svg>
           );
       }
-    } else {
+    }else {
       switch (gridCols) {
         case 2:
           return (
