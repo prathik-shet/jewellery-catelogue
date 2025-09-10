@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import axios from 'axios';
 
 function UserCatalogue() {
   const [jewellery, setJewellery] = useState([]);
@@ -27,16 +28,9 @@ function UserCatalogue() {
   const [modalMedia, setModalMedia] = useState([]);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   
-  // Enhanced responsive grid system
-  const [gridCols, setGridCols] = useState(() => {
-    // Smart default based on screen size
-    if (typeof window !== 'undefined') {
-      return window.innerWidth < 768 ? 2 : 3;
-    }
-    return 3;
-  });
+  // Responsive grid system - separate for mobile and desktop
   const [isMobile, setIsMobile] = useState(false);
-  
+  const [gridCols, setGridCols] = useState(4); // Default for desktop
   const [sortField, setSortField] = useState('clickCount');
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [showSortPanel, setShowSortPanel] = useState(false);
@@ -49,60 +43,44 @@ function UserCatalogue() {
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
 
-  // Dynamic data from API
-  const [categories, setCategories] = useState([]);
-  const [genders, setGenders] = useState([]);
-  const [types, setTypes] = useState([]);
-  const [metals, setMetals] = useState([]);
+  const catagories = [
+    'All Jewellery',
+    'Earrings',
+    'Pendants',
+    'Finger Rings',
+    'Mangalsutra',
+    'Chains',
+    'Nose Pin',
+    'Necklaces',
+    'Necklace Set',
+    'Bangles',
+    'Bracelets',
+    'Antique',
+    'Custom',
+  ];
+  const genders = ['All', 'Unisex', 'Women', 'Men'];
+  const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
+  const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
 
-  // Device detection and responsive handling
+  // Device detection and grid initialization
   useEffect(() => {
-    const handleResize = () => {
+    const checkDevice = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      
-      // Auto-adjust grid if it's inappropriate for screen size
+      // Set appropriate default grid based on device
       if (mobile && gridCols > 3) {
-        setGridCols(2);
-      } else if (!mobile && gridCols === 1) {
-        setGridCols(3);
+        setGridCols(2); // Default mobile grid
+      } else if (!mobile && gridCols < 2) {
+        setGridCols(4); // Default desktop grid
       }
     };
 
-    handleResize(); // Initial check
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
   }, [gridCols]);
 
-  // Fetch filter options from API
-  const fetchFilterOptions = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      const response = await fetch('/api/jewellery/filters', { headers });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch filter options');
-      }
-      
-      const data = await response.json();
-      
-      setCategories(['All Jewellery', ...(data.categories || [])]);
-      setGenders(['All', ...(data.genders || [])]);
-      setTypes(['All', ...(data.types || [])]);
-      setMetals(['All', ...(data.metals || [])]);
-    } catch (error) {
-      console.error('Failed to load filter options:', error);
-      // Set default values if API fails
-      setCategories(['All Jewellery']);
-      setGenders(['All']);
-      setTypes(['All']);
-      setMetals(['All']);
-    }
-  }, []);
-
-  // Enhanced grid cycling function with device-aware options
+  // Responsive grid cycling function
   const cycleGrid = () => {
     setGridCols(prev => {
       if (isMobile) {
@@ -120,37 +98,33 @@ function UserCatalogue() {
     });
   };
 
-  // Get responsive grid classes
+  // Get grid classes based on current grid columns
   const getGridClasses = () => {
-    const baseClasses = 'grid gap-3 sm:gap-4 lg:gap-6 px-3 sm:px-4 lg:px-6 pb-8';
-    
     if (isMobile) {
-      // Mobile grid classes
       switch (gridCols) {
-        case 1: return `${baseClasses} grid-cols-1`;
-        case 2: return `${baseClasses} grid-cols-2`;
-        case 3: return `${baseClasses} grid-cols-3`;
-        default: return `${baseClasses} grid-cols-2`;
+        case 1: return 'grid grid-cols-1';
+        case 2: return 'grid grid-cols-2';
+        case 3: return 'grid grid-cols-2 sm:grid-cols-3';
+        default: return 'grid grid-cols-2';
       }
     } else {
-      // Desktop grid classes
       switch (gridCols) {
-        case 2: return `${baseClasses} grid-cols-2 lg:grid-cols-2`;
-        case 3: return `${baseClasses} grid-cols-2 md:grid-cols-3 lg:grid-cols-3`;
-        case 4: return `${baseClasses} grid-cols-2 md:grid-cols-3 lg:grid-cols-4`;
-        case 6: return `${baseClasses} grid-cols-2 md:grid-cols-4 lg:grid-cols-6`;
-        default: return `${baseClasses} grid-cols-2 md:grid-cols-3 lg:grid-cols-3`;
+        case 2: return 'grid grid-cols-2 lg:grid-cols-2';
+        case 3: return 'grid grid-cols-2 lg:grid-cols-3';
+        case 4: return 'grid grid-cols-2 lg:grid-cols-4';
+        case 6: return 'grid grid-cols-3 lg:grid-cols-6';
+        default: return 'grid grid-cols-2 lg:grid-cols-4';
       }
     }
   };
 
   // Get responsive image height classes
-  const getImageHeightClass = () => {
+  const getImageHeightClasses = () => {
     if (isMobile) {
       switch (gridCols) {
         case 1: return 'h-64 sm:h-80';
-        case 2: return 'h-40 sm:h-48';
-        case 3: return 'h-32 sm:h-40';
+        case 2: return 'h-40 sm:h-48 lg:h-56';
+        case 3: return 'h-32 sm:h-40 lg:h-48';
         default: return 'h-40 sm:h-48';
       }
     } else {
@@ -159,7 +133,7 @@ function UserCatalogue() {
         case 3: return 'h-48 lg:h-56';
         case 4: return 'h-40 lg:h-48';
         case 6: return 'h-32 lg:h-40';
-        default: return 'h-48 lg:h-56';
+        default: return 'h-40 lg:h-48';
       }
     }
   };
@@ -168,33 +142,27 @@ function UserCatalogue() {
   const getTextSizeClasses = () => {
     if (isMobile) {
       switch (gridCols) {
-        case 1: return { title: 'text-lg sm:text-xl', detail: 'text-sm' };
-        case 2: return { title: 'text-sm sm:text-base', detail: 'text-xs' };
-        case 3: return { title: 'text-xs sm:text-sm', detail: 'text-xs' };
-        default: return { title: 'text-sm sm:text-base', detail: 'text-xs' };
+        case 1: return { title: 'text-lg sm:text-xl', details: 'text-sm' };
+        case 2: return { title: 'text-sm sm:text-base', details: 'text-xs' };
+        case 3: return { title: 'text-xs sm:text-sm', details: 'text-xs' };
+        default: return { title: 'text-sm sm:text-base', details: 'text-xs' };
       }
     } else {
       switch (gridCols) {
-        case 2: return { title: 'text-lg lg:text-xl', detail: 'text-sm lg:text-base' };
-        case 3: return { title: 'text-base lg:text-lg', detail: 'text-sm' };
-        case 4: return { title: 'text-sm lg:text-base', detail: 'text-xs lg:text-sm' };
-        case 6: return { title: 'text-xs lg:text-sm', detail: 'text-xs' };
-        default: return { title: 'text-base lg:text-lg', detail: 'text-sm' };
+        case 2: return { title: 'text-lg lg:text-xl', details: 'text-sm lg:text-base' };
+        case 3: return { title: 'text-base lg:text-lg', details: 'text-sm' };
+        case 4: return { title: 'text-sm lg:text-base', details: 'text-xs lg:text-sm' };
+        case 6: return { title: 'text-xs lg:text-sm', details: 'text-xs' };
+        default: return { title: 'text-sm lg:text-base', details: 'text-xs lg:text-sm' };
       }
     }
   };
 
-  // Fetch jewellery from API
+  // Fetch function now relies solely on the API
   const fetchJewellery = useCallback(async () => {
     setLoading(true);
     setIsDataFetched(false);
     try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` })
-      };
-
       const params = new URLSearchParams();
       
       // Always add basic pagination params
@@ -211,7 +179,7 @@ function UserCatalogue() {
 
       // Add filters only if they have valid values
       if (selectedCategory.length > 0 && !selectedCategory.includes('All Jewellery')) {
-        params.append('categories', selectedCategory.join(','));
+        params.append('catagories', selectedCategory.join(','));
       }
       
       if (selectedSubCategory && selectedSubCategory.trim() !== '') {
@@ -250,20 +218,56 @@ function UserCatalogue() {
         params.append('searchId', searchId.trim());
       }
 
-      const response = await fetch(`/api/jewellery?${params.toString()}`, { headers });
+      console.log('API URL:', `/api/jewellery?${params.toString()}`);
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch jewellery data');
+      const res = await axios.get(`/api/jewellery?${params.toString()}`);
+      const data = res.data;
+
+      console.log('API Response:', data);
+
+      // Handle API response
+      let items = [];
+      let total = 0;
+      let pages = 1;
+
+      if (data) {
+        if (Array.isArray(data)) {
+          items = data;
+          total = data.length;
+          pages = Math.ceil(total / itemsPerPage);
+        } else if (data.items && Array.isArray(data.items)) {
+          items = data.items;
+          total = data.totalItems || data.total || data.count || 0;
+          pages = data.totalPages || Math.ceil(total / itemsPerPage);
+        } else if (data.data && Array.isArray(data.data)) {
+          items = data.data;
+          total = data.totalItems || data.total || data.count || data.data.length;
+          pages = data.totalPages || Math.ceil(total / itemsPerPage);
+        } else if (data.jewellery && Array.isArray(data.jewellery)) {
+          items = data.jewellery;
+          total = data.totalItems || data.total || data.count || data.jewellery.length;
+          pages = data.totalPages || Math.ceil(total / itemsPerPage);
+        } else if (data.pagination && data.items) {
+           items = data.items;
+           total = data.pagination.totalCount;
+           pages = data.pagination.totalPages;
+        }
       }
 
-      const data = await response.json();
-
-      setJewellery(data.items || []);
-      setTotalItems(data.totalItems || 0);
-      setTotalPages(data.totalPages || 1);
+      if (items.length > 0) {
+        setJewellery(items);
+        setTotalItems(total);
+        setTotalPages(pages);
+      } else {
+        // If API returns no items, clear the state
+        setJewellery([]);
+        setTotalItems(0);
+        setTotalPages(1);
+      }
 
     } catch (error) {
       console.error('Failed to load jewellery:', error);
+      // In case of an error, reset to an empty state
       setJewellery([]);
       setTotalItems(0);
       setTotalPages(1);
@@ -295,10 +299,6 @@ function UserCatalogue() {
   }, [selectedCategory, selectedSubCategory, selectedType, selectedGender, metalFilter, stoneFilter, designFilter, weightRanges, searchQuery, searchId, sortField, sortOrder, sortByDate]);
 
   useEffect(() => {
-    fetchFilterOptions();
-  }, [fetchFilterOptions]);
-
-  useEffect(() => {
     fetchJewellery();
   }, [fetchJewellery]);
 
@@ -309,27 +309,18 @@ function UserCatalogue() {
     
     try {
       const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` })
-      };
-      
-      const response = await fetch(`/api/jewellery/${item._id}/click`, {
-        method: 'PATCH',
-        headers
+      const response = await axios.patch(`/api/jewellery/${item._id}/click`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       
-      if (response.ok) {
-        const data = await response.json();
-        setJewellery(prev => prev.map(jewel => 
-          jewel._id === item._id 
-            ? { ...jewel, clickCount: data.clickCount || (jewel.clickCount || 0) + 1 }
-            : jewel
-        ));
-      }
+      setJewellery(prev => prev.map(jewel => 
+        jewel._id === item._id 
+          ? { ...jewel, clickCount: response.data.clickCount || (jewel.clickCount || 0) + 1 }
+          : jewel
+      ));
     } catch (error) {
       console.error('Failed to update popularity:', error);
-      // Optimistically update the count even if the API call fails
+      // Fallback to update UI optimistically
       setJewellery(prev => prev.map(jewel => 
         jewel._id === item._id 
           ? { ...jewel, clickCount: (jewel.clickCount || 0) + 1 }
@@ -345,18 +336,20 @@ function UserCatalogue() {
     if (direction === 'next') {
       newIndex = selectedItemIndex + 1;
       if (newIndex >= jewellery.length) {
-        newIndex = 0;
+        newIndex = 0; // Wrap to first item
       }
     } else if (direction === 'prev') {
       newIndex = selectedItemIndex - 1;
       if (newIndex < 0) {
-        newIndex = jewellery.length - 1;
+        newIndex = jewellery.length - 1; // Wrap to last item
       }
     }
     
     if (newIndex !== selectedItemIndex && jewellery[newIndex]) {
       setSelectedItem(jewellery[newIndex]);
       setSelectedItemIndex(newIndex);
+      
+      // Update click count for the new item
       handleItemClick(jewellery[newIndex], newIndex);
     }
   };
@@ -484,31 +477,32 @@ function UserCatalogue() {
     return range;
   };
 
-  const getAllCategories = () => {
-    return categories.filter(cat => cat !== 'All Jewellery');
+  const getAllcatagories = () => {
+    const basecatagories = catagories.filter(cat => cat !== 'All Jewellery');
+    return basecatagories;
   };
 
-  const getAllSubCategories = () => {
-    const subCategories = jewellery
+  const getAllSubcatagories = () => {
+    const subcatagories = jewellery
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index);
     
-    return subCategories.sort();
+    return subcatagories.sort();
   };
 
-  const getFilteredSubCategories = () => {
+  const getFilteredSubcatagories = () => {
     if (selectedCategory.length === 0) {
-      return getAllSubCategories();
+      return getAllSubcatagories();
     }
     
-    const filteredSubCategories = jewellery
+    const filteredSubcatagories = jewellery
       .filter(item => selectedCategory.includes(item.category?.main))
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index);
     
-    return filteredSubCategories.sort();
+    return filteredSubcatagories.sort();
   };
 
   const clearAllFilters = () => {
@@ -562,7 +556,100 @@ function UserCatalogue() {
     }
   };
 
-  const textSizes = getTextSizeClasses();
+  // Get grid icon based on current state
+  const getGridIcon = () => {
+    if (isMobile) {
+      switch (gridCols) {
+        case 1:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          );
+        case 2:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7" />
+            </svg>
+          );
+        case 3:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h4M4 12h4M4 18h4M10 6h4M10 12h4M10 18h4M16 6h4M16 12h4M16 18h4" />
+            </svg>
+          );
+        default:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7" />
+            </svg>
+          );
+      }
+    } else {
+      switch (gridCols) {
+        case 2:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7" />
+            </svg>
+          );
+        case 3:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h4M4 12h4M4 18h4M10 6h4M10 12h4M10 18h4M16 6h4M16 12h4M16 18h4" />
+            </svg>
+          );
+        case 4:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="4" height="4" />
+              <rect x="10" y="3" width="4" height="4" />
+              <rect x="17" y="3" width="4" height="4" />
+              <rect x="3" y="10" width="4" height="4" />
+              <rect x="10" y="10" width="4" height="4" />
+              <rect x="17" y="10" width="4" height="4" />
+              <rect x="3" y="17" width="4" height="4" />
+              <rect x="10" y="17" width="4" height="4" />
+              <rect x="17" y="17" width="4" height="4" />
+            </svg>
+          );
+        case 6:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="2" y="3" width="3" height="3" />
+              <rect x="6" y="3" width="3" height="3" />
+              <rect x="10" y="3" width="3" height="3" />
+              <rect x="14" y="3" width="3" height="3" />
+              <rect x="18" y="3" width="3" height="3" />
+              <rect x="2" y="10" width="3" height="3" />
+              <rect x="6" y="10" width="3" height="3" />
+              <rect x="10" y="10" width="3" height="3" />
+              <rect x="14" y="10" width="3" height="3" />
+              <rect x="18" y="10" width="3" height="3" />
+              <rect x="2" y="17" width="3" height="3" />
+              <rect x="6" y="17" width="3" height="3" />
+              <rect x="10" y="17" width="3" height="3" />
+              <rect x="14" y="17" width="3" height="3" />
+              <rect x="18" y="17" width="3" height="3" />
+            </svg>
+          );
+        default:
+          return (
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="4" height="4" />
+              <rect x="10" y="3" width="4" height="4" />
+              <rect x="17" y="3" width="4" height="4" />
+              <rect x="3" y="10" width="4" height="4" />
+              <rect x="10" y="10" width="4" height="4" />
+              <rect x="17" y="10" width="4" height="4" />
+              <rect x="3" y="17" width="4" height="4" />
+              <rect x="10" y="17" width="4" height="4" />
+              <rect x="17" y="17" width="4" height="4" />
+            </svg>
+          );
+      }
+    }
+  };
 
   return (
     <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 min-h-screen">
@@ -598,7 +685,7 @@ function UserCatalogue() {
                 placeholder="Search jewellery by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-20 py-3 bg-white border-2 border-gray-200 rounded-2xl text-gray-800 placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-200/30 transition-all duration-300 text-sm sm:text-base font-medium"
+                className="w-full pl-12 pr-16 py-3 bg-white border-2 border-gray-200 rounded-2xl text-gray-800 placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-200/30 transition-all duration-300 text-sm sm:text-base font-medium"
               />
               <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                 <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -606,53 +693,20 @@ function UserCatalogue() {
                 </svg>
               </div>
               
-              {/* Enhanced Grid Toggle Button */}
+              {/* Grid Toggle Button - Right side of search */}
               <button
                 onClick={cycleGrid}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-2 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center gap-1 min-w-[60px] justify-center"
-                title={`Grid: ${gridCols} column${gridCols > 1 ? 's' : ''} (${isMobile ? 'Mobile' : 'Desktop'} mode)`}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-2 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center gap-1"
+                title={`Grid: ${gridCols} column${gridCols > 1 ? 's' : ''} (${isMobile ? 'Mobile' : 'Desktop'})`}
               >
-                {/* Dynamic grid icon based on current columns */}
-                {gridCols === 1 && (
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                )}
-                {gridCols === 2 && (
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v18M3 9h18" />
-                  </svg>
-                )}
-                {gridCols === 3 && (
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h6v6H3zm8 0h6v6h-6zm-8 8h6v6H3zm8 0h6v6h-6z" />
-                  </svg>
-                )}
-                {gridCols === 4 && (
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="5" height="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="10" y="3" width="5" height="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="17" y="3" width="5" height="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="3" y="10" width="5" height="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                  </svg>
-                )}
-                {gridCols === 6 && (
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <rect x="1" y="2" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="5" y="2" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="9" y="2" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="1" y="6" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="5" y="6" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                    <rect x="9" y="6" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
-                  </svg>
-                )}
+                {getGridIcon()}
                 <span className="text-xs font-bold hidden sm:inline">{gridCols}</span>
               </button>
               
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-20 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                  className="absolute right-16 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -691,7 +745,7 @@ function UserCatalogue() {
                     <div>
                       <label className="block font-bold text-blue-700 mb-2">Categories</label>
                       <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-gray-50">
-                        {getAllCategories().map((cat) => (
+                        {getAllcatagories().map((cat) => (
                           <label key={cat} className="flex items-center gap-2 text-sm p-1 hover:bg-blue-50 rounded cursor-pointer">
                             <input
                               type="checkbox"
@@ -725,7 +779,7 @@ function UserCatalogue() {
                         className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                       >
                         <option value="">All Sub-Categories</option>
-                        {getFilteredSubCategories().map((subCat) => (
+                        {getFilteredSubcatagories().map((subCat) => (
                           <option key={subCat} value={subCat}>{subCat}</option>
                         ))}
                       </select>
@@ -1092,8 +1146,8 @@ function UserCatalogue() {
           </div>
         )}
 
-        {/* Enhanced Responsive Cards Grid */}
-        <div className={getGridClasses()}>
+        {/* Enhanced Cards Grid - Responsive with new grid system */}
+        <div className={`gap-3 sm:gap-4 lg:gap-6 px-3 sm:px-4 lg:px-6 pb-8 ${getGridClasses()}`}>
           {!loading && jewellery.length === 0 ? (
             <div className="col-span-full text-center py-20">
               <div className="text-6xl sm:text-8xl mb-6 animate-bounce">💎</div>
@@ -1110,6 +1164,7 @@ function UserCatalogue() {
             jewellery.map((item, index) => {
               const itemImages = getItemImages(item);
               const mainImage = getMainImage(item);
+              const textSizes = getTextSizeClasses();
               
               return (
                 <div
@@ -1120,14 +1175,14 @@ function UserCatalogue() {
                   {/* Card Glow Effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   
-                  {/* Enhanced Media Section with Responsive Height */}
+                  {/* Enhanced Media Section */}
                   {mainImage && (
                     <div className="relative mb-2 sm:mb-3 overflow-hidden rounded-lg sm:rounded-xl">
                       <img
                         src={mainImage}
                         alt={item.name}
                         loading="lazy"
-                        className={`w-full object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500 ${getImageHeightClass()}`}
+                        className={`w-full object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500 ${getImageHeightClasses()}`}
                         onError={(e) => {
                           e.target.style.display = 'none';
                         }}
@@ -1170,7 +1225,7 @@ function UserCatalogue() {
                       {item.name}
                     </h2>
                     
-                    <div className={`flex items-center justify-between text-gray-600 ${textSizes.detail}`}>
+                    <div className={`flex items-center justify-between text-gray-600 ${textSizes.details}`}>
                       <span className="font-semibold text-amber-700">{item.weight}g</span>
                       <span className="font-semibold truncate ml-1">{item.category?.main}</span>
                     </div>
@@ -1572,23 +1627,3 @@ function UserCatalogue() {
 }
 
 export default UserCatalogue;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

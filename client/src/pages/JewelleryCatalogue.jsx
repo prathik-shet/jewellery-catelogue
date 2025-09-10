@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 
 function JewelleryCatalogue() {
@@ -16,25 +16,56 @@ function JewelleryCatalogue() {
   const [searchId, setSearchId] = useState('');
   const [newItem, setNewItem] = useState({});
   
-  // ✅ Enhanced media file handling
-  const [imageFiles, setImageFiles] = useState([]); // Multiple image files
-  const [videoFiles, setVideoFiles] = useState([]); // ✅ NEW: Multiple video files
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [isDataFetched, setIsDataFetched] = useState(false);
+  
+  // Enhanced media file handling
+  const [imageFiles, setImageFiles] = useState([]);
+  const [videoFiles, setVideoFiles] = useState([]);
   
   const [isEditing, setIsEditing] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
   const [showForm, setShowForm] = useState(false);
   
-  // ✅ Enhanced modal media handling
-  const [modalMedia, setModalMedia] = useState([]); // Combined images and videos
+  // Enhanced modal media handling
+  const [modalMedia, setModalMedia] = useState([]);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   
-  const [gridCols, setGridCols] = useState(3);
+  // Enhanced responsive grid system
+  const [gridCols, setGridCols] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768 ? 2 : 3;
+    }
+    return 3;
+  });
+  const [isMobile, setIsMobile] = useState(false);
+  
   const [sortField, setSortField] = useState('clickCount');
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [showSortPanel, setShowSortPanel] = useState(false);
+  
+  // Enhanced item selection with navigation
   const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedItemIndex, setSelectedItemIndex] = useState(-1);
+  
+  // Touch/swipe handling
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  
   const [designFilter, setDesignFilter] = useState('');
 
-  const catagories = [
+  // Dynamic data from API
+  const [categories, setCategories] = useState([]);
+  const [genders, setGenders] = useState([]);
+  const [types, setTypes] = useState([]);
+  const [metals, setMetals] = useState([]);
+
+  const defaultCategories = [
     'All Jewellery',
     'Earrings',
     'Pendants',
@@ -49,54 +80,288 @@ function JewelleryCatalogue() {
     'Antique',
     'Custom',
   ];
-  const genders = ['All', 'Unisex', 'Women', 'Men'];
-  const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
-  const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
+  const defaultGenders = ['All', 'Unisex', 'Women', 'Men'];
+  const defaultTypes = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
+  const defaultMetals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
   const isAdmin = true;
 
-  axios.get(`/api/jewellery`);
-
-
+  // Device detection and responsive handling
   useEffect(() => {
-    fetchJewellery();
-  }, []);
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      
+      if (mobile && gridCols > 3) {
+        setGridCols(2);
+      } else if (!mobile && gridCols === 1) {
+        setGridCols(3);
+      }
+    };
 
-  const fetchJewellery = async () => {
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [gridCols]);
+
+  // Fetch filter options from API
+  const fetchFilterOptions = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get(`/api/jewellery`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = res.data;
-      if (Array.isArray(data)) {
-        setJewellery(data);
-      } else if (data && Array.isArray(data.items)) {
-        setJewellery(data.items);
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await fetch('/api/jewellery/filters', { headers });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(['All Jewellery', ...(data.categories || defaultCategories.slice(1))]);
+        setGenders(['All', ...(data.genders || defaultGenders.slice(1))]);
+        setTypes(['All', ...(data.types || defaultTypes.slice(1))]);
+        setMetals(['All', ...(data.metals || defaultMetals.slice(1))]);
       } else {
-        console.error('Unexpected response format:', data);
-        setJewellery([]);
+        // Use defaults if API fails
+        setCategories(defaultCategories);
+        setGenders(defaultGenders);
+        setTypes(defaultTypes);
+        setMetals(defaultMetals);
       }
     } catch (error) {
-      console.error('Failed to load jewellery:', error);
-      alert('Failed to load jewellery.');
-      setJewellery([]);
+      console.error('Failed to load filter options:', error);
+      setCategories(defaultCategories);
+      setGenders(defaultGenders);
+      setTypes(defaultTypes);
+      setMetals(defaultMetals);
+    }
+  }, []);
+
+  // Enhanced grid cycling function with device-aware options
+  const cycleGrid = () => {
+    setGridCols(prev => {
+      if (isMobile) {
+        if (prev === 1) return 2;
+        if (prev === 2) return 3;
+        return 1;
+      } else {
+        if (prev === 2) return 3;
+        if (prev === 3) return 4;
+        if (prev === 4) return 6;
+        return 2;
+      }
+    });
+  };
+
+  // Get responsive grid classes
+  const getGridClasses = () => {
+    const baseClasses = 'grid gap-3 sm:gap-4 lg:gap-6 px-3 sm:px-4 lg:px-6 pb-8';
+    
+    if (isMobile) {
+      switch (gridCols) {
+        case 1: return `${baseClasses} grid-cols-1`;
+        case 2: return `${baseClasses} grid-cols-2`;
+        case 3: return `${baseClasses} grid-cols-3`;
+        default: return `${baseClasses} grid-cols-2`;
+      }
+    } else {
+      switch (gridCols) {
+        case 2: return `${baseClasses} grid-cols-2 lg:grid-cols-2`;
+        case 3: return `${baseClasses} grid-cols-2 md:grid-cols-3 lg:grid-cols-3`;
+        case 4: return `${baseClasses} grid-cols-2 md:grid-cols-3 lg:grid-cols-4`;
+        case 6: return `${baseClasses} grid-cols-2 md:grid-cols-4 lg:grid-cols-6`;
+        default: return `${baseClasses} grid-cols-2 md:grid-cols-3 lg:grid-cols-3`;
+      }
     }
   };
 
-  const handleItemClick = async (item) => {
+  // Get responsive image height classes
+  const getImageHeightClass = () => {
+    if (isMobile) {
+      switch (gridCols) {
+        case 1: return 'h-64 sm:h-80';
+        case 2: return 'h-40 sm:h-48';
+        case 3: return 'h-32 sm:h-40';
+        default: return 'h-40 sm:h-48';
+      }
+    } else {
+      switch (gridCols) {
+        case 2: return 'h-56 lg:h-64';
+        case 3: return 'h-48 lg:h-56';
+        case 4: return 'h-40 lg:h-48';
+        case 6: return 'h-32 lg:h-40';
+        default: return 'h-48 lg:h-56';
+      }
+    }
+  };
+
+  // Get responsive text size classes
+  const getTextSizeClasses = () => {
+    if (isMobile) {
+      switch (gridCols) {
+        case 1: return { title: 'text-lg sm:text-xl', detail: 'text-sm' };
+        case 2: return { title: 'text-sm sm:text-base', detail: 'text-xs' };
+        case 3: return { title: 'text-xs sm:text-sm', detail: 'text-xs' };
+        default: return { title: 'text-sm sm:text-base', detail: 'text-xs' };
+      }
+    } else {
+      switch (gridCols) {
+        case 2: return { title: 'text-lg lg:text-xl', detail: 'text-sm lg:text-base' };
+        case 3: return { title: 'text-base lg:text-lg', detail: 'text-sm' };
+        case 4: return { title: 'text-sm lg:text-base', detail: 'text-xs lg:text-sm' };
+        case 6: return { title: 'text-xs lg:text-sm', detail: 'text-xs' };
+        default: return { title: 'text-base lg:text-lg', detail: 'text-sm' };
+      }
+    }
+  };
+
+  // Enhanced fetchJewellery with pagination
+  const fetchJewellery = useCallback(async () => {
+    setLoading(true);
+    setIsDataFetched(false);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` })
+      };
+
+      const params = new URLSearchParams();
+      
+      params.append('page', currentPage.toString());
+      params.append('pageSize', itemsPerPage.toString());
+      
+      if (sortByDate) {
+        params.append('sortByDate', sortByDate);
+      } else {
+        params.append('sortField', sortField || 'clickCount');
+        params.append('sortOrder', sortOrder || 'desc');
+      }
+
+      if (selectedCategory.length > 0 && !selectedCategory.includes('All Jewellery')) {
+        params.append('categories', selectedCategory.join(','));
+      }
+      
+      if (selectedSubCategory && selectedSubCategory.trim() !== '') {
+        params.append('subCategory', selectedSubCategory);
+      }
+      
+      if (selectedType && selectedType !== '' && selectedType !== 'All') {
+        params.append('type', selectedType);
+      }
+      
+      if (selectedGender && selectedGender !== '' && selectedGender !== 'All') {
+        params.append('gender', selectedGender);
+      }
+      
+      if (metalFilter && metalFilter !== '' && metalFilter !== 'All') {
+        params.append('metal', metalFilter);
+      }
+      
+      if (stoneFilter && stoneFilter !== '') {
+        params.append('stone', stoneFilter);
+      }
+      
+      if (designFilter && designFilter !== '') {
+        params.append('design', designFilter);
+      }
+      
+      if (weightRanges.length > 0) {
+        params.append('weightRanges', weightRanges.join(','));
+      }
+      
+      if (searchQuery && searchQuery.trim() !== '') {
+        params.append('search', searchQuery.trim());
+      }
+      
+      if (searchId && searchId.trim() !== '') {
+        params.append('searchId', searchId.trim());
+      }
+
+      const response = await fetch(`/api/jewellery?${params.toString()}`, { headers });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch jewellery data');
+      }
+
+      const data = await response.json();
+
+      if (data.items && Array.isArray(data.items)) {
+        setJewellery(data.items);
+        setTotalItems(data.totalItems || 0);
+        setTotalPages(data.totalPages || 1);
+      } else if (Array.isArray(data)) {
+        // Fallback for direct array response
+        setJewellery(data);
+        setTotalItems(data.length);
+        setTotalPages(1);
+      } else {
+        setJewellery([]);
+        setTotalItems(0);
+        setTotalPages(1);
+      }
+
+    } catch (error) {
+      console.error('Failed to load jewellery:', error);
+      setJewellery([]);
+      setTotalItems(0);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+      setIsDataFetched(true);
+    }
+  }, [
+    currentPage,
+    itemsPerPage,
+    sortField,
+    sortOrder,
+    sortByDate,
+    selectedCategory,
+    selectedSubCategory,
+    selectedType,
+    selectedGender,
+    metalFilter,
+    stoneFilter,
+    designFilter,
+    weightRanges,
+    searchQuery,
+    searchId,
+  ]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedSubCategory, selectedType, selectedGender, metalFilter, stoneFilter, designFilter, weightRanges, searchQuery, searchId, sortField, sortOrder, sortByDate]);
+
+  useEffect(() => {
+    fetchFilterOptions();
+  }, [fetchFilterOptions]);
+
+  useEffect(() => {
+    fetchJewellery();
+  }, [fetchJewellery]);
+
+  // Enhanced item click handler with index tracking
+  const handleItemClick = async (item, index) => {
     setSelectedItem(item);
+    setSelectedItemIndex(index);
     
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.patch(`/api/jewellery/${item._id}/click`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` })
+      };
+      
+      const response = await fetch(`/api/jewellery/${item._id}/click`, {
+        method: 'PATCH',
+        headers
       });
       
-      setJewellery(prev => prev.map(jewel => 
-        jewel._id === item._id 
-          ? { ...jewel, clickCount: response.data.clickCount || (jewel.clickCount || 0) + 1 }
-          : jewel
-      ));
+      if (response.ok) {
+        const data = await response.json();
+        setJewellery(prev => prev.map(jewel => 
+          jewel._id === item._id 
+            ? { ...jewel, clickCount: data.clickCount || (jewel.clickCount || 0) + 1 }
+            : jewel
+        ));
+      }
     } catch (error) {
       console.error('Failed to update popularity:', error);
       setJewellery(prev => prev.map(jewel => 
@@ -107,18 +372,86 @@ function JewelleryCatalogue() {
     }
   };
 
-  // ✅ Enhanced helper function to get all media (images + videos) from an item
+  // Navigation functions for item details modal
+  const navigateToItem = (direction) => {
+    let newIndex = selectedItemIndex;
+    
+    if (direction === 'next') {
+      newIndex = selectedItemIndex + 1;
+      if (newIndex >= jewellery.length) {
+        newIndex = 0;
+      }
+    } else if (direction === 'prev') {
+      newIndex = selectedItemIndex - 1;
+      if (newIndex < 0) {
+        newIndex = jewellery.length - 1;
+      }
+    }
+    
+    if (newIndex !== selectedItemIndex && jewellery[newIndex]) {
+      setSelectedItem(jewellery[newIndex]);
+      setSelectedItemIndex(newIndex);
+      handleItemClick(jewellery[newIndex], newIndex);
+    }
+  };
+
+  // Touch event handlers for swipe detection
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+    
+    if (isLeftSwipe) {
+      navigateToItem('next');
+    } else if (isRightSwipe) {
+      navigateToItem('prev');
+    }
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (!selectedItem) return;
+      
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateToItem('prev');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateToItem('next');
+      } else if (e.key === 'Escape') {
+        setSelectedItem(null);
+        setSelectedItemIndex(-1);
+      }
+    };
+
+    if (selectedItem) {
+      document.addEventListener('keydown', handleKeyPress);
+      return () => document.removeEventListener('keydown', handleKeyPress);
+    }
+  }, [selectedItem, selectedItemIndex, jewellery]);
+
+  // Helper functions for media handling
   const getItemMedia = (item) => {
     const media = [];
     
-    // Add images
     if (item.images && Array.isArray(item.images) && item.images.length > 0) {
       item.images.forEach(img => media.push({ type: 'image', src: img }));
     } else if (item.image) {
       media.push({ type: 'image', src: item.image });
     }
     
-    // ✅ NEW: Add videos
     if (item.videos && Array.isArray(item.videos) && item.videos.length > 0) {
       item.videos.forEach(vid => media.push({ type: 'video', src: vid }));
     }
@@ -126,7 +459,6 @@ function JewelleryCatalogue() {
     return media;
   };
 
-  // ✅ Helper function to get all images from an item
   const getItemImages = (item) => {
     if (item.images && Array.isArray(item.images) && item.images.length > 0) {
       return item.images;
@@ -136,7 +468,6 @@ function JewelleryCatalogue() {
     return [];
   };
 
-  // ✅ NEW: Helper function to get all videos from an item
   const getItemVideos = (item) => {
     if (item.videos && Array.isArray(item.videos) && item.videos.length > 0) {
       return item.videos;
@@ -144,70 +475,103 @@ function JewelleryCatalogue() {
     return [];
   };
 
-  // ✅ Helper function to get the main image
   const getMainImage = (item) => {
     const images = getItemImages(item);
     return images.length > 0 ? images[0] : null;
   };
 
-  const getAllcatagories = () => {
-    if (!Array.isArray(jewellery)) {
-      return catagories.filter(cat => cat !== 'All Jewellery' && cat !== 'Custom');
+  // Fixed pagination handlers
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    
-    const basecatagories = catagories.filter(cat => cat !== 'All Jewellery');
-    const customcatagories = jewellery
-      .map(item => item.category?.main)
-      .filter(cat => cat && !basecatagories.includes(cat))
-      .filter((cat, index, arr) => arr.indexOf(cat) === index);
-    
-    return [...basecatagories.filter(cat => cat !== 'Custom'), ...customcatagories];
   };
 
-  const getAllSubcatagories = () => {
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      goToPage(currentPage + 1);
+    }
+  };
+
+  // Generate pagination range
+  const getPaginationRange = () => {
+    const range = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        range.push(i);
+      }
+    } else {
+      let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+      let end = Math.min(totalPages, start + maxVisible - 1);
+      
+      if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+      }
+      
+      for (let i = start; i <= end; i++) {
+        range.push(i);
+      }
+    }
+    
+    return range;
+  };
+
+  const getAllCategories = () => {
+    return categories.filter(cat => cat !== 'All Jewellery' && cat !== 'Custom');
+  };
+
+  const getAllSubCategories = () => {
     if (!Array.isArray(jewellery)) {
       return [];
     }
     
-    const subcatagories = jewellery
+    const subCategories = jewellery
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index);
     
-    return subcatagories.sort();
+    return subCategories.sort();
   };
 
-  const getFilteredSubcatagories = () => {
+  const getFilteredSubCategories = () => {
     if (!Array.isArray(jewellery)) {
       return [];
     }
     
     if (selectedCategory.length === 0) {
-      return getAllSubcatagories();
+      return getAllSubCategories();
     }
     
-    const filteredSubcatagories = jewellery
+    const filteredSubCategories = jewellery
       .filter(item => selectedCategory.includes(item.category?.main))
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index);
     
-    return filteredSubcatagories.sort();
+    return filteredSubCategories.sort();
   };
 
-  // ✅ NEW: Get existing sub-catagories for the selected main category
-  const getSubcatagoriesForMainCategory = (mainCategory) => {
+  const getSubCategoriesForMainCategory = (mainCategory) => {
     if (!Array.isArray(jewellery) || !mainCategory || mainCategory === 'Custom') {
       return [];
     }
     
-    const subcatagories = jewellery
+    const subCategories = jewellery
       .filter(item => item.category?.main === mainCategory)
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index);
     
-    return subcatagories.sort();
+    return subCategories.sort();
   };
 
   const clearAllFilters = () => {
@@ -221,14 +585,53 @@ function JewelleryCatalogue() {
     setSearchQuery('');
     setSearchId('');
     setDesignFilter('');
+    setCurrentPage(1);
   };
 
+  const clearAllSorts = () => {
+    setSortField('clickCount');
+    setSortOrder('desc');
+    setSortByDate('');
+    setCurrentPage(1);
+  };
+
+  const getActiveSortDescription = () => {
+    if (sortByDate === 'newest') return 'Date: Newest First';
+    if (sortByDate === 'oldest') return 'Date: Oldest First';
+    if (sortField === 'weight' && sortOrder === 'asc') return 'Weight: Low to High';
+    if (sortField === 'weight' && sortOrder === 'desc') return 'Weight: High to Low';
+    if (sortField === 'orderNo' && sortOrder === 'asc') return 'Order No: Low to High';
+    if (sortField === 'orderNo' && sortOrder === 'desc') return 'Order No: High to Low';
+    if (sortField === 'clickCount' && sortOrder === 'desc') return 'Popularity: Most Popular First';
+    if (sortField === 'clickCount' && sortOrder === 'asc') return 'Popularity: Least Popular First';
+    return 'Most Popular First';
+  };
+
+  const openMediaModal = (media, startIndex = 0) => {
+    setModalMedia(media);
+    setCurrentMediaIndex(startIndex);
+  };
+
+  const closeMediaModal = () => {
+    setModalMedia([]);
+    setCurrentMediaIndex(0);
+  };
+
+  const navigateMedia = (direction) => {
+    if (direction === 'next') {
+      setCurrentMediaIndex(prev => (prev + 1) % modalMedia.length);
+    } else {
+      setCurrentMediaIndex(prev => (prev - 1 + modalMedia.length) % modalMedia.length);
+    }
+  };
+
+  // Form handling functions (keeping existing admin functionality)
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
-    if (name === 'catagories') {
+    if (name === 'categories') {
       setNewItem((prev) => ({
         ...prev,
-        category: { ...prev.category, main: value, sub: '' }, // ✅ Clear sub when main changes
+        category: { ...prev.category, main: value, sub: '' },
       }));
       if (value !== 'Custom') setCustomCategory('');
     } else if (name === 'subCategory') {
@@ -243,7 +646,6 @@ function JewelleryCatalogue() {
     }
   };
 
-  // ✅ Enhanced file handling for multiple images
   const handleImageFileChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 10) {
@@ -253,7 +655,6 @@ function JewelleryCatalogue() {
     setImageFiles(files);
   };
 
-  // ✅ NEW: Enhanced file handling for multiple videos
   const handleVideoFileChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 5) {
@@ -263,17 +664,14 @@ function JewelleryCatalogue() {
     setVideoFiles(files);
   };
 
-  // ✅ Remove image from upload list
   const removeImageFile = (index) => {
     setImageFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // ✅ NEW: Remove video from upload list
   const removeVideoFile = (index) => {
     setVideoFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // ✅ Enhanced handleAddItem with multiple images and videos
   const handleAddItem = async (e) => {
     e.preventDefault();
     if (
@@ -292,7 +690,6 @@ function JewelleryCatalogue() {
     }
 
     try {
-      // Process images
       const imagePromises = imageFiles.map(file => {
         return new Promise((resolve) => {
           const reader = new FileReader();
@@ -301,7 +698,6 @@ function JewelleryCatalogue() {
         });
       });
 
-      // ✅ NEW: Process videos
       const videoPromises = videoFiles.map(file => {
         return new Promise((resolve) => {
           const reader = new FileReader();
@@ -327,9 +723,9 @@ function JewelleryCatalogue() {
         carat: parseInt(newItem.carat),
         gender: newItem.gender || 'Unisex',
         stoneWeight: newItem.stoneWeight ? parseFloat(newItem.stoneWeight) : null,
-        images: imageResults, // Multiple images
-        videos: videoResults, // ✅ NEW: Multiple videos
-        image: imageResults[0] || null, // Main image for backward compatibility
+        images: imageResults,
+        videos: videoResults,
+        image: imageResults[0] || null,
         type: newItem.type || 'normal',
         orderNo: newItem.orderNo ? parseInt(newItem.orderNo) : null,
         isOurDesign: newItem.isOurDesign !== undefined ? newItem.isOurDesign : true,
@@ -344,7 +740,7 @@ function JewelleryCatalogue() {
       fetchJewellery();
       setNewItem({});
       setImageFiles([]);
-      setVideoFiles([]); // ✅ NEW: Clear video files
+      setVideoFiles([]);
       setShowForm(false);
       setCustomCategory('');
       setIsEditing(false);
@@ -361,8 +757,8 @@ function JewelleryCatalogue() {
     setIsEditing(true);
     setSelectedItem(null);
     setImageFiles([]);
-    setVideoFiles([]); // ✅ NEW: Clear video files
-    if (!catagories.includes(item.category?.main)) {
+    setVideoFiles([]);
+    if (!defaultCategories.includes(item.category?.main)) {
       setCustomCategory(item.category?.main);
       setNewItem((prev) => ({
         ...prev,
@@ -371,7 +767,6 @@ function JewelleryCatalogue() {
     }
   };
 
-  // ✅ Enhanced handleUpdateItem with multiple images and videos
   const handleUpdateItem = async (e) => {
     e.preventDefault();
     try {
@@ -392,9 +787,8 @@ function JewelleryCatalogue() {
         isOurDesign: newItem.isOurDesign !== undefined ? newItem.isOurDesign : true,
       };
 
-      const token = localStorage.getItem('token');
+      const token = localStorage.getToken('token');
       
-      // Process images if new ones are uploaded
       if (imageFiles.length > 0) {
         const imagePromises = imageFiles.map(file => {
           return new Promise((resolve) => {
@@ -409,7 +803,6 @@ function JewelleryCatalogue() {
         payload.image = imageResults[0];
       }
 
-      // ✅ NEW: Process videos if new ones are uploaded
       if (videoFiles.length > 0) {
         const videoPromises = videoFiles.map(file => {
           return new Promise((resolve) => {
@@ -431,7 +824,7 @@ function JewelleryCatalogue() {
       setIsEditing(false);
       setNewItem({});
       setImageFiles([]);
-      setVideoFiles([]); // ✅ NEW: Clear video files
+      setVideoFiles([]);
       setShowForm(false);
       setCustomCategory('');
       alert('Item updated successfully!');
@@ -457,1059 +850,1000 @@ function JewelleryCatalogue() {
     }
   };
 
-  const clearAllSorts = () => {
-    setSortField('clickCount');
-    setSortOrder('desc');
-    setSortByDate('');
-  };
-
-  const getActiveSortDescription = () => {
-    if (sortByDate === 'newest') return 'Date: Newest First';
-    if (sortByDate === 'oldest') return 'Date: Oldest First';
-    if (sortField === 'weight' && sortOrder === 'asc') return 'Weight: Low to High';
-    if (sortField === 'weight' && sortOrder === 'desc') return 'Weight: High to Low';
-    if (sortField === 'orderNo' && sortOrder === 'asc') return 'Order No: Low to High';
-    if (sortField === 'orderNo' && sortOrder === 'desc') return 'Order No: High to Low';
-    if (sortField === 'clickCount' && sortOrder === 'desc') return 'Popularity: Most Popular First';
-    if (sortField === 'clickCount' && sortOrder === 'asc') return 'Popularity: Least Popular First';
-    return 'Most Popular First';
-  };
-
-  // ✅ Enhanced media gallery modal
-  const openMediaModal = (media, startIndex = 0) => {
-    setModalMedia(media);
-    setCurrentMediaIndex(startIndex);
-  };
-
-  // ✅ Close media modal
-  const closeMediaModal = () => {
-    setModalMedia([]);
-    setCurrentMediaIndex(0);
-  };
-
-  // ✅ Navigate media in modal
-  const navigateMedia = (direction) => {
-    if (direction === 'next') {
-      setCurrentMediaIndex(prev => (prev + 1) % modalMedia.length);
-    } else {
-      setCurrentMediaIndex(prev => (prev - 1 + modalMedia.length) % modalMedia.length);
-    }
-  };
-
-  const filterJewellery = () => {
-    if (!Array.isArray(jewellery)) {
-      console.error('Jewellery is not an array:', jewellery);
-      return [];
-    }
-    
-    let filtered = [...jewellery];
-
-    if (selectedCategory.length > 0) {
-      filtered = filtered.filter((item) =>
-        selectedCategory.includes(item.category?.main)
-      );
-    }
-
-    if (selectedSubCategory) {
-      filtered = filtered.filter(
-        (item) =>
-          item.category?.sub &&
-          item.category.sub.toLowerCase() === selectedSubCategory.toLowerCase()
-      );
-    }
-
-    if (selectedType && selectedType !== 'All') {
-      filtered = filtered.filter(
-        (item) => item.type && item.type.toLowerCase() === selectedType.toLowerCase()
-      );
-    }
-
-    if (selectedGender) {
-      filtered = filtered.filter((item) => item.gender === selectedGender);
-    }
-
-    if (metalFilter && metalFilter !== 'All') {
-      filtered = filtered.filter(
-        (item) => item.metal && item.metal.toLowerCase() === metalFilter.toLowerCase()
-      );
-    }
-
-    if (stoneFilter === 'with') {
-      filtered = filtered.filter((item) => item.stoneWeight != null);
-    } else if (stoneFilter === 'without') {
-      filtered = filtered.filter((item) => item.stoneWeight == null);
-    }
-
-    if (designFilter === 'our') {
-      filtered = filtered.filter((item) => item.isOurDesign === true);
-    } else if (designFilter === 'Others') {
-      filtered = filtered.filter((item) => item.isOurDesign === false);
-    }
-
-    if (weightRanges.length > 0) {
-      filtered = filtered.filter((item) => {
-        const w = parseFloat(item.weight);
-        if (isNaN(w)) return false;
-        return weightRanges.some((range) => {
-          const [min, max] = range.split('-');
-          return max === '+'
-            ? w >= parseFloat(min)
-            : w >= parseFloat(min) && w <= parseFloat(max);
-        });
-      });
-    }
-
-    if (searchQuery) {
-      filtered = filtered.filter((item) =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (searchId) {
-      filtered = filtered.filter(
-        (item) => item.id?.toLowerCase().includes(searchId.toLowerCase())
-      );
-    }
-
-    // Sorting logic
-    if (sortField === 'orderNo') {
-      if (sortOrder === 'asc') {
-        filtered.sort((a, b) => {
-          const aOrder = a.orderNo !== undefined && a.orderNo !== null ? a.orderNo : 0;
-          const bOrder = b.orderNo !== undefined && b.orderNo !== null ? b.orderNo : 0;
-          return aOrder - bOrder;
-        });
-      } else if (sortOrder === 'desc') {
-        filtered.sort((a, b) => {
-          const aOrder = a.orderNo !== undefined && a.orderNo !== null ? a.orderNo : 0;
-          const bOrder = b.orderNo !== undefined && b.orderNo !== null ? b.orderNo : 0;
-          return bOrder - aOrder;
-        });
-      }
-    } else if (sortField === 'weight') {
-      if (sortOrder === 'asc') {
-        filtered.sort((a, b) => {
-          const aWeight = parseFloat(a.weight) || 0;
-          const bWeight = parseFloat(b.weight) || 0;
-          return aWeight - bWeight;
-        });
-      } else if (sortOrder === 'desc') {
-        filtered.sort((a, b) => {
-          const aWeight = parseFloat(a.weight) || 0;
-          const bWeight = parseFloat(b.weight) || 0;
-          return bWeight - aWeight;
-        });
-      }
-    } else if (sortField === 'clickCount') {
-      if (sortOrder === 'desc') {
-        filtered.sort((a, b) => {
-          const aClicks = a.clickCount || 0;
-          const bClicks = b.clickCount || 0;
-          return bClicks - aClicks;
-        });
-      } else if (sortOrder === 'asc') {
-        filtered.sort((a, b) => {
-          const aClicks = a.clickCount || 0;
-          const bClicks = b.clickCount || 0;
-          return aClicks - bClicks;
-        });
-      }
-    }
-
-    if (sortByDate === 'newest') {
-      filtered.sort((a, b) => {
-        const aDate = a.date ? new Date(a.date) : new Date(0);
-        const bDate = b.date ? new Date(b.date) : new Date(0);
-        return bDate - aDate;
-      });
-    } else if (sortByDate === 'oldest') {
-      filtered.sort((a, b) => {
-        const aDate = a.date ? new Date(a.date) : new Date(0);
-        const bDate = b.date ? new Date(b.date) : new Date(0);
-        return aDate - bDate;
-      });
-    }
-
-    return filtered;
-  };
-
-  const filteredJewellery = filterJewellery();
+  const textSizes = getTextSizeClasses();
 
   return (
-    <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 min-h-screen pb-20">
-      {/* Enhanced Header with Glassmorphism Effect */}
-      <div className="bg-gradient-to-r from-amber-400/90 via-yellow-400/90 to-orange-400/90 backdrop-blur-md fixed top-0 left-0 w-full z-[80] shadow-2xl p-4 flex items-center gap-4 border-b border-amber-300/50">
-        <div className="flex items-center gap-4">
+    <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 min-h-screen">
+      {/* Header with Logo and Company Name */}
+      <div className="bg-gradient-to-r from-amber-400/90 via-yellow-400/90 to-orange-400/90 backdrop-blur-md fixed top-0 left-0 w-full z-[90] shadow-2xl p-4 border-b border-amber-300/50">
+        <div className="flex items-center gap-4 justify-center sm:justify-start">
           <div className="relative">
             <img
-              src="./logo.png"
+              src="logo.png"
               alt="Logo"
-              className="w-16 h-16 object-cover rounded-full border-3 border-white shadow-xl ring-4 ring-amber-200/50"
+              loading="lazy"
+              className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-3 border-white shadow-xl ring-4 ring-amber-200/50"
             />
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>
+            <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>
           </div>
-          <div>
-            <h1 className="text-3xl font-black text-white tracking-wide drop-shadow-lg">
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-wide drop-shadow-lg">
               VIMALESHWARA JEWELLERS
             </h1>
-            <p className="text-amber-100 text-sm font-medium">Premium Jewellery Collection</p>
+            <p className="text-amber-100 text-xs sm:text-sm font-medium">Premium Jewellery Collection</p>
           </div>
         </div>
-        
-        <button
-          onClick={() => setShowSortPanel(true)}
-          className="ml-auto bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold shadow-xl hover:from-indigo-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border border-white/20 backdrop-blur-sm"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-          </svg>
-          Sort & Filter
-          <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
-        </button>
       </div>
 
-      <div className="h-32" />
-
-      {/* Sort Panel Overlay */}
-      {showSortPanel && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[45]" onClick={() => setShowSortPanel(false)} />
-      )}
-
-      {/* Enhanced Sorting Sidebar */}
-      <div className={`fixed top-0 left-0 h-full w-96 bg-gradient-to-b from-white via-amber-50 to-orange-50 border-r-4 border-amber-400 z-[150] transform transition-all duration-500 ease-out shadow-2xl ${
-        showSortPanel ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        <div className="p-6 h-full overflow-y-auto">
-          <div className="flex items-center justify-between mb-8 pb-6 border-b-2 border-gradient-to-r from-amber-300 to-orange-300">
-            <h2 className="text-3xl font-black text-amber-800 flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+      {/* Combined Search, Filter, Sort Controls */}
+      <div className="bg-white/95 backdrop-blur-md fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-4 border-b border-amber-200">
+        <div className="w-full max-w-5xl mx-auto">
+          {/* Search Bar Row */}
+          <div className="relative mb-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search jewellery by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-20 py-3 bg-white border-2 border-gray-200 rounded-2xl text-gray-800 placeholder-gray-500 focus:outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-200/30 transition-all duration-300 text-sm sm:text-base font-medium"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              Sort Options
-            </h2>
-            <button
-              onClick={() => setShowSortPanel(false)}
-              className="text-red-600 hover:text-red-800 bg-red-100 hover:bg-red-200 rounded-xl p-3 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="mb-8 p-6 bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100 rounded-2xl border-2 border-blue-300 shadow-lg">
-            <h3 className="font-bold text-blue-800 mb-3 flex items-center gap-3 text-lg">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              Current Sort
-            </h3>
-            <p className="text-blue-700 font-semibold text-lg mb-4">{getActiveSortDescription()}</p>
-            <button
-              onClick={clearAllSorts}
-              className="bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-3 rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-semibold shadow-lg transform hover:scale-105"
-            >
-              Reset to Most Popular
-            </button>
-          </div>
-
-          <div className="space-y-6">
-            <div className="p-6 bg-white rounded-2xl shadow-lg border-2 border-amber-200 hover:border-amber-300 transition-all duration-300">
-              <label className="block font-bold text-amber-700 mb-4 flex items-center gap-3 text-lg">
-                <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                Sort By Field
-              </label>
-              <select
-                value={sortField}
-                onChange={(e) => {
-                  setSortField(e.target.value);
-                  setSortOrder('');
-                  setSortByDate('');
-                }}
-                className="w-full p-4 rounded-xl border-2 border-amber-300 bg-gradient-to-r from-white to-amber-50 focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 font-medium text-lg shadow-inner"
-              >
-                <option value="">Select Field...</option>
-                <option value="weight">💎 Weight</option>
-                <option value="orderNo">📋 Order Number</option>
-                <option value="clickCount">🔥 Popularity</option>
-              </select>
-            </div>
-
-            {(sortField === 'weight' || sortField === 'orderNo' || sortField === 'clickCount') && (
-              <div className="p-6 bg-white rounded-2xl shadow-lg border-2 border-amber-200">
-                <label className="block font-bold text-amber-700 mb-4 flex items-center gap-3 text-lg">
-                  <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                    </svg>
-                  </div>
-                  Sort Direction
-                </label>
-                <div className="grid grid-cols-1 gap-4">
-                  <button
-                    onClick={() => {
-                      setSortOrder('asc');
-                      setSortByDate('');
-                    }}
-                    className={`p-4 rounded-xl border-2 font-semibold transition-all duration-300 text-lg ${
-                      sortOrder === 'asc'
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600 shadow-xl transform scale-105'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300 shadow-md hover:shadow-lg'
-                    }`}
-                  >
-                    ⬆️ {sortField === 'clickCount' ? 'Least Popular First' : 'Low to High (Ascending)'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSortOrder('desc');
-                      setSortByDate('');
-                    }}
-                    className={`p-4 rounded-xl border-2 font-semibold transition-all duration-300 text-lg ${
-                      sortOrder === 'desc'
-                        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600 shadow-xl transform scale-105'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300 shadow-md hover:shadow-lg'
-                    }`}
-                  >
-                    ⬇️ {sortField === 'clickCount' ? 'Most Popular First' : 'High to Low (Descending)'}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div className="p-6 bg-white rounded-2xl shadow-lg border-2 border-amber-200">
-              <label className="block font-bold text-amber-700 mb-4 flex items-center gap-3 text-lg">
-                <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                Sort By Date
-              </label>
-              <div className="grid grid-cols-1 gap-4">
-                <button
-                  onClick={() => {
-                    setSortByDate('newest');
-                    setSortOrder('');
-                    setSortField('');
-                  }}
-                  className={`p-4 rounded-xl border-2 font-semibold transition-all duration-300 text-lg ${
-                    sortByDate === 'newest'
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600 shadow-xl transform scale-105'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 shadow-md hover:shadow-lg'
-                  }`}
-                >
-                  🆕 Newest First
-                </button>
-                <button
-                  onClick={() => {
-                    setSortByDate('oldest');
-                    setSortOrder('');
-                    setSortField('');
-                  }}
-                  className={`p-4 rounded-xl border-2 font-semibold transition-all duration-300 text-lg ${
-                    sortByDate === 'oldest'
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600 shadow-xl transform scale-105'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 shadow-md hover:shadow-lg'
-                  }`}
-                >
-                  📅 Oldest First
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 bg-gradient-to-r from-purple-100 via-pink-100 to-rose-100 rounded-2xl border-2 border-purple-300 shadow-lg">
-              <h3 className="font-bold text-purple-700 mb-4 flex items-center gap-3 text-lg">
-                <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                Quick Sort
-              </h3>
-              <div className="grid grid-cols-1 gap-3">
-                <button
-                  onClick={() => {
-                    setSortField('clickCount');
-                    setSortOrder('desc');
-                    setSortByDate('');
-                  }}
-                  className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 font-semibold shadow-lg transform hover:scale-105"
-                >
-                  🔥 Most Popular Items
-                </button>
-                <button
-                  onClick={() => {
-                    setSortField('weight');
-                    setSortOrder('desc');
-                    setSortByDate('');
-                  }}
-                  className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 font-semibold shadow-lg transform hover:scale-105"
-                >
-                  💎 Heaviest Items
-                </button>
-                <button
-                  onClick={() => {
-                    setSortField('weight');
-                    setSortOrder('asc');
-                    setSortByDate('');
-                  }}
-                  className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 font-semibold shadow-lg transform hover:scale-105"
-                >
-                  🪶 Lightest Items
-                </button>
-                <button
-                  onClick={() => {
-                    setSortField('orderNo');
-                    setSortOrder('asc');
-                    setSortByDate('');
-                  }}
-                  className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-300 font-semibold shadow-lg transform hover:scale-105"
-                >
-                  📋 Order: Low to High
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Enhanced Main Filters with Proper Z-Index */}
-      <div className="flex flex-wrap gap-6 p-8 bg-gradient-to-r from-white/80 via-amber-50/80 to-orange-50/80 backdrop-blur-md border-2 border-amber-300/50 rounded-3xl shadow-2xl mb-8 mx-6 relative z-[60]">
-
-        {/* Category Multi-Select with Higher Z-Index */}
-        <div className="relative group">
-          <button className="p-4 border-2 border-amber-400 bg-gradient-to-r from-amber-100 to-orange-100 rounded-2xl cursor-pointer w-64 text-left font-bold text-amber-800 hover:from-amber-200 hover:to-orange-200 transition-all duration-300 flex items-center justify-between shadow-lg hover:shadow-xl transform hover:scale-105">
-            <span className="flex items-center gap-3">
-              <div className="w-6 h-6 bg-amber-500 rounded-lg flex items-center justify-center">
-                🏷️
-              </div>
-              Filter catagories
-            </span>
-            <svg className="w-5 h-5 transform group-hover:rotate-180 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div className="absolute z-[70] hidden group-hover:block bg-white/95 backdrop-blur-md border-2 border-amber-400 rounded-2xl shadow-2xl max-h-72 overflow-y-auto top-full mt-2 w-64 p-4">
-            {getAllcatagories().map((cat) => (
-              <label
-                key={cat}
-                className="flex items-center text-sm gap-3 text-gray-700 hover:bg-amber-50 p-3 rounded-xl transition-all duration-200 cursor-pointer font-medium"
-              >
-                <input
-                  type="checkbox"
-                  value={cat}
-                  checked={selectedCategory.includes(cat)}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSelectedCategory((prev) =>
-                      e.target.checked
-                        ? [...prev, value]
-                        : prev.filter((v) => v !== value)
-                    );
-                    if (!e.target.checked) {
-                      setSelectedSubCategory('');
-                    }
-                  }}
-                  className="w-5 h-5 text-amber-600 bg-gray-100 border-gray-300 rounded-lg focus:ring-amber-500 focus:ring-2"
-                />
-                {cat}
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Sub-Category Filter */}
-        <div className="relative z-[60]">
-          <select
-            value={selectedSubCategory}
-            onChange={(e) => setSelectedSubCategory(e.target.value)}
-            className="w-full p-4 border-2 border-amber-400 rounded-2xl w-64 bg-gradient-to-r from-amber-50 to-orange-50 focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 shadow-lg font-semibold text-gray-700 hover:shadow-xl"
-          >
-            <option value="">🔍 All Sub-catagories</option>
-            {getFilteredSubcatagories().map((subCat) => (
-              <option key={subCat} value={subCat}>
-                {subCat}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Type Filter */}
-        <select
-          className="p-4 border-2 border-amber-400 rounded-2xl w-64 bg-gradient-to-r from-amber-50 to-orange-50 focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 shadow-lg font-semibold text-gray-700 hover:shadow-xl"
-          value={selectedType}
-          onChange={(e) => setSelectedType(e.target.value)}
-        >
-          {types.map((typeOpt, i) => (
-            <option key={i} value={typeOpt === 'All' ? '' : typeOpt}>
-              {typeOpt === 'All' ? '🎯 All Types' : `✨ ${typeOpt[0].toUpperCase() + typeOpt.slice(1)}`}
-            </option>
-          ))}
-        </select>
-
-        {/* Enhanced Filter Row */}
-        <div className="flex gap-4 flex-wrap">
-          {/* Gender */}
-          <select
-            className="p-4 border-2 border-amber-400 rounded-2xl w-48 bg-gradient-to-r from-amber-50 to-orange-50 focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 shadow-lg font-semibold text-gray-700 hover:shadow-xl"
-            value={selectedGender}
-            onChange={(e) => setSelectedGender(e.target.value)}
-          >
-            {genders.map((gender, idx) => (
-              <option key={idx} value={gender === 'All' ? '' : gender}>
-                {gender === 'All' ? '👥 All' : 
-                 gender === 'Unisex' ? '⚪ Unisex' : 
-                 gender === 'Women' ? '👩 Women' : '👨 Men'}
-              </option>
-            ))}
-          </select>
-
-          {/* Metal Filter */}
-          <select
-            className="p-4 border-2 border-amber-400 rounded-2xl w-48 bg-gradient-to-r from-amber-50 to-orange-50 focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 shadow-lg font-semibold text-gray-700 hover:shadow-xl"
-            value={metalFilter}
-            onChange={(e) => setMetalFilter(e.target.value)}
-          >
-            {metals.map((metal, idx) => (
-              <option key={idx} value={metal === 'All' ? '' : metal}>
-                {metal === 'All' ? '🥇 All Metals' : 
-                 metal === 'gold' ? '🥇 Gold' :
-                 metal === 'silver' ? '🥈 Silver' :
-                 metal === 'diamond' ? '💎 Diamond' :
-                 metal === 'platinum' ? '⚪ Platinum' :
-                 metal === 'rose gold' ? '🌹 Rose Gold' : `✨ ${metal[0].toUpperCase() + metal.slice(1)}`}
-              </option>
-            ))}
-          </select>
-
-          {/* Stone Filter */}
-          <select
-            className="p-4 border-2 border-amber-400 rounded-2xl w-48 bg-gradient-to-r from-amber-50 to-orange-50 focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 shadow-lg font-semibold text-gray-700 hover:shadow-xl"
-            value={stoneFilter}
-            onChange={(e) => setStoneFilter(e.target.value)}
-          >
-            <option value="">💎 All Stones</option>
-            <option value="with">✨ With Stone</option>
-            <option value="without">⚪ Without Stone</option>
-          </select>
-
-          {/* Design Ownership Filter */}
-          <select
-            className="p-4 border-2 border-amber-400 rounded-2xl w-48 bg-gradient-to-r from-amber-50 to-orange-50 focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 shadow-lg font-semibold text-gray-700 hover:shadow-xl"
-            value={designFilter}
-            onChange={(e) => setDesignFilter(e.target.value)}
-          >
-            <option value="">🎨 All Designs</option>
-            <option value="our">🏪 In House</option>
-            <option value="Others">👤 Others Design</option>
-          </select>
-        </div>
-
-        {/* Weight Range Multi-Checkbox with Higher Z-Index */}
-        <div className="relative group">
-          <button className="p-4 border-2 border-amber-400 bg-gradient-to-r from-amber-100 to-orange-100 rounded-2xl cursor-pointer w-64 text-left font-bold text-amber-800 hover:from-amber-200 hover:to-orange-200 transition-all duration-300 flex items-center justify-between shadow-lg hover:shadow-xl transform hover:scale-105">
-            <span className="flex items-center gap-3">
-              <div className="w-6 h-6 bg-amber-500 rounded-lg flex items-center justify-center">
-                ⚖️
-              </div>
-              Filter Weight
-            </span>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div className="absolute z-[70] hidden group-hover:block bg-white/95 backdrop-blur-md border-2 border-amber-400 rounded-2xl shadow-2xl max-h-72 overflow-y-auto top-full mt-2 w-64 p-4">
-            {[
-              '0-2', '2-4', '4-6', '6-8', '8-10', '10-15', '15-20', '20-25',
-              '25-30', '30-35', '35-40', '40-45', '45-50', '50-75', '75-+'
-            ].map((range) => (
-              <label
-                key={range}
-                className="flex items-center text-sm gap-3 text-gray-700 hover:bg-amber-50 p-3 rounded-xl transition-all duration-200 cursor-pointer font-medium"
-              >
-                <input
-                  type="checkbox"
-                  value={range}
-                  checked={weightRanges.includes(range)}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setWeightRanges((prev) =>
-                      e.target.checked
-                        ? [...prev, value]
-                        : prev.filter((r) => r !== value)
-                    );
-                  }}
-                  className="w-5 h-5 text-amber-600 bg-gray-100 border-gray-300 rounded-lg focus:ring-amber-500 focus:ring-2"
-                />
-                <span>{range.replace('-', '–').replace('+', 'g+')}g</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Enhanced Search Inputs */}
-        <input
-          type="text"
-          placeholder="🔍 Search by name"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="p-4 border-2 border-amber-400 rounded-2xl w-64 bg-gradient-to-r from-amber-50 to-orange-50 focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 shadow-lg font-medium hover:shadow-xl"
-        />
-
-        <input
-          type="text"
-          placeholder="🆔 Search by ID"
-          value={searchId}
-          onChange={(e) => setSearchId(e.target.value)}
-          className="p-4 border-2 border-amber-400 rounded-2xl w-64 bg-gradient-to-r from-amber-50 to-orange-50 focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 shadow-lg font-medium hover:shadow-xl"
-        />
-
-        {/* Enhanced Grid Selector */}
-        <select
-          className="p-4 border-2 border-amber-400 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 shadow-lg font-semibold text-gray-700 hover:shadow-xl"
-          value={gridCols}
-          onChange={(e) => setGridCols(Number(e.target.value))}
-        >
-          <option value={2}>🏠 Grid: 2</option>
-          <option value={3}>🏠 Grid: 3</option>
-          <option value={4}>🏠 Grid: 4</option>
-          <option value={6}>🏠 Grid: 6</option>
-          <option value={8}>🏠 Grid: 8</option>
-          <option value={10}>🏠 Grid: 10</option>
-        </select>
-
-        {/* Enhanced Clear All Filters Button */}
-        <button
-          onClick={clearAllFilters}
-          className="px-8 py-4 bg-gradient-to-r from-red-500 via-red-600 to-red-700 text-white font-bold rounded-2xl hover:from-red-600 hover:via-red-700 hover:to-red-800 shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border border-red-400"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-          Clear All Filters
-          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-        </button>
-      </div>
-
-      {/* Enhanced Add Item Button */}
-      {isAdmin && (
-        <div className="px-6 mb-8 relative z-0">
-          <button
-            onClick={() => {
-              setShowForm(true);
-              setNewItem({});
-              setImageFiles([]);
-              setVideoFiles([]); // ✅ NEW: Clear video files
-              setIsEditing(false);
-              setCustomCategory('');
-            }}
-            className="relative z-0 px-8 py-4 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold rounded-2xl hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-3 border border-emerald-400"
-          >
-            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
-            Add New Jewellery
-            <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
-          </button>
-        </div>
-      )}
-
-      {/* ✅ Enhanced Cards Grid with Multiple Media (Images + Videos) */}
-      <div
-        className={`grid gap-8 px-6 pb-20 ${
-          gridCols === 2
-            ? 'grid-cols-1 sm:grid-cols-2'
-            : gridCols === 3
-            ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
-            : gridCols === 4
-            ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-            : gridCols === 6
-            ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'
-            : gridCols === 8
-            ? 'grid-cols-1 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-8'
-            : gridCols === 10
-            ? 'grid-cols-2 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-10'
-            : 'grid-cols-1'
-        }`}
-      >
-        {filteredJewellery.length === 0 ? (
-          <div className="col-span-full text-center py-20">
-            <div className="text-8xl mb-6 animate-bounce">💎</div>
-            <p className="text-2xl font-bold text-gray-600 mb-2">No jewellery items found.</p>
-            <p className="text-gray-500 text-lg">Try adjusting your filters or search terms.</p>
-          </div>
-        ) : (
-          filteredJewellery.map((item) => {
-            const itemImages = getItemImages(item);
-            const itemVideos = getItemVideos(item); // ✅ NEW: Get videos
-            //const itemMedia = getItemMedia(item); // ✅ NEW: Get all media
-            const mainImage = getMainImage(item);
-            
-            return (
-              <div
-                key={item._id}
-                onClick={() => handleItemClick(item)}
-                className="bg-gradient-to-br from-white via-amber-50 to-orange-50 border-2 border-amber-300 rounded-3xl p-6 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-500 cursor-pointer group overflow-hidden relative"
-              >
-                {/* Card Glow Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                
-                {/* ✅ Enhanced Media Section with Images and Videos Support */}
-                {mainImage && (
-                  <div className="relative mb-4 overflow-hidden rounded-2xl">
-                    <img
-                      src={mainImage}
-                      alt={item.name}
-                      className="w-full h-48 object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    
-                    {/* ✅ Enhanced Media Indicators */}
-                    <div className="absolute top-2 left-2 flex gap-2">
-                      {/* Images Count */}
-                      {itemImages.length > 0 && (
-                        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          {itemImages.length}
-                        </div>
-                      )}
-                      
-                      {/* ✅ NEW: Videos Count */}
-                      {itemVideos.length > 0 && (
-                        <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
-                          </svg>
-                          {itemVideos.length}
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Popularity badge */}
-                    {item.clickCount > 0 && (
-                      <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                        🔥 {item.clickCount}
-                      </div>
-                    )}
-                    
-                    {/* Design Ownership Badge */}
-                    <div className={`absolute bottom-2 left-2 px-3 py-1 rounded-full text-xs font-bold shadow-lg ${
-                      item.isOurDesign === false 
-                        ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' 
-                        : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                    }`}>
-                      {item.isOurDesign === false ? '👤 Others' : '🏪 In House'}
-                    </div>
-                  </div>
-                )}
-                
-                <h2 className="text-xl font-black text-amber-900 mb-4 truncate group-hover:text-amber-800 transition-colors duration-300">{item.name}</h2>
-                
-                <div className="space-y-3 text-sm text-gray-700">
-                  <div className="flex items-center gap-3 p-2 bg-white/50 rounded-xl">
-                    <div className="w-6 h-6 bg-amber-500 rounded-lg flex items-center justify-center text-white font-bold">⚖️</div>
-                    <span className="font-semibold">Weight:</span> 
-                    <span className="font-bold text-amber-700">{item.weight}g</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-2 bg-white/50 rounded-xl">
-                    <div className="w-6 h-6 bg-amber-500 rounded-lg flex items-center justify-center text-white font-bold">🏷️</div>
-                    <span className="font-semibold">Category:</span> 
-                    <span className="font-bold text-amber-700">{item.category?.main}</span>
-                  </div>
-                </div>
-                
-                <div className="mt-6 text-center">
-                  <span className="text-sm text-blue-600 font-bold bg-gradient-to-r from-blue-100 to-indigo-100 px-4 py-2 rounded-full border border-blue-200 group-hover:from-blue-200 group-hover:to-indigo-200 transition-all duration-300">
-                    Click for details ✨
-                  </span>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* ✅ Enhanced Item Details Popup with Media Gallery (Images + Videos) */}
-      {selectedItem && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[85] flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-white via-amber-50 to-orange-50 rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-y-auto border-4 border-amber-400 shadow-2xl">
-            {/* Enhanced Popup Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400 p-6 border-b-2 border-amber-500 flex items-center justify-between rounded-t-3xl">
-              <h2 className="text-3xl font-black text-white flex items-center gap-4 drop-shadow-lg">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                Item Details
-              </h2>
+              
+              {/* Enhanced Grid Toggle Button */}
               <button
-                onClick={() => setSelectedItem(null)}
-                className="text-red-600 hover:text-red-800 bg-white/90 hover:bg-white rounded-2xl p-4 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110"
+                onClick={cycleGrid}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-green-500 to-emerald-600 text-white p-2 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 flex items-center gap-1 min-w-[60px] justify-center"
+                title={`Grid: ${gridCols} column${gridCols > 1 ? 's' : ''} (${isMobile ? 'Mobile' : 'Desktop'} mode)`}
               >
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                {gridCols === 1 && (
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+                {gridCols === 2 && (
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v18M3 9h18" />
+                  </svg>
+                )}
+                {gridCols === 3 && (
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h6v6H3zm8 0h6v6h-6zm-8 8h6v6H3zm8 0h6v6h-6z" />
+                  </svg>
+                )}
+                {gridCols === 4 && (
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="5" height="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+                    <rect x="10" y="3" width="5" height="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+                    <rect x="17" y="3" width="5" height="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+                    <rect x="3" y="10" width="5" height="5" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+                  </svg>
+                )}
+                {gridCols === 6 && (
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect x="1" y="2" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+                    <rect x="5" y="2" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+                    <rect x="9" y="2" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+                    <rect x="1" y="6" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+                    <rect x="5" y="6" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+                    <rect x="9" y="6" width="3" height="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+                  </svg>
+                )}
+                <span className="text-xs font-bold hidden sm:inline">{gridCols}</span>
               </button>
-            </div>
-
-            {/* Enhanced Popup Content */}
-            <div className="p-8">
-              {/* ✅ Enhanced Media Gallery Section (Images + Videos) */}
-              {(() => {
-                const itemMedia = getItemMedia(selectedItem);
-                return itemMedia.length > 0 && (
-                  <div className="mb-8">
-                    {/* Main Media */}
-                    <div className="text-center mb-4">
-                      {itemMedia[0].type === 'image' ? (
-                        <img
-                          src={itemMedia[0].src}
-                          alt={selectedItem.name}
-                          onClick={() => openMediaModal(itemMedia, 0)}
-                          className="max-w-full h-80 object-cover rounded-2xl mx-auto cursor-pointer border-4 border-amber-200 hover:border-amber-400 transition-all duration-300 shadow-2xl hover:shadow-3xl transform hover:scale-105"
-                        />
-                      ) : (
-                        <video
-                          src={itemMedia[0].src}
-                          controls
-                          className="max-w-full h-80 object-cover rounded-2xl mx-auto border-4 border-amber-200 shadow-2xl"
-                          poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTggNUwyMCAxMkw4IDE5VjVaIiBmaWxsPSIjRkY2OTAwIi8+Cjwvc3ZnPgo="
-                        />
-                      )}
-                    </div>
-                    
-                    {/* Media Thumbnails */}
-                    {itemMedia.length > 1 && (
-                      <div className="flex justify-center gap-3 flex-wrap">
-                        {itemMedia.map((media, index) => (
-                          <div
-                            key={index}
-                            onClick={() => openMediaModal(itemMedia, index)}
-                            className="relative w-20 h-20 rounded-xl cursor-pointer border-2 border-amber-200 hover:border-amber-400 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-110 overflow-hidden"
-                          >
-                            {media.type === 'image' ? (
-                              <img
-                                src={media.src}
-                                alt={`${selectedItem.name} ${index + 1}`}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
-                                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
-                                </svg>
-                              </div>
-                            )}
-                            {/* Media Type Badge */}
-                            <div className={`absolute top-1 right-1 px-1 py-0.5 rounded text-xs font-bold ${
-                              media.type === 'image' 
-                                ? 'bg-blue-500 text-white' 
-                                : 'bg-purple-500 text-white'
-                            }`}>
-                              {media.type === 'image' ? '📷' : '🎥'}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    {/* Media Count */}
-                    <div className="text-center mt-4 flex justify-center gap-4">
-                      {getItemImages(selectedItem).length > 0 && (
-                        <span className="text-sm text-gray-600 bg-blue-100 px-3 py-1 rounded-full">
-                          📸 {getItemImages(selectedItem).length} image{getItemImages(selectedItem).length !== 1 ? 's' : ''}
-                        </span>
-                      )}
-                      {getItemVideos(selectedItem).length > 0 && (
-                        <span className="text-sm text-gray-600 bg-purple-100 px-3 py-1 rounded-full">
-                          🎥 {getItemVideos(selectedItem).length} video{getItemVideos(selectedItem).length !== 1 ? 's' : ''}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Enhanced Item Name */}
-              <h3 className="text-4xl font-black text-amber-900 mb-8 text-center bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">{selectedItem.name}</h3>
-
-              {/* Enhanced Details Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <div className="bg-gradient-to-r from-white to-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-3 text-gray-700">
-                    <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white font-bold">🆔</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block">ID</span>
-                      <span className="text-lg font-semibold">{selectedItem.id}</span>
-                    </div>
-                  </p>
-                </div>
-                <div className="bg-gradient-to-r from-white to-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-3 text-gray-700">
-                    <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white font-bold">✨</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block">Type</span>
-                      <span className="text-lg font-semibold">{selectedItem.type}</span>
-                    </div>
-                  </p>
-                </div>
-                <div className="bg-gradient-to-r from-white to-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-3 text-gray-700">
-                    <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white font-bold">🥇</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block">Metal</span>
-                      <span className="text-lg font-semibold">{selectedItem.metal}</span>
-                    </div>
-                  </p>
-                </div>
-                <div className="bg-gradient-to-r from-white to-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-3 text-gray-700">
-                    <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white font-bold">💎</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block">Carat</span>
-                      <span className="text-lg font-semibold">{selectedItem.carat}</span>
-                    </div>
-                  </p>
-                </div>
-                <div className="bg-gradient-to-r from-white to-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-3 text-gray-700">
-                    <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white font-bold">⚖️</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block">Weight</span>
-                      <span className="text-lg font-semibold">{selectedItem.weight}g</span>
-                    </div>
-                  </p>
-                </div>
-                {selectedItem.stoneWeight && (
-                  <div className="bg-gradient-to-r from-white to-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <p className="flex items-center gap-3 text-gray-700">
-                      <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white font-bold">💎</div>
-                      <div>
-                        <span className="font-bold text-amber-800 block">Stone</span>
-                        <span className="text-lg font-semibold">{selectedItem.stoneWeight}g</span>
-                      </div>
-                    </p>
-                  </div>
-                )}
-                <div className="bg-gradient-to-r from-white to-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-3 text-gray-700">
-                    <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white font-bold">🏷️</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block">Category</span>
-                      <span className="text-lg font-semibold">{selectedItem.category?.main}
-                        {selectedItem.category?.sub && ` - ${selectedItem.category.sub}`}</span>
-                    </div>
-                  </p>
-                </div>
-                <div className="bg-gradient-to-r from-white to-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-3 text-gray-700">
-                    <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white font-bold">👤</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block">Gender</span>
-                      <span className="text-lg font-semibold">{selectedItem.gender}</span>
-                    </div>
-                  </p>
-                </div>
-                <div className="bg-gradient-to-r from-white to-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-3 text-gray-700">
-                    <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center text-white font-bold">🔥</div>
-                    <div>
-                      <span className="font-bold text-amber-800 block">Popularity</span>
-                      <span className="text-lg font-semibold">{selectedItem.clickCount || 0} views</span>
-                    </div>
-                  </p>
-                </div>
-                {/* Design Ownership Display */}
-                <div className="bg-gradient-to-r from-white to-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                  <p className="flex items-center gap-3 text-gray-700">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold ${
-                      selectedItem.isOurDesign === false ? 'bg-orange-500' : 'bg-green-500'
-                    }`}>
-                      {selectedItem.isOurDesign === false ? '👤' : '🏪'}
-                    </div>
-                    <div>
-                      <span className="font-bold text-amber-800 block">Design</span>
-                      <span className="text-lg font-semibold">
-                        {selectedItem.isOurDesign === false ? 'Others Design' : 'In House'}
-                      </span>
-                    </div>
-                  </p>
-                </div>
-                {selectedItem.orderNo !== undefined && selectedItem.orderNo !== null && (
-                  <div className="bg-gradient-to-r from-white to-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <p className="flex items-center gap-3 text-gray-700">
-                      <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white font-bold">📋</div>
-                      <div>
-                        <span className="font-bold text-amber-800 block">Order No</span>
-                        <span className="text-lg font-semibold">{selectedItem.orderNo}</span>
-                      </div>
-                    </p>
-                  </div>
-                )}
-                {selectedItem.date && (
-                  <div className="bg-gradient-to-r from-white to-amber-50 p-6 rounded-2xl border-2 border-amber-200 shadow-lg hover:shadow-xl transition-all duration-300">
-                    <p className="flex items-center gap-3 text-gray-700">
-                      <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white font-bold">📅</div>
-                      <div>
-                        <span className="font-bold text-amber-800 block">Uploaded</span>
-                        <span className="text-lg font-semibold">{new Date(selectedItem.date).toLocaleDateString()}</span>
-                      </div>
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Enhanced Admin Actions */}
-              {isAdmin && (
-                <div className="flex gap-6 justify-center">
-                  <button
-                    onClick={() => handleEdit(selectedItem)}
-                    className="px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-2xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 font-bold flex items-center gap-3 shadow-xl transform hover:scale-105"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Edit Item
-                  </button>
-                  <button
-                    onClick={() => handleDelete(selectedItem._id)}
-                    className="px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-2xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-bold flex items-center gap-3 shadow-xl transform hover:scale-105"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Delete Item
-                  </button>
-                </div>
+              
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-20 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               )}
             </div>
           </div>
+
+          {/* Filter and Sort Controls Row */}
+          <div className="flex items-center justify-center gap-3">
+            {/* Filter By Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowFilterPanel(!showFilterPanel);
+                  setShowSortPanel(false);
+                }}
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-lg hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <span className="text-sm sm:text-base">Filter</span>
+                <svg className={`w-3 h-3 sm:w-4 sm:h-4 transform transition-transform duration-300 ${showFilterPanel ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Filter Dropdown Panel */}
+              {showFilterPanel && (
+                <div className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 border-blue-300 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]">
+                  <div className="space-y-4">
+                    
+                    {/* Category Multi-Select */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Categories</label>
+                      <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-gray-50">
+                        {getAllCategories().map((cat) => (
+                          <label key={cat} className="flex items-center gap-2 text-sm p-1 hover:bg-blue-50 rounded cursor-pointer">
+                            <input
+                              type="checkbox"
+                              value={cat}
+                              checked={selectedCategory.includes(cat)}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setSelectedCategory((prev) =>
+                                  e.target.checked
+                                    ? [...prev, value]
+                                    : prev.filter((v) => v !== value)
+                                );
+                                if (!e.target.checked) {
+                                  setSelectedSubCategory('');
+                                }
+                              }}
+                              className="w-4 h-4 text-blue-600"
+                            />
+                            {cat}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Sub-Category */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Sub-Category</label>
+                      <select
+                        value={selectedSubCategory}
+                        onChange={(e) => setSelectedSubCategory(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      >
+                        <option value="">All Sub-Categories</option>
+                        {getFilteredSubCategories().map((subCat) => (
+                          <option key={subCat} value={subCat}>{subCat}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Type */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Type</label>
+                      <select
+                        value={selectedType}
+                        onChange={(e) => setSelectedType(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      >
+                        {types.map((typeOpt, i) => (
+                          <option key={i} value={typeOpt === 'All' ? '' : typeOpt}>
+                            {typeOpt === 'All' ? 'All Types' : typeOpt[0].toUpperCase() + typeOpt.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Gender */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Gender</label>
+                      <select
+                        value={selectedGender}
+                        onChange={(e) => setSelectedGender(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      >
+                        {genders.map((gender, idx) => (
+                          <option key={idx} value={gender === 'All' ? '' : gender}>
+                            {gender}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Metal */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Metal</label>
+                      <select
+                        value={metalFilter}
+                        onChange={(e) => setMetalFilter(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      >
+                        {metals.map((metal, idx) => (
+                          <option key={idx} value={metal === 'All' ? '' : metal}>
+                            {metal === 'All' ? 'All Metals' : metal[0].toUpperCase() + metal.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Stone */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Stone</label>
+                      <select
+                        value={stoneFilter}
+                        onChange={(e) => setStoneFilter(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      >
+                        <option value="">All Stones</option>
+                        <option value="with">With Stone</option>
+                        <option value="without">Without Stone</option>
+                      </select>
+                    </div>
+
+                    {/* Design */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Design</label>
+                      <select
+                        value={designFilter}
+                        onChange={(e) => setDesignFilter(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      >
+                        <option value="">All Designs</option>
+                        <option value="our">In House</option>
+                        <option value="Others">Others Design</option>
+                      </select>
+                    </div>
+
+                    {/* Weight Range */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Weight Range</label>
+                      <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-gray-50">
+                        {[
+                          '0-2', '2-4', '4-6', '6-8', '8-10', '10-15', '15-20', '20-25',
+                          '25-30', '30-35', '35-40', '40-45', '45-50', '50-75', '75-+'
+                        ].map((range) => (
+                          <label key={range} className="flex items-center gap-2 text-sm p-1 hover:bg-blue-50 rounded cursor-pointer">
+                            <input
+                              type="checkbox"
+                              value={range}
+                              checked={weightRanges.includes(range)}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setWeightRanges((prev) =>
+                                  e.target.checked
+                                    ? [...prev, value]
+                                    : prev.filter((r) => r !== value)
+                                );
+                              }}
+                              className="w-4 h-4 text-blue-600"
+                            />
+                            <span>{range.replace('-', '–').replace('+', 'g+')}g</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Search by ID */}
+                    <div>
+                      <label className="block font-bold text-blue-700 mb-2">Search by ID</label>
+                      <input
+                        type="text"
+                        placeholder="Search by ID"
+                        value={searchId}
+                        onChange={(e) => setSearchId(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      />
+                    </div>
+
+                    {/* Clear Filters Button */}
+                    <button
+                      onClick={clearAllFilters}
+                      className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Clear All Filters
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sort By Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowSortPanel(!showSortPanel);
+                  setShowFilterPanel(false);
+                }}
+                className="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-lg hover:from-purple-600 hover:to-pink-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+              >
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                  />
+                </svg>
+                <span className="text-sm sm:text-base">Sort</span>
+                <svg
+                  className={`w-3 h-3 sm:w-4 sm:h-4 transform transition-transform duration-300 ${
+                    showSortPanel ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              {/* Sort Dropdown Panel */}
+              {showSortPanel && (
+                <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 border-purple-300 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]">
+                  <div className="space-y-4">
+                    {/* Current Sort Display */}
+                    <div className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl border border-purple-300">
+                      <h3 className="font-bold text-purple-700 mb-2">Current Sort</h3>
+                      <p className="text-purple-600 font-semibold">
+                        {getActiveSortDescription()}
+                      </p>
+                    </div>
+
+                    {/* Sort by Field */}
+                    <div>
+                      <label className="block font-bold text-purple-700 mb-2">
+                        Sort By Field
+                      </label>
+                      <select
+                        value={sortField}
+                        onChange={(e) => {
+                          setSortField(e.target.value);
+                          setSortOrder("desc");
+                          setSortByDate("");
+                        }}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
+                      >
+                        <option value="clickCount">Popularity</option>
+                        <option value="weight">Weight</option>
+                        <option value="orderNo">Order Number</option>
+                      </select>
+                    </div>
+
+                    {/* Sort Direction */}
+                    <div>
+                      <label className="block font-bold text-purple-700 mb-2">
+                        Sort Direction
+                      </label>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => {
+                            setSortOrder("asc");
+                            setSortByDate("");
+                          }}
+                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                            sortOrder === "asc" && !sortByDate
+                              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
+                          }`}
+                        >
+                          {sortField === "clickCount"
+                            ? "Least Popular First"
+                            : "Low to High (Ascending)"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortOrder("desc");
+                            setSortByDate("");
+                          }}
+                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                            sortOrder === "desc" && !sortByDate
+                              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
+                          }`}
+                        >
+                          {sortField === "clickCount"
+                            ? "Most Popular First"
+                            : "High to Low (Descending)"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Sort by Date */}
+                    <div>
+                      <label className="block font-bold text-purple-700 mb-2">
+                        Sort by Date
+                      </label>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => {
+                            setSortByDate("newest");
+                            setSortOrder("");
+                            setSortField("");
+                          }}
+                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                            sortByDate === "newest"
+                              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600"
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300"
+                          }`}
+                        >
+                          Newest First
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortByDate("oldest");
+                            setSortOrder("");
+                            setSortField("");
+                          }}
+                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                            sortByDate === "oldest"
+                              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600"
+                              : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300"
+                          }`}
+                        >
+                          Oldest First
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Clear Sort Button */}
+                    <button
+                      onClick={clearAllSorts}
+                      className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                        />
+                      </svg>
+                      Reset to Most Popular
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Add Item Button (Admin Only) */}
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setShowForm(true);
+                  setNewItem({});
+                  setImageFiles([]);
+                  setVideoFiles([]);
+                  setIsEditing(false);
+                  setCustomCategory('');
+                }}
+                className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-lg hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span className="text-sm sm:text-base">Add Item</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Overlay for closing dropdowns */}
+      {(showFilterPanel || showSortPanel) && (
+        <div 
+          className="fixed inset-0 z-[70]" 
+          onClick={() => {
+            setShowFilterPanel(false);
+            setShowSortPanel(false);
+          }}
+        />
+      )}
+
+      {/* Content with proper spacing */}
+      <div className="pt-60 sm:pt-64">
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-amber-500 border-t-transparent mx-auto mb-4"></div>
+              <p className="text-lg font-semibold text-amber-700">Loading jewellery...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Results Info */}
+        {isDataFetched && totalItems > 0 && (
+          <div className="px-4 sm:px-6 mb-6">
+            <div className="bg-gradient-to-r from-white/90 to-amber-50/90 backdrop-blur-sm rounded-2xl p-4 border-2 border-amber-200 shadow-lg">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-amber-800">
+                      Showing {jewellery.length} of {totalItems} items
+                    </p>
+                    {totalPages > 1 && (
+                      <p className="text-sm text-gray-600">
+                        Page {currentPage} of {totalPages} • Grid: {gridCols} column{gridCols > 1 ? 's' : ''} ({isMobile ? 'Mobile' : 'Desktop'})
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600 bg-white/80 px-3 py-2 rounded-lg border border-amber-200">
+                  {getActiveSortDescription()}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Responsive Cards Grid */}
+        <div className={getGridClasses()}>
+          {!loading && jewellery.length === 0 ? (
+            <div className="col-span-full text-center py-20">
+              <div className="text-6xl sm:text-8xl mb-6 animate-bounce">💎</div>
+              <p className="text-xl sm:text-2xl font-bold text-gray-600 mb-2">No jewellery items found.</p>
+              <p className="text-gray-500 text-base sm:text-lg">Try adjusting your filters or search terms.</p>
+              <button
+                onClick={clearAllFilters}
+                className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-300"
+              >
+                Clear All Filters
+              </button>
+            </div>
+          ) : (
+            jewellery.map((item, index) => {
+              const itemImages = getItemImages(item);
+              const itemVideos = getItemVideos(item);
+              const mainImage = getMainImage(item);
+              
+              return (
+                <div
+                  key={item._id}
+                  onClick={() => handleItemClick(item, index)}
+                  className="bg-gradient-to-br from-white via-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl sm:rounded-2xl p-2 sm:p-3 lg:p-4 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-500 cursor-pointer group overflow-hidden relative"
+                >
+                  {/* Card Glow Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  {/* Enhanced Media Section */}
+                  {mainImage && (
+                    <div className="relative mb-2 sm:mb-3 overflow-hidden rounded-lg sm:rounded-xl">
+                      <img
+                        src={mainImage}
+                        alt={item.name}
+                        loading="lazy"
+                        className={`w-full object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500 ${getImageHeightClass()}`}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      
+                      {/* Media Indicators */}
+                      <div className="absolute top-1 sm:top-2 left-1 sm:left-2 flex gap-1">
+                        {itemImages.length > 0 && (
+                          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                            <svg className="w-2 h-2 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {itemImages.length}
+                          </div>
+                        )}
+                        
+                        {itemVideos.length > 0 && (
+                          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                            <svg className="w-2 h-2 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
+                            </svg>
+                            {itemVideos.length}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Popularity badge */}
+                      {item.clickCount > 0 && (
+                        <div className="absolute top-1 sm:top-2 right-1 sm:right-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg">
+                          🔥 {item.clickCount}
+                        </div>
+                      )}
+                      
+                      {/* Design Ownership Badge */}
+                      <div className={`absolute bottom-1 sm:bottom-2 left-1 sm:left-2 px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg ${
+                        item.isOurDesign === false 
+                          ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white' 
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+                      }`}>
+                        {item.isOurDesign === false ? '👤' : '🏪'}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Responsive Text Section */}
+                  <div className="space-y-1">
+                    <h2 className={`font-bold text-amber-900 truncate group-hover:text-amber-800 transition-colors duration-300 ${textSizes.title}`}>
+                      {item.name}
+                    </h2>
+                    
+                    <div className={`flex items-center justify-between text-gray-600 ${textSizes.detail}`}>
+                      <span className="font-semibold text-amber-700">{item.weight}g</span>
+                      <span className="font-semibold truncate ml-1">{item.category?.main}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Enhanced Pagination Controls */}
+        {isDataFetched && totalPages > 1 && jewellery.length > 0 && (
+          <div className="px-4 sm:px-6 pb-8 mt-8">
+            <div className="bg-gradient-to-r from-white/95 via-amber-50/95 to-orange-50/95 backdrop-blur-md rounded-2xl p-6 border-2 border-amber-300 shadow-2xl">
+              <div className="flex flex-col items-center gap-6">
+                {/* Pagination Info */}
+                <div className="text-center">
+                  <p className="text-lg font-bold text-amber-800 mb-2">
+                    Page {currentPage} of {totalPages}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Showing {jewellery.length} items per page • {totalItems} total items
+                  </p>
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                  {/* Previous Button */}
+                  <button
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 ${
+                      currentPage === 1
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 shadow-lg'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Previous
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {!getPaginationRange().includes(1) && totalPages > 5 && (
+                      <>
+                        <button
+                          onClick={() => goToPage(1)}
+                          className="w-10 h-10 rounded-lg font-bold transition-all duration-300 bg-white text-gray-700 border border-gray-300 hover:bg-amber-50 hover:border-amber-300"
+                        >
+                          1
+                        </button>
+                        <span className="px-2 text-gray-500">...</span>
+                      </>
+                    )}
+
+                    {getPaginationRange().map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => goToPage(page)}
+                        className={`w-10 h-10 rounded-lg font-bold transition-all duration-300 ${
+                          page === currentPage
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg transform scale-110'
+                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-amber-50 hover:border-amber-300'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    {!getPaginationRange().includes(totalPages) && totalPages > 5 && (
+                      <>
+                        <span className="px-2 text-gray-500">...</span>
+                        <button
+                          onClick={() => goToPage(totalPages)}
+                          className="w-10 h-10 rounded-lg font-bold transition-all duration-300 bg-white text-gray-700 border border-gray-300 hover:bg-amber-50 hover:border-amber-300"
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Next Button */}
+                  <button
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 ${
+                      currentPage === totalPages
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transform hover:scale-105 shadow-lg'
+                    }`}
+                  >
+                    Next
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Quick Jump to Page */}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-gray-700">Jump to page:</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={totalPages}
+                    placeholder={currentPage.toString()}
+                    onChange={(e) => {
+                      const page = parseInt(e.target.value);
+                      if (page >= 1 && page <= totalPages) {
+                        goToPage(page);
+                      }
+                    }}
+                    className="w-20 px-2 py-1 text-center border border-gray-300 rounded-lg focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
+                  />
+                  <span className="text-sm text-gray-600">of {totalPages}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Enhanced Item Details Popup with Navigation and Swipe Support */}
+      {selectedItem && (
+        <div 
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            {/* Enhanced Header with Navigation */}
+            <div className="bg-gradient-to-r from-amber-400 to-orange-400 p-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => navigateToItem('prev')}
+                  className="text-white hover:text-amber-200 transition-colors duration-200 p-1 rounded-lg hover:bg-black/10"
+                  title="Previous Item (← or swipe right)"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                
+                <h2 className="text-lg font-black text-white truncate max-w-md">
+                  {selectedItem.name}
+                </h2>
+                
+                <button
+                  onClick={() => navigateToItem('next')}
+                  className="text-white hover:text-amber-200 transition-colors duration-200 p-1 rounded-lg hover:bg-black/10"
+                  title="Next Item (→ or swipe left)"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="text-white text-sm font-semibold bg-black/20 px-3 py-1 rounded-full">
+                  {selectedItemIndex + 1} / {jewellery.length}
+                </div>
+                <button
+                  onClick={() => {
+                    setSelectedItem(null);
+                    setSelectedItemIndex(-1);
+                  }}
+                  className="text-white hover:text-red-200 transition-colors duration-200 flex-shrink-0"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+              {/* Image Section */}
+              <div className="lg:w-3/5 p-6 flex flex-col">
+                {(() => {
+                  const itemMedia = getItemMedia(selectedItem);
+                  const mainImage = getMainImage(selectedItem);
+                  
+                  if (!mainImage) return null;
+                  
+                  return (
+                    <>
+                      {/* Main Image */}
+                      <div className="flex-1 flex items-center justify-center mb-4">
+                        <img
+                          src={mainImage}
+                          alt={selectedItem.name}
+                          loading="lazy"
+                          onClick={() => openMediaModal(itemMedia, 0)}
+                          className="max-w-full max-h-96 object-contain rounded-xl cursor-pointer border border-amber-200 hover:border-amber-400 transition-all duration-300 shadow-lg"
+                        />
+                      </div>
+                      
+                      {/* Thumbnail Gallery */}
+                      {itemMedia.length > 1 && (
+                        <div className="flex justify-center gap-2 flex-wrap">
+                          {itemMedia.slice(1, 5).map((media, index) => (
+                            <div
+                              key={index + 1}
+                              onClick={() => openMediaModal(itemMedia, index + 1)}
+                              className="w-16 h-16 rounded-lg cursor-pointer border border-amber-200 hover:border-amber-400 transition-all duration-300 overflow-hidden flex-shrink-0"
+                            >
+                              {media.type === 'image' ? (
+                                <img
+                                  src={media.src}
+                                  alt={`${selectedItem.name} ${index + 2}`}
+                                  loading="lazy"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {itemMedia.length > 5 && (
+                            <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-xs">
+                              +{itemMedia.length - 5}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Swipe Instructions */}
+                      <div className="mt-4 text-center">
+                        <p className="text-xs text-gray-500">
+                          Swipe left/right to navigate • Use ←/→ keys • Tap image for gallery
+                        </p>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+
+              {/* Details Section */}
+              <div className="lg:w-2/5 p-6 bg-gray-50 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="col-span-2 bg-white p-3 rounded-lg border-2 border-amber-200">
+                    <span className="font-semibold text-gray-700">ID:</span>
+                    <div className="font-bold text-amber-700 mt-1">{selectedItem.id}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Weight</span>
+                    <div className="font-bold text-amber-700">{selectedItem.weight}g</div>
+                  </div>
+                  
+                  {selectedItem.stoneWeight && (
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Stone Weight</span>
+                      <div className="font-bold text-amber-700">{selectedItem.stoneWeight}g</div>
+                    </div>
+                  )}
+                  
+                  {selectedItem.carat && (
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Carat</span>
+                      <div className="font-bold text-amber-700">{selectedItem.carat}</div>
+                    </div>
+                  )}
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Metal</span>
+                    <div className="font-bold text-amber-700 capitalize">{selectedItem.metal}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Type</span>
+                    <div className="font-bold text-amber-700 capitalize">{selectedItem.type}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Gender</span>
+                    <div className="font-bold text-amber-700">{selectedItem.gender}</div>
+                  </div>
+                  
+                  <div className="col-span-2 bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Category</span>
+                    <div className="font-bold text-amber-700">{selectedItem.category?.main}{selectedItem.category?.sub && ` - ${selectedItem.category.sub}`}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Views</span>
+                    <div className="font-bold text-amber-700">{selectedItem.clickCount || 0}</div>
+                  </div>
+                  
+                  <div className="bg-white p-3 rounded-lg border">
+                    <span className="font-semibold text-gray-700 text-xs">Design</span>
+                    <div className="font-bold text-amber-700">{selectedItem.isOurDesign === false ? 'Others' : 'In House'}</div>
+                  </div>
+                  
+                  {selectedItem.orderNo !== undefined && selectedItem.orderNo !== null && (
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Order No</span>
+                      <div className="font-bold text-amber-700">{selectedItem.orderNo}</div>
+                    </div>
+                  )}
+                  
+                  {selectedItem.date && (
+                    <div className="bg-white p-3 rounded-lg border">
+                      <span className="font-semibold text-gray-700 text-xs">Date</span>
+                      <div className="font-bold text-amber-700">{new Date(selectedItem.date).toLocaleDateString()}</div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Enhanced Admin Actions */}
+                {isAdmin && (
+                  <div className="flex gap-3 justify-center mt-6">
+                    <button
+                      onClick={() => handleEdit(selectedItem)}
+                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 font-bold flex items-center gap-2 text-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(selectedItem._id)}
+                      className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 font-bold flex items-center gap-2 text-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ✅ Enhanced Media Gallery Modal (Images + Videos) */}
+      {/* Enhanced Media Gallery Modal */}
       {modalMedia.length > 0 && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[999] flex items-center justify-center">
-          <div className="relative max-w-6xl max-h-[90vh] w-full mx-4">
+          <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-4">
             {/* Close Button */}
             <button
               onClick={closeMediaModal}
-              className="absolute top-4 right-4 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-3 transition-all duration-300 transform hover:scale-110"
+              className="absolute top-4 right-4 z-20 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
             >
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -1519,17 +1853,17 @@ function JewelleryCatalogue() {
               <>
                 <button
                   onClick={() => navigateMedia('prev')}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-3 transition-all duration-300 hover:scale-110"
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
                 >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
                 <button
                   onClick={() => navigateMedia('next')}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 text-white bg-black/50 hover:bg-black/70 rounded-full p-3 transition-all duration-300 hover:scale-110"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
                 >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -1537,68 +1871,43 @@ function JewelleryCatalogue() {
             )}
 
             {/* Main Media */}
-            <div className="flex items-center justify-center h-full">
+            <div className="w-full h-full flex items-center justify-center">
               {modalMedia[currentMediaIndex].type === 'image' ? (
                 <img
                   src={modalMedia[currentMediaIndex].src}
                   alt={`Gallery ${currentMediaIndex + 1}`}
-                  className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border-4 border-white"
+                  loading="lazy"
+                  className="max-w-full max-h-full object-contain rounded-lg border-4 border-white/20"
+                  style={{ 
+                    maxWidth: 'calc(100vw - 2rem)', 
+                    maxHeight: 'calc(100vh - 2rem)' 
+                  }}
                 />
               ) : (
                 <video
                   src={modalMedia[currentMediaIndex].src}
                   controls
                   autoPlay
-                  className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl border-4 border-white"
+                  className="max-w-full max-h-full object-contain rounded-lg border-4 border-white/20"
+                  style={{ 
+                    maxWidth: 'calc(100vw - 2rem)', 
+                    maxHeight: 'calc(100vh - 2rem)' 
+                  }}
                 />
               )}
             </div>
 
-            {/* Media Counter and Type */}
+            {/* Media Counter */}
             {modalMedia.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full flex items-center gap-2">
-                <span className={`px-2 py-1 rounded text-xs font-bold ${
-                  modalMedia[currentMediaIndex].type === 'image' ? 'bg-blue-500' : 'bg-purple-500'
-                }`}>
-                  {modalMedia[currentMediaIndex].type === 'image' ? '📷' : '🎥'}
-                </span>
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full backdrop-blur-sm">
                 {currentMediaIndex + 1} / {modalMedia.length}
-              </div>
-            )}
-
-            {/* Thumbnail Navigation */}
-            {modalMedia.length > 1 && (
-              <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex gap-2 bg-black/30 p-3 rounded-2xl max-w-full overflow-x-auto">
-                {modalMedia.map((media, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentMediaIndex(index)}
-                    className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-all duration-300 flex-shrink-0 ${
-                      index === currentMediaIndex ? 'border-white scale-110' : 'border-gray-400 hover:border-white'
-                    }`}
-                  >
-                    {media.type === 'image' ? (
-                      <img
-                        src={media.src}
-                        alt={`Thumbnail ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-                ))}
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* ✅ Enhanced Add/Edit Form with Multiple Image and Video Support - FIXED Z-INDEX */}
+      {/* Enhanced Add/Edit Form with Multiple Image and Video Support */}
       {isAdmin && showForm && (
         <div className="fixed top-0 right-0 w-full sm:w-1/2 md:w-1/3 h-full bg-gradient-to-b from-white via-amber-50 to-orange-50 z-[120] shadow-2xl overflow-y-auto p-8 border-l-4 border-amber-400">
           <button
@@ -1607,7 +1916,7 @@ function JewelleryCatalogue() {
               setShowForm(false);
               setNewItem({});
               setImageFiles([]);
-              setVideoFiles([]); // ✅ NEW: Clear video files
+              setVideoFiles([]);
               setIsEditing(false);
               setCustomCategory('');
             }}
@@ -1647,14 +1956,14 @@ function JewelleryCatalogue() {
               required
             />
             <select
-              name="catagories"
+              name="categories"
               value={newItem.category?.main || ''}
               onChange={handleFormChange}
               className="w-full border-2 border-amber-300 p-4 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 font-medium text-lg shadow-lg"
               required
             >
               <option value="">🏷️ Select Main Category*</option>
-              {catagories.slice(1).map((cat) => (
+              {defaultCategories.slice(1).map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
                 </option>
@@ -1671,7 +1980,7 @@ function JewelleryCatalogue() {
               />
             )}
             
-            {/* ✅ NEW: Enhanced Sub-Category with Existing Options */}
+            {/* Enhanced Sub-Category with Existing Options */}
             {newItem.category?.main && newItem.category.main !== 'Custom' && (
               <div className="space-y-2">
                 <label className="block font-bold text-amber-700 text-sm">
@@ -1684,7 +1993,7 @@ function JewelleryCatalogue() {
                   className="w-full border-2 border-amber-300 p-4 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 font-medium text-lg shadow-lg"
                 >
                   <option value="">Select existing sub-category</option>
-                  {getSubcatagoriesForMainCategory(newItem.category.main).map((subCat) => (
+                  {getSubCategoriesForMainCategory(newItem.category.main).map((subCat) => (
                     <option key={subCat} value={subCat}>
                       {subCat}
                     </option>
@@ -1796,7 +2105,7 @@ function JewelleryCatalogue() {
               </label>
             </div>
             
-            {/* ✅ Enhanced Multiple Image Upload */}
+            {/* Enhanced Multiple Image Upload */}
             <div className="space-y-4">
               <label className="block font-bold text-amber-700 text-lg">
                 📸 Upload Images (Max 10)*
@@ -1848,7 +2157,7 @@ function JewelleryCatalogue() {
               )}
             </div>
             
-            {/* ✅ NEW: Multiple Video Upload */}
+            {/* Multiple Video Upload */}
             <div className="space-y-4">
               <label className="block font-bold text-purple-700 text-lg">
                 🎥 Upload Videos (Max 5)
