@@ -101,7 +101,7 @@ function JewelleryCatalogue() {
 
   const isAdmin = true;
 
-  // Fixed function to generate next ID for a category
+  // FIXED: Enhanced function to generate next ID for a category with comprehensive fallback
   const generateNextId = async (category) => {
     if (!category || category === 'Custom' || !categoryCodeMap[category]) {
       return '';
@@ -111,82 +111,151 @@ function JewelleryCatalogue() {
     
     try {
       const categoryCode = categoryCodeMap[category];
+      const token = localStorage.getItem('token');
       
-      // First try to get from API
+      // Primary: Try specific latest ID API endpoint
       try {
-        const token = localStorage.getItem('token');
+        console.log(`🔍 Attempting primary API: latest ID for category ${category}`);
         const response = await axios.get(
           `/api/jewellery/latest-id/${encodeURIComponent(category)}`,
           {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 10000
           }
         );
 
         if (response.data && response.data.latestId) {
-          // Extract number from the latest ID (e.g., "EAR00009" -> "00009" -> 9)
           const latestId = response.data.latestId;
-          const numberPart = latestId.substring(categoryCode.length); // Remove category prefix
-          const currentNumber = parseInt(numberPart, 10) || 0; // Parse as integer
+          const numberPart = latestId.substring(categoryCode.length);
+          const currentNumber = parseInt(numberPart, 10) || 0;
           const nextNumber = currentNumber + 1;
-          
-          // Format the number with leading zeros (5 digits: 00010)
           const formattedNumber = nextNumber.toString().padStart(5, '0');
           const newId = `${categoryCode}${formattedNumber}`;
           
-          console.log(`API ID Generation: ${latestId} -> ${newId}`);
+          console.log(`✅ Primary API success: ${latestId} -> ${newId}`);
           return newId;
         }
-      } catch (apiError) {
-        console.log('API call failed, falling back to local data');
+      } catch (primaryError) {
+        console.warn(`❌ Primary API failed:`, primaryError.message);
       }
 
-      // Fallback: generate ID based on local jewellery data
-      console.log('Using local data for ID generation');
-      
-      // Get all items from the same category
+      // Secondary: Fetch all items for this specific category (without pagination)
+      try {
+        console.log(`🔍 Attempting secondary API: fetch all items for category ${category}`);
+        const response = await axios.get(`/api/jewellery`, {
+          params: {
+            catagories: category,
+            pageSize: 10000, // Large number to get all items
+            sortField: 'id',
+            sortOrder: 'desc'
+          },
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 15000
+        });
+
+        let allCategoryItems = [];
+        
+        // Handle different response formats
+        if (response.data) {
+          if (Array.isArray(response.data)) {
+            allCategoryItems = response.data;
+          } else if (response.data.items && Array.isArray(response.data.items)) {
+            allCategoryItems = response.data.items;
+          } else if (response.data.data && Array.isArray(response.data.data)) {
+            allCategoryItems = response.data.data;
+          } else if (response.data.jewellery && Array.isArray(response.data.jewellery)) {
+            allCategoryItems = response.data.jewellery;
+          }
+        }
+
+        // Filter for exact category match and valid IDs
+        const categoryItems = allCategoryItems.filter(item => 
+          item.category?.main === category && 
+          item.id && 
+          item.id.startsWith(categoryCode)
+        );
+
+        console.log(`📊 Found ${categoryItems.length} items in category ${category} from secondary API`);
+        
+        let maxNumber = 0;
+        categoryItems.forEach(item => {
+          if (item.id && item.id.startsWith(categoryCode)) {
+            const numberPart = item.id.substring(categoryCode.length);
+            const number = parseInt(numberPart, 10);
+            if (!isNaN(number) && number > maxNumber) {
+              maxNumber = number;
+            }
+          }
+        });
+
+        const nextNumber = maxNumber + 1;
+        const formattedNumber = nextNumber.toString().padStart(5, '0');
+        const newId = `${categoryCode}${formattedNumber}`;
+        
+        console.log(`✅ Secondary API success: Max found: ${maxNumber}, Generated: ${newId}`);
+        return newId;
+
+      } catch (secondaryError) {
+        console.warn(`❌ Secondary API failed:`, secondaryError.message);
+      }
+
+      // Tertiary: Try a specific endpoint for category max ID
+      try {
+        console.log(`🔍 Attempting tertiary API: max ID for category ${category}`);
+        const response = await axios.get(`/api/jewellery/max-id/${encodeURIComponent(category)}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000
+        });
+
+        if (response.data && typeof response.data.maxNumber === 'number') {
+          const nextNumber = response.data.maxNumber + 1;
+          const formattedNumber = nextNumber.toString().padStart(5, '0');
+          const newId = `${categoryCode}${formattedNumber}`;
+          
+          console.log(`✅ Tertiary API success: Max: ${response.data.maxNumber}, Generated: ${newId}`);
+          return newId;
+        }
+      } catch (tertiaryError) {
+        console.warn(`❌ Tertiary API failed:`, tertiaryError.message);
+      }
+
+      // Final fallback: Use local data from current page (last resort)
+      console.log(`🔍 Final fallback: using local paginated data`);
       const categoryItems = jewellery.filter(item => 
         item.category?.main === category && 
         item.id && 
         item.id.startsWith(categoryCode)
       );
       
-      console.log(`Found ${categoryItems.length} items in category ${category}`);
-      
       let maxNumber = 0;
-      
-      // Find the highest existing number
       categoryItems.forEach(item => {
         if (item.id && item.id.startsWith(categoryCode)) {
-          // Extract numeric part: "EAR00009" -> "00009"
           const numberPart = item.id.substring(categoryCode.length);
-          // Convert to integer: "00009" -> 9
           const number = parseInt(numberPart, 10);
-          
           if (!isNaN(number) && number > maxNumber) {
             maxNumber = number;
           }
-          
-          console.log(`Item ID: ${item.id}, Extracted number: ${number}, Current max: ${maxNumber}`);
         }
       });
       
-      // Generate next number
+      // If no items found locally, start from 1
       const nextNumber = maxNumber + 1;
-      
-      // Format with leading zeros (5 digits)
       const formattedNumber = nextNumber.toString().padStart(5, '0');
       const newId = `${categoryCode}${formattedNumber}`;
       
-      console.log(`Local ID Generation: Max found: ${maxNumber}, Next: ${nextNumber}, Formatted: ${newId}`);
+      console.log(`⚠️ Final fallback used: Local max: ${maxNumber}, Generated: ${newId}`);
+      console.log(`⚠️ Warning: This may not be accurate due to pagination. Consider implementing server-side max ID endpoint.`);
       
       return newId;
       
     } catch (error) {
-      console.error('Error generating ID:', error);
+      console.error('❌ Critical error in ID generation:', error);
       
-      // Ultimate fallback: just use 00001
+      // Ultimate emergency fallback
       const categoryCode = categoryCodeMap[category];
-      return `${categoryCode}00001`;
+      const emergencyId = `${categoryCode}00001`;
+      console.log(`🚨 Emergency fallback: ${emergencyId}`);
+      return emergencyId;
       
     } finally {
       setIsGeneratingId(false);
@@ -227,13 +296,13 @@ function JewelleryCatalogue() {
     });
   };
 
-  // Get responsive grid classes
+  // FIXED: Get responsive grid classes - Fixed mobile 3-column issue
   const getGridClasses = () => {
     if (isMobile) {
       switch (gridCols) {
         case 1: return 'grid grid-cols-1';
         case 2: return 'grid grid-cols-2';
-        case 3: return 'grid grid-cols-2 sm:grid-cols-3';
+        case 3: return 'grid grid-cols-3'; // FIXED: Was showing 2 cols, now shows 3
         default: return 'grid grid-cols-2';
       }
     } else {
@@ -682,7 +751,7 @@ function JewelleryCatalogue() {
     if (sortField === 'orderNo' && sortOrder === 'desc') return 'Order No: High to Low';
     if (sortField === 'clickCount' && sortOrder === 'desc') return 'Popularity: Most Popular First';
     if (sortField === 'clickCount' && sortOrder === 'asc') return 'Popularity: Least Popular First';
-    return 'Most Popular First';
+    return 'Newest First';
   };
 
   const openMediaModal = (media, startIndex = 0) => {
