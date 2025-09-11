@@ -101,7 +101,7 @@ function JewelleryCatalogue() {
 
   const isAdmin = true;
 
-  // Function to generate next ID for a category
+  // Fixed function to generate next ID for a category
   const generateNextId = async (category) => {
     if (!category || category === 'Custom' || !categoryCodeMap[category]) {
       return '';
@@ -112,61 +112,82 @@ function JewelleryCatalogue() {
     try {
       const categoryCode = categoryCodeMap[category];
       
-      // Fetch the latest item in this category to get the highest ID
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `/api/jewellery/latest-id/${encodeURIComponent(category)}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      // First try to get from API
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `/api/jewellery/latest-id/${encodeURIComponent(category)}`,
+          {
+            headers: { Authorization: `Bearer ${token}` }
+          }
+        );
 
-      let nextNumber = 1;
-      
-      if (response.data && response.data.latestId) {
-        // Extract number from the latest ID (e.g., "EAR00005" -> 5)
-        const latestId = response.data.latestId;
-        const numberPart = latestId.replace(categoryCode, '');
-        const currentNumber = parseInt(numberPart) || 0;
-        nextNumber = currentNumber + 1;
+        if (response.data && response.data.latestId) {
+          // Extract number from the latest ID (e.g., "EAR00009" -> "00009" -> 9)
+          const latestId = response.data.latestId;
+          const numberPart = latestId.substring(categoryCode.length); // Remove category prefix
+          const currentNumber = parseInt(numberPart, 10) || 0; // Parse as integer
+          const nextNumber = currentNumber + 1;
+          
+          // Format the number with leading zeros (5 digits: 00010)
+          const formattedNumber = nextNumber.toString().padStart(5, '0');
+          const newId = `${categoryCode}${formattedNumber}`;
+          
+          console.log(`API ID Generation: ${latestId} -> ${newId}`);
+          return newId;
+        }
+      } catch (apiError) {
+        console.log('API call failed, falling back to local data');
       }
 
-      // Format the number with leading zeros (5 digits: 00001)
+      // Fallback: generate ID based on local jewellery data
+      console.log('Using local data for ID generation');
+      
+      // Get all items from the same category
+      const categoryItems = jewellery.filter(item => 
+        item.category?.main === category && 
+        item.id && 
+        item.id.startsWith(categoryCode)
+      );
+      
+      console.log(`Found ${categoryItems.length} items in category ${category}`);
+      
+      let maxNumber = 0;
+      
+      // Find the highest existing number
+      categoryItems.forEach(item => {
+        if (item.id && item.id.startsWith(categoryCode)) {
+          // Extract numeric part: "EAR00009" -> "00009"
+          const numberPart = item.id.substring(categoryCode.length);
+          // Convert to integer: "00009" -> 9
+          const number = parseInt(numberPart, 10);
+          
+          if (!isNaN(number) && number > maxNumber) {
+            maxNumber = number;
+          }
+          
+          console.log(`Item ID: ${item.id}, Extracted number: ${number}, Current max: ${maxNumber}`);
+        }
+      });
+      
+      // Generate next number
+      const nextNumber = maxNumber + 1;
+      
+      // Format with leading zeros (5 digits)
       const formattedNumber = nextNumber.toString().padStart(5, '0');
       const newId = `${categoryCode}${formattedNumber}`;
+      
+      console.log(`Local ID Generation: Max found: ${maxNumber}, Next: ${nextNumber}, Formatted: ${newId}`);
       
       return newId;
       
     } catch (error) {
       console.error('Error generating ID:', error);
       
-      // Fallback: generate ID based on local data
-      try {
-        const categoryCode = categoryCodeMap[category];
-        const categoryItems = jewellery.filter(item => 
-          item.category?.main === category && 
-          item.id && 
-          item.id.startsWith(categoryCode)
-        );
-        
-        let maxNumber = 0;
-        categoryItems.forEach(item => {
-          const numberPart = item.id.replace(categoryCode, '');
-          const number = parseInt(numberPart) || 0;
-          if (number > maxNumber) {
-            maxNumber = number;
-          }
-        });
-        
-        const nextNumber = maxNumber + 1;
-        const formattedNumber = nextNumber.toString().padStart(5, '0');
-        return `${categoryCode}${formattedNumber}`;
-        
-      } catch (fallbackError) {
-        console.error('Fallback ID generation failed:', fallbackError);
-        const categoryCode = categoryCodeMap[category];
-        return `${categoryCode}00001`;
-      }
+      // Ultimate fallback: just use 00001
+      const categoryCode = categoryCodeMap[category];
+      return `${categoryCode}00001`;
+      
     } finally {
       setIsGeneratingId(false);
     }
@@ -777,7 +798,7 @@ function JewelleryCatalogue() {
     }
   };
 
-  // Enhanced form handling functions with automatic ID generation
+  // Enhanced form handling functions with fixed automatic ID generation
   const handleFormChange = async (e) => {
     const { name, value, type, checked } = e.target;
     
@@ -794,8 +815,10 @@ function JewelleryCatalogue() {
         
         // Generate automatic ID when category is selected (only for new items, not editing)
         if (!isEditing && value && categoryCodeMap[value]) {
+          console.log(`Category changed to: ${value}, generating ID...`);
           const generatedId = await generateNextId(value);
           if (generatedId) {
+            console.log(`Generated ID: ${generatedId}`);
             setNewItem(prev => ({
               ...prev,
               id: generatedId,
@@ -2053,7 +2076,7 @@ function JewelleryCatalogue() {
         </div>
       )}
 
-      {/* Enhanced Add/Edit Form with Automatic ID Generation */}
+      {/* Enhanced Add/Edit Form with Fixed Automatic ID Generation */}
       {isAdmin && showForm && (
         <div className="fixed top-0 right-0 w-full sm:w-1/2 md:w-1/3 h-full bg-gradient-to-b from-white via-amber-50 to-orange-50 z-[120] shadow-2xl overflow-y-auto p-8 border-l-4 border-amber-400">
           <button
@@ -2165,7 +2188,7 @@ function JewelleryCatalogue() {
                       ID Pattern: {categoryCodeMap[newItem.category.main]}00001, {categoryCodeMap[newItem.category.main]}00002...
                     </p>
                     <p className="text-sm text-green-600">
-                      Auto-generated based on latest item in this category
+                      {newItem.id ? `Generated: ${newItem.id}` : 'Auto-generated based on latest item in this category'}
                     </p>
                   </div>
                 </div>
@@ -2438,7 +2461,7 @@ function JewelleryCatalogue() {
                 </>
               )}
             </button>
-          </form>
+          </form> 
         </div>
       )}
     </div>
