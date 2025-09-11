@@ -59,6 +59,9 @@ function JewelleryCatalogue() {
   
   const [designFilter, setDesignFilter] = useState('');
 
+  // ID Generation state
+  const [isGeneratingId, setIsGeneratingId] = useState(false);
+
   // Static categories - consistent with UserCatalogue
   const catagories = [
     'All Jewellery',
@@ -75,11 +78,99 @@ function JewelleryCatalogue() {
     'Antique',
     'Custom',
   ];
+  
+  // Category code mapping for ID generation
+  const categoryCodeMap = {
+    'Earrings': 'EAR',
+    'Pendants': 'PEN',
+    'Finger Rings': 'RIN',
+    'Mangalsutra': 'MAN',
+    'Chains': 'CHA',
+    'Nose Pin': 'NOS',
+    'Necklaces': 'NEC',
+    'Necklace Set': 'SET',
+    'Bangles': 'BAN',
+    'Bracelets': 'BRA',
+    'Antique': 'ANT',
+    'Custom': 'CUS'
+  };
+
   const genders = ['All', 'Unisex', 'Women', 'Men'];
   const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
   const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
 
   const isAdmin = true;
+
+  // Function to generate next ID for a category
+  const generateNextId = async (category) => {
+    if (!category || category === 'Custom' || !categoryCodeMap[category]) {
+      return '';
+    }
+
+    setIsGeneratingId(true);
+    
+    try {
+      const categoryCode = categoryCodeMap[category];
+      
+      // Fetch the latest item in this category to get the highest ID
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `/api/jewellery/latest-id/${encodeURIComponent(category)}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      let nextNumber = 1;
+      
+      if (response.data && response.data.latestId) {
+        // Extract number from the latest ID (e.g., "EAR00005" -> 5)
+        const latestId = response.data.latestId;
+        const numberPart = latestId.replace(categoryCode, '');
+        const currentNumber = parseInt(numberPart) || 0;
+        nextNumber = currentNumber + 1;
+      }
+
+      // Format the number with leading zeros (5 digits: 00001)
+      const formattedNumber = nextNumber.toString().padStart(5, '0');
+      const newId = `${categoryCode}${formattedNumber}`;
+      
+      return newId;
+      
+    } catch (error) {
+      console.error('Error generating ID:', error);
+      
+      // Fallback: generate ID based on local data
+      try {
+        const categoryCode = categoryCodeMap[category];
+        const categoryItems = jewellery.filter(item => 
+          item.category?.main === category && 
+          item.id && 
+          item.id.startsWith(categoryCode)
+        );
+        
+        let maxNumber = 0;
+        categoryItems.forEach(item => {
+          const numberPart = item.id.replace(categoryCode, '');
+          const number = parseInt(numberPart) || 0;
+          if (number > maxNumber) {
+            maxNumber = number;
+          }
+        });
+        
+        const nextNumber = maxNumber + 1;
+        const formattedNumber = nextNumber.toString().padStart(5, '0');
+        return `${categoryCode}${formattedNumber}`;
+        
+      } catch (fallbackError) {
+        console.error('Fallback ID generation failed:', fallbackError);
+        const categoryCode = categoryCodeMap[category];
+        return `${categoryCode}00001`;
+      }
+    } finally {
+      setIsGeneratingId(false);
+    }
+  };
 
   // Device detection and responsive handling
   useEffect(() => {
@@ -686,15 +777,33 @@ function JewelleryCatalogue() {
     }
   };
 
-  // Form handling functions (keeping existing admin functionality)
-  const handleFormChange = (e) => {
+  // Enhanced form handling functions with automatic ID generation
+  const handleFormChange = async (e) => {
     const { name, value, type, checked } = e.target;
+    
     if (name === 'categories') {
-      setNewItem((prev) => ({
-        ...prev,
-        category: { ...prev.category, main: value, sub: '' },
-      }));
-      if (value !== 'Custom') setCustomCategory('');
+      const updatedItem = {
+        ...newItem,
+        category: { ...newItem.category, main: value, sub: '' },
+      };
+      
+      setNewItem(updatedItem);
+      
+      if (value !== 'Custom') {
+        setCustomCategory('');
+        
+        // Generate automatic ID when category is selected (only for new items, not editing)
+        if (!isEditing && value && categoryCodeMap[value]) {
+          const generatedId = await generateNextId(value);
+          if (generatedId) {
+            setNewItem(prev => ({
+              ...prev,
+              id: generatedId,
+              category: { ...prev.category, main: value, sub: '' }
+            }));
+          }
+        }
+      }
     } else if (name === 'subCategory') {
       setNewItem((prev) => ({
         ...prev,
@@ -808,7 +917,11 @@ function JewelleryCatalogue() {
       alert('Item added successfully!');
     } catch (error) {
       console.error('Error adding item:', error);
-      alert('Error adding item.');
+      if (error.response?.data?.message) {
+        alert(`Error adding item: ${error.response.data.message}`);
+      } else {
+        alert('Error adding item.');
+      }
     }
   };
 
@@ -891,7 +1004,11 @@ function JewelleryCatalogue() {
       alert('Item updated successfully!');
     } catch (error) {
       console.error('Error updating item:', error);
-      alert('Error updating item.');
+      if (error.response?.data?.message) {
+        alert(`Error updating item: ${error.response.data.message}`);
+      } else {
+        alert('Error updating item.');
+      }
     }
   };
 
@@ -1936,7 +2053,7 @@ function JewelleryCatalogue() {
         </div>
       )}
 
-      {/* Enhanced Add/Edit Form with Multiple Image and Video Support */}
+      {/* Enhanced Add/Edit Form with Automatic ID Generation */}
       {isAdmin && showForm && (
         <div className="fixed top-0 right-0 w-full sm:w-1/2 md:w-1/3 h-full bg-gradient-to-b from-white via-amber-50 to-orange-50 z-[120] shadow-2xl overflow-y-auto p-8 border-l-4 border-amber-400">
           <button
@@ -1968,14 +2085,36 @@ function JewelleryCatalogue() {
               {isEditing ? 'Edit Item' : 'Add New Jewellery'}
             </h2>
             
-            <input
-              name="id"
-              className="w-full border-2 border-amber-300 p-4 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 font-medium text-lg shadow-lg"
-              placeholder="🆔 ID*"
-              value={newItem.id || ''}
-              onChange={handleFormChange}
-              required
-            />
+            {/* Auto-Generated ID Field */}
+            <div className="relative">
+              <input
+                name="id"
+                className={`w-full border-2 p-4 rounded-2xl transition-all duration-300 font-medium text-lg shadow-lg ${
+                  isGeneratingId 
+                    ? 'border-blue-300 bg-blue-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-200' 
+                    : 'border-amber-300 focus:border-amber-500 focus:ring-4 focus:ring-amber-200'
+                }`}
+                placeholder="🆔 ID* (Auto-generated when category is selected)"
+                value={newItem.id || ''}
+                onChange={handleFormChange}
+                required
+                disabled={isGeneratingId}
+              />
+              {isGeneratingId && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+                  <span className="text-sm text-blue-600 font-semibold">Generating...</span>
+                </div>
+              )}
+              {newItem.id && !isGeneratingId && !isEditing && (
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-green-500">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              )}
+            </div>
+            
             <input
               name="name"
               className="w-full border-2 border-amber-300 p-4 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 font-medium text-lg shadow-lg"
@@ -1984,21 +2123,55 @@ function JewelleryCatalogue() {
               onChange={handleFormChange}
               required
             />
-            <select
-              name="categories"
-              value={newItem.category?.main || ''}
-              onChange={handleFormChange}
-              className="w-full border-2 border-amber-300 p-4 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 font-medium text-lg shadow-lg"
-              required
-            >
-              <option value="">🏷️ Select Main Category*</option>
-              {catagories.slice(1).map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-              <option value="Custom">Custom</option>
-            </select>
+            
+            {/* Category Selection with Auto ID Generation */}
+            <div className="relative">
+              <select
+                name="categories"
+                value={newItem.category?.main || ''}
+                onChange={handleFormChange}
+                className={`w-full border-2 p-4 rounded-2xl transition-all duration-300 font-medium text-lg shadow-lg ${
+                  isGeneratingId 
+                    ? 'border-blue-300 bg-blue-50 focus:border-blue-500 focus:ring-4 focus:ring-blue-200' 
+                    : 'border-amber-300 focus:border-amber-500 focus:ring-4 focus:ring-amber-200'
+                }`}
+                required
+                disabled={isGeneratingId}
+              >
+                <option value="">🏷️ Select Main Category* (Auto-generates ID)</option>
+                {catagories.slice(1).map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat} {categoryCodeMap[cat] ? `(${categoryCodeMap[cat]})` : ''}
+                  </option>
+                ))}
+                <option value="Custom">Custom (Manual ID Required)</option>
+              </select>
+              {isGeneratingId && (
+                <div className="absolute right-12 top-1/2 transform -translate-y-1/2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent"></div>
+                </div>
+              )}
+            </div>
+            
+            {/* ID Generation Info */}
+            {newItem.category?.main && categoryCodeMap[newItem.category.main] && !isEditing && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-2xl border-2 border-green-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center text-white">
+                    🆔
+                  </div>
+                  <div>
+                    <p className="font-bold text-green-700">
+                      ID Pattern: {categoryCodeMap[newItem.category.main]}00001, {categoryCodeMap[newItem.category.main]}00002...
+                    </p>
+                    <p className="text-sm text-green-600">
+                      Auto-generated based on latest item in this category
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {newItem.category?.main === 'Custom' && (
               <input
                 className="w-full border-2 border-amber-300 p-4 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 font-medium text-lg shadow-lg"
@@ -2243,13 +2416,27 @@ function JewelleryCatalogue() {
             
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white font-bold py-4 rounded-2xl hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-3 text-lg"
+              disabled={isGeneratingId}
+              className={`w-full font-bold py-4 rounded-2xl shadow-xl transform transition-all duration-300 flex items-center justify-center gap-3 text-lg ${
+                isGeneratingId
+                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 hover:scale-105'
+              }`}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-              {isEditing ? 'Update Item' : 'Add Item'}
-              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              {isGeneratingId ? (
+                <>
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-600 border-t-transparent"></div>
+                  Generating ID...
+                </>
+              ) : (
+                <>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  {isEditing ? 'Update Item' : 'Add Item'}
+                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                </>
+              )}
             </button>
           </form>
         </div>
