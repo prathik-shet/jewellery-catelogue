@@ -91,12 +91,22 @@ function Dashboard() {
               +91 8265-221143
             </a>
           </p>
-          <p className="text-yellow-800 font-medium">
+          <p className="text-yellow-800 font-medium mb-4">
             📱{" "}
             <a href="tel:+919448203199" className="underline hover:text-yellow-600">
               +91 94482-03199
             </a>
           </p>
+
+          {/* Google Maps Button */}
+          <a
+            href="https://www.google.com/maps/place/Vimaleshwara+Jewellers/@13.5364704,75.3646234,17z/data=!3m1!4b1!4m6!3m5!1s0x3bbb14e87902c949:0x9909b22e6458feda!8m2!3d13.5364704!4d75.3671983!16s%2Fg%2F11dy7dxygr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+          >
+            📍 View on Google Maps
+          </a>
         </section>
       </main>
     </div>
