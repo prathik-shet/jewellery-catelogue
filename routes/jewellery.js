@@ -109,7 +109,7 @@ router.get("/", async (req, res) => {
 
     // Enhanced parameter validation and conversion
     const pageNum = Math.max(1, parseInt(page) || 1);
-    const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize) || 20)); // Limit max page size
+    const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize) || 20));
     const skip = (pageNum - 1) * pageSizeNum;
 
     let query = {};
@@ -189,10 +189,8 @@ router.get("/", async (req, res) => {
       sortOptions = { date: 1, _id: 1 };
     } else if (sortField && sortField.trim()) {
       const direction = sortOrder === 'asc' ? 1 : -1;
-      // Always include _id as a consistent tie-breaker for stable sorting
       sortOptions = { [sortField]: direction, _id: direction };
     } else {
-      // Default sort by popularity (clickCount) then by _id for consistency
       sortOptions = { clickCount: -1, _id: -1 };
     }
 
@@ -200,47 +198,110 @@ router.get("/", async (req, res) => {
     console.log(`Sort Options:`, sortOptions);
     console.log(`Query:`, JSON.stringify(query));
 
+    // CRITICAL FIX: Use efficient aggregation pipeline to handle large documents
     const [result] = await Jewellery.aggregate([
+      // Stage 1: Match the query
       { $match: query },
+      
+      // Stage 2: Add computed fields but EXCLUDE heavy fields during sorting
       { 
         $addFields: {
-          // Ensure clickCount is always a number for consistent sorting
           clickCount: { 
             $cond: {
               if: { $type: "$clickCount" },
               then: "$clickCount",
               else: 0
             }
-          },
-          images: { 
-            $cond: {
-              if: { $isArray: "$images" },
-              then: "$images",
-              else: { $cond: { if: "$image", then: ["$image"], else: [] } }
-            }
-          },
-          videos: { 
-            $cond: {
-              if: { $isArray: "$videos" },
-              then: "$videos",
-              else: []
-            }
           }
         }
       },
+      
+      // Stage 3: Project only essential fields for sorting to reduce memory usage
+      {
+        $project: {
+          _id: 1,
+          id: 1,
+          name: 1,
+          category: 1,
+          type: 1,
+          metal: 1,
+          carat: 1,
+          weight: 1,
+          stoneWeight: 1,
+          gender: 1,
+          isOurDesign: 1,
+          clickCount: 1,
+          date: 1,
+          orderNo: 1,
+          updatedAt: 1,
+          createdAt: 1,
+          __v: 1,
+          // Include only the first image for preview to reduce size
+          image: 1,
+          // Store references to original arrays without the actual data
+          hasImages: { $cond: { if: { $isArray: "$images" }, then: { $gt: [{ $size: "$images" }, 0] }, else: { $ne: ["$image", null] } } },
+          hasVideos: { $cond: { if: { $isArray: "$videos" }, then: { $gt: [{ $size: "$videos" }, 0] }, else: false } }
+        }
+      },
+      
+      // Stage 4: Use facet for pagination with allowDiskUse
       {
         $facet: {
           items: [
             { $sort: sortOptions },
             { $skip: skip },
-            { $limit: pageSizeNum }
+            { $limit: pageSizeNum },
+            // Stage 5: Re-lookup full documents for the paginated results only
+            {
+              $lookup: {
+                from: "jewelleries", // Make sure this matches your collection name
+                localField: "_id",
+                foreignField: "_id",
+                as: "fullDoc"
+              }
+            },
+            // Stage 6: Replace with full document and add computed fields
+            {
+              $replaceRoot: {
+                newRoot: {
+                  $mergeObjects: [
+                    { $arrayElemAt: ["$fullDoc", 0] },
+                    {
+                      images: { 
+                        $cond: {
+                          if: { $isArray: { $arrayElemAt: ["$fullDoc.images", 0] } },
+                          then: { $arrayElemAt: ["$fullDoc.images", 0] },
+                          else: { 
+                            $cond: { 
+                              if: { $arrayElemAt: ["$fullDoc.image", 0] }, 
+                              then: [{ $arrayElemAt: ["$fullDoc.image", 0] }], 
+                              else: [] 
+                            } 
+                          }
+                        }
+                      },
+                      videos: { 
+                        $cond: {
+                          if: { $isArray: { $arrayElemAt: ["$fullDoc.videos", 0] } },
+                          then: { $arrayElemAt: ["$fullDoc.videos", 0] },
+                          else: []
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           ],
           totalCount: [
             { $count: "count" }
           ]
         }
       }
-    ]);
+    ], { 
+      allowDiskUse: true, // CRITICAL: Allow disk usage for large sorts
+      maxTimeMS: 30000 // Set reasonable timeout
+    });
 
     const totalItems = result.totalCount[0]?.count || 0;
     const items = result.items || [];
