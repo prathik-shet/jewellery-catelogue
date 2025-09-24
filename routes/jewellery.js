@@ -107,8 +107,12 @@ router.get("/", async (req, res) => {
       pageSize = 20,
     } = req.query;
 
+    // Enhanced parameter validation and conversion
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize) || 20)); // Limit max page size
+    const skip = (pageNum - 1) * pageSizeNum;
+
     let query = {};
-    
     const andConditions = [];
 
     // Category Main - support multiple categories
@@ -177,28 +181,37 @@ router.get("/", async (req, res) => {
         query = { $and: andConditions };
     }
 
-    // Enhanced Sorting Logic
+    // Enhanced Sorting Logic with consistent tie-breaker
     let sortOptions = {};
     if (sortByDate === 'newest') {
       sortOptions = { date: -1, _id: -1 };
     } else if (sortByDate === 'oldest') {
       sortOptions = { date: 1, _id: 1 };
-    } else if (sortField) {
+    } else if (sortField && sortField.trim()) {
       const direction = sortOrder === 'asc' ? 1 : -1;
+      // Always include _id as a consistent tie-breaker for stable sorting
       sortOptions = { [sortField]: direction, _id: direction };
     } else {
+      // Default sort by popularity (clickCount) then by _id for consistency
       sortOptions = { clickCount: -1, _id: -1 };
     }
 
-    const pageNum = parseInt(page);
-    const pageSizeNum = parseInt(pageSize);
-    const skip = (pageNum - 1) * pageSizeNum;
-    
+    console.log(`Pagination Debug: Page ${pageNum}, PageSize ${pageSizeNum}, Skip ${skip}`);
+    console.log(`Sort Options:`, sortOptions);
+    console.log(`Query:`, JSON.stringify(query));
+
     const [result] = await Jewellery.aggregate([
       { $match: query },
       { 
         $addFields: {
-          clickCount: { $ifNull: ["$clickCount", 0] },
+          // Ensure clickCount is always a number for consistent sorting
+          clickCount: { 
+            $cond: {
+              if: { $type: "$clickCount" },
+              then: "$clickCount",
+              else: 0
+            }
+          },
           images: { 
             $cond: {
               if: { $isArray: "$images" },
@@ -233,10 +246,17 @@ router.get("/", async (req, res) => {
     const items = result.items || [];
     const totalPages = Math.ceil(totalItems / pageSizeNum);
 
-    // =================== FIX STARTS HERE ===================
-    // Added `totalItems` and `totalPages` to the top level of the response.
-    // This matches the structure the frontend component expects, fixing the issue
-    // where the total count was being read as 0.
+    console.log(`Pagination Result: Total Items ${totalItems}, Items Returned ${items.length}, Total Pages ${totalPages}`);
+
+    // Validate that the requested page is within bounds
+    if (pageNum > totalPages && totalPages > 0) {
+      return res.status(400).json({ 
+        error: `Page ${pageNum} does not exist. Maximum page is ${totalPages}.`,
+        totalPages,
+        totalItems
+      });
+    }
+
     res.json({
       items,
       totalItems,
@@ -245,10 +265,11 @@ router.get("/", async (req, res) => {
         page: pageNum,
         pageSize: pageSizeNum,
         totalCount: totalItems,
-        totalPages: totalPages
+        totalPages: totalPages,
+        hasNextPage: pageNum < totalPages,
+        hasPreviousPage: pageNum > 1
       }
     });
-    // =================== FIX ENDS HERE ===================
   } catch (err) {
     console.error("Error fetching items:", err);
     res.status(500).json({ error: "Failed to fetch items: " + err.message });
@@ -397,4 +418,3 @@ router.get("/stats", async (req, res) => {
 });
 
 module.exports = router;
-
