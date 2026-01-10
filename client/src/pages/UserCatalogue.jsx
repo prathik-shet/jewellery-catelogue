@@ -1,138 +1,203 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import DualRangeSlider from './DualRangeSlider'; // Ensure file is in same folder
 
 function UserCatalogue() {
-  // --- Data State ---
+  // Data State
   const [jewellery, setJewellery] = useState([]);
   
-  // --- Filter States ---
+  // Sorting State
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [sortByDate, setSortByDate] = useState('');
+  const [sortField, setSortField] = useState('weight');
+
+  // Filter State
+  const [stoneFilter, setStoneFilter] = useState('');
+  const [metalFilter, setMetalFilter] = useState('');
+  // FIXED: Removed TypeScript syntax <[number, number]>
   const [weightRange, setWeightRange] = useState([0, 200]); 
   const [selectedCategory, setSelectedCategory] = useState([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [selectedGender, setSelectedGender] = useState('');
-  const [metalFilter, setMetalFilter] = useState('');
-  const [stoneFilter, setStoneFilter] = useState('');
   const [designFilter, setDesignFilter] = useState('');
+  
+  // Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [searchId, setSearchId] = useState('');
 
-  // --- Sort States ---
-  const [sortField, setSortField] = useState('date'); 
-  const [sortOrder, setSortOrder] = useState('desc');
-
-  // --- Pagination & UI States ---
+  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isDataFetched, setIsDataFetched] = useState(false);
-  const [showFilterPanel, setShowFilterPanel] = useState(false);
-  const [showSortPanel, setShowSortPanel] = useState(false);
 
-  // --- Media & Modal States ---
+  // UI State
   const [modalMedia, setModalMedia] = useState([]);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+  const [gridCols, setGridCols] = useState(2);
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [showSortPanel, setShowSortPanel] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedItemIndex, setSelectedItemIndex] = useState(-1);
 
-  // --- Responsive States ---
-  const [isMobile, setIsMobile] = useState(false);
-  const [gridCols, setGridCols] = useState(4);
+  // Touch State
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
 
-  // --- Palette Constants ---
-  const colors = {
-    bg: '#fff8e6',      // Light Cream
-    text: '#2e2e2e',    // Dark Grey
-    primary: '#7f1a2b', // Burgundy
-    accent: '#fae382',  // Pale Gold
-    highlight: '#ffcc00', // Bright Gold
-  };
-
-  // --- Constants ---
+  // Constants
   const categories = [
-    'All Jewellery', 'Earrings', 'Pendants', 'Finger Rings', 'Mangalsutra',
-    'Chains', 'Nose Pin', 'Necklaces', 'Necklace Set', 'Bangles',
-    'Bracelets', 'Antique', 'Custom',
+    'All Jewellery',
+    'Earrings',
+    'Pendants',
+    'Finger Rings',
+    'Mangalsutra',
+    'Chains',
+    'Nose Pin',
+    'Necklaces',
+    'Necklace Set',
+    'Bangles',
+    'Bracelets',
+    'Antique',
+    'Custom',
   ];
   const genders = ['All', 'Unisex', 'Women', 'Men'];
+  const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
   const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
 
-  // --- Device Detection & Mobile Grid Fix ---
+  // Handle Resize
   useEffect(() => {
     const checkDevice = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      // Enforce limits immediately
-      if (mobile && gridCols > 2) setGridCols(2);
-      else if (!mobile && gridCols < 2) setGridCols(4);
+      if (mobile && gridCols > 2) {
+        setGridCols(2);
+      } else if (!mobile && gridCols < 2) {
+        setGridCols(2);
+      }
     };
+
     checkDevice();
     window.addEventListener('resize', checkDevice);
     return () => window.removeEventListener('resize', checkDevice);
   }, [gridCols]);
 
-  // --- Grid Logic ---
   const cycleGrid = () => {
     setGridCols(prev => {
-      // Mobile: Toggle 1 -> 2 -> 1 (Removed 3 grid)
-      if (isMobile) return prev === 1 ? 2 : 1;
-      // Desktop: 2 -> 3 -> 4 -> 6 -> 2
-      return prev === 2 ? 3 : prev === 3 ? 4 : prev === 4 ? 6 : 2;
+      if (isMobile) {
+        return prev === 1 ? 2 : 1;
+      } else {
+        if (prev === 2) return 3;
+        if (prev === 3) return 4;
+        if (prev === 4) return 6;
+        return 2;
+      }
     });
   };
 
   const getGridClasses = () => {
     if (isMobile) {
-      return gridCols === 1 ? 'grid-cols-1' : 'grid-cols-2';
+      return gridCols === 1 ? 'grid grid-cols-1' : 'grid grid-cols-2';
+    } else {
+      switch (gridCols) {
+        case 2: return 'grid grid-cols-2 lg:grid-cols-2';
+        case 3: return 'grid grid-cols-2 lg:grid-cols-3';
+        case 4: return 'grid grid-cols-2 lg:grid-cols-4';
+        case 6: return 'grid grid-cols-3 lg:grid-cols-6';
+        default: return 'grid grid-cols-2 lg:grid-cols-4';
+      }
     }
-    return `grid-cols-2 lg:grid-cols-${gridCols}`;
   };
 
   const getImageHeightClasses = () => {
-    if (isMobile) return 'h-48'; 
-    switch (gridCols) {
-      case 2: return 'h-80';
-      case 3: return 'h-64';
-      case 4: return 'h-56';
-      case 6: return 'h-40';
-      default: return 'h-56';
+    if (isMobile) {
+      return gridCols === 1 ? 'h-64' : 'h-40';
+    } else {
+      switch (gridCols) {
+        case 2: return 'h-56 lg:h-64';
+        case 3: return 'h-48 lg:h-56';
+        case 4: return 'h-40 lg:h-48';
+        case 6: return 'h-32 lg:h-40';
+        default: return 'h-40 lg:h-48';
+      }
     }
   };
 
-  // --- API Fetching ---
+  const getTextSizeClasses = () => {
+    if (isMobile) {
+      return gridCols === 1
+        ? { title: 'text-lg sm:text-xl', details: 'text-sm' }
+        : { title: 'text-sm sm:text-base', details: 'text-xs' };
+    } else {
+      switch (gridCols) {
+        case 2: return { title: 'text-lg lg:text-xl', details: 'text-sm lg:text-base' };
+        case 3: return { title: 'text-base lg:text-lg', details: 'text-sm' };
+        case 4: return { title: 'text-sm lg:text-base', details: 'text-xs lg:text-sm' };
+        case 6: return { title: 'text-xs lg:text-sm', details: 'text-xs' };
+        default: return { title: 'text-sm lg:text-base', details: 'text-xs lg:text-sm' };
+      }
+    }
+  };
+
   const fetchJewellery = useCallback(async () => {
     setLoading(true);
     setIsDataFetched(false);
     try {
       const params = new URLSearchParams();
+
       params.append('page', currentPage.toString());
       params.append('pageSize', itemsPerPage.toString());
 
-      if (sortField === 'date') {
-        params.append('sortByDate', sortOrder === 'desc' ? 'newest' : 'oldest');
+      if (sortByDate) {
+        params.append('sortByDate', sortByDate);
       } else {
-        params.append('sortField', sortField);
-        params.append('sortOrder', sortOrder);
+        params.append('sortField', sortField || 'weight');
+        params.append('sortOrder', sortOrder || 'desc');
       }
 
       if (selectedCategory.length > 0 && !selectedCategory.includes('All Jewellery')) {
-        params.append('catagories', selectedCategory.join(','));
+        params.append('categories', selectedCategory.join(','));
       }
-      if (selectedSubCategory?.trim()) params.append('subCategory', selectedSubCategory);
-      if (selectedType && selectedType !== 'All') params.append('type', selectedType);
-      if (selectedGender && selectedGender !== 'All') params.append('gender', selectedGender);
-      if (metalFilter && metalFilter !== 'All') params.append('metal', metalFilter);
-      if (stoneFilter) params.append('stone', stoneFilter);
-      if (designFilter) params.append('design', designFilter);
-      if (searchQuery?.trim()) params.append('search', searchQuery.trim());
-      if (searchId?.trim()) params.append('searchId', searchId.trim());
 
-      params.append('minWeight', weightRange[0].toString());
-      params.append('maxWeight', weightRange[1].toString());
+      if (selectedSubCategory && selectedSubCategory.trim() !== '') {
+        params.append('subCategory', selectedSubCategory);
+      }
+
+      if (selectedType && selectedType !== '' && selectedType !== 'All') {
+        params.append('type', selectedType);
+      }
+
+      if (selectedGender && selectedGender !== '' && selectedGender !== 'All') {
+        params.append('gender', selectedGender);
+      }
+
+      if (metalFilter && metalFilter !== '' && metalFilter !== 'All') {
+        params.append('metal', metalFilter);
+      }
+
+      if (stoneFilter && stoneFilter !== '') {
+        params.append('stone', stoneFilter);
+      }
+
+      if (designFilter && designFilter !== '') {
+        params.append('design', designFilter);
+      }
+
+      if (weightRange[0] > 0 || weightRange[1] < 200) {
+        params.append('minWeight', weightRange[0].toString());
+        params.append('maxWeight', weightRange[1].toString());
+      }
+
+      if (searchQuery && searchQuery.trim() !== '') {
+        params.append('search', searchQuery.trim());
+      }
+
+      if (searchId && searchId.trim() !== '') {
+        params.append('searchId', searchId.trim());
+      }
 
       const res = await axios.get(`/api/jewellery?${params.toString()}`);
       const data = res.data;
@@ -145,10 +210,23 @@ function UserCatalogue() {
         if (Array.isArray(data)) {
           items = data;
           total = data.length;
-        } else if (data.items || data.data || data.jewellery) {
-          items = data.items || data.data || data.jewellery;
-          total = data.totalItems || data.total || data.count || items.length;
+          pages = Math.ceil(total / itemsPerPage);
+        } else if (data.items && Array.isArray(data.items)) {
+          items = data.items;
+          total = data.totalItems || data.total || data.count || 0;
           pages = data.totalPages || Math.ceil(total / itemsPerPage);
+        } else if (data.data && Array.isArray(data.data)) {
+          items = data.data;
+          total = data.totalItems || data.total || data.count || data.data.length;
+          pages = data.totalPages || Math.ceil(total / itemsPerPage);
+        } else if (data.jewellery && Array.isArray(data.jewellery)) {
+          items = data.jewellery;
+          total = data.totalItems || data.total || data.count || data.jewellery.length;
+          pages = data.totalPages || Math.ceil(total / itemsPerPage);
+        } else if (data.pagination && data.items) {
+          items = data.items;
+          total = data.pagination.totalCount;
+          pages = data.pagination.totalPages;
         }
       }
 
@@ -161,35 +239,246 @@ function UserCatalogue() {
         setTotalItems(0);
         setTotalPages(1);
       }
+
     } catch (error) {
       console.error('Failed to load jewellery:', error);
       setJewellery([]);
+      setTotalItems(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
       setIsDataFetched(true);
     }
   }, [
-    currentPage, itemsPerPage, sortField, sortOrder,
-    selectedCategory, selectedSubCategory, selectedType, selectedGender,
-    metalFilter, stoneFilter, designFilter, weightRange, searchQuery, searchId
+    currentPage,
+    itemsPerPage,
+    sortField,
+    sortOrder,
+    sortByDate,
+    selectedCategory,
+    selectedSubCategory,
+    selectedType,
+    selectedGender,
+    metalFilter,
+    stoneFilter,
+    designFilter,
+    weightRange,
+    searchQuery,
+    searchId,
   ]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [
-    selectedCategory, selectedSubCategory, selectedType, selectedGender, 
-    metalFilter, stoneFilter, designFilter, weightRange, searchQuery, searchId, 
-    sortField, sortOrder
-  ]);
+  }, [selectedCategory, selectedSubCategory, selectedType, selectedGender, metalFilter, stoneFilter, designFilter, weightRange, searchQuery, searchId, sortField, sortOrder, sortByDate]);
 
   useEffect(() => {
     fetchJewellery();
   }, [fetchJewellery]);
 
-  // --- Handlers ---
-  const handleItemClick = (item, index) => {
+  const handleItemClick = async (item, index) => {
     setSelectedItem(item);
     setSelectedItemIndex(index);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.patch(`/api/jewellery/${item._id}/click`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setJewellery(prev => prev.map(jewel =>
+        jewel._id === item._id
+          ? { ...jewel, clickCount: response.data.clickCount || (jewel.clickCount || 0) + 1 }
+          : jewel
+      ));
+    } catch (error) {
+      console.error('Failed to update popularity:', error);
+      setJewellery(prev => prev.map(jewel =>
+        jewel._id === item._id
+          ? { ...jewel, clickCount: (jewel.clickCount || 0) + 1 }
+          : jewel
+      ));
+    }
+  };
+
+  const navigateToItem = (direction) => {
+    let newIndex = selectedItemIndex;
+
+    if (direction === 'next') {
+      newIndex = selectedItemIndex + 1;
+      if (newIndex >= jewellery.length) {
+        newIndex = 0;
+      }
+    } else if (direction === 'prev') {
+      newIndex = selectedItemIndex - 1;
+      if (newIndex < 0) {
+        newIndex = jewellery.length - 1;
+      }
+    }
+
+    if (newIndex !== selectedItemIndex && jewellery[newIndex]) {
+      setSelectedItem(jewellery[newIndex]);
+      setSelectedItemIndex(newIndex);
+      handleItemClick(jewellery[newIndex], newIndex);
+    }
+  };
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      navigateToItem('next');
+    } else if (isRightSwipe) {
+      navigateToItem('prev');
+    }
+  };
+
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (!selectedItem) return;
+
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        navigateToItem('prev');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        navigateToItem('next');
+      } else if (e.key === 'Escape') {
+        setSelectedItem(null);
+        setSelectedItemIndex(-1);
+      }
+    };
+
+    if (selectedItem) {
+      document.addEventListener('keydown', handleKeyPress);
+      return () => document.removeEventListener('keydown', handleKeyPress);
+    }
+  }, [selectedItem, selectedItemIndex, jewellery]);
+
+  const getItemImages = (item) => {
+    if (!item) return [];
+    if (Array.isArray(item.images) && item.images.length > 0) {
+      return item.images.filter(Boolean);
+    }
+    if (item.image) {
+      return [item.image];
+    }
+    return [];
+  };
+
+  const getItemVideos = (item) => {
+    if (!item) return [];
+    if (Array.isArray(item.videos) && item.videos.length > 0) {
+      return item.videos.filter(Boolean);
+    }
+    return [];
+  };
+
+  const getMainImage = (item) => {
+    const images = getItemImages(item);
+    return images.length > 0 ? images[0] : null;
+  };
+
+  const getItemMedia = (item) => {
+    if (!item) return [];
+    const media = [];
+    getItemImages(item).forEach((img) => {
+      media.push({ type: 'image', src: img });
+    });
+    getItemVideos(item).forEach((vid) => {
+      media.push({ type: 'video', src: vid });
+    });
+    return media;
+  };
+
+  const shareOnWhatsApp = async (item) => {
+    const mainImage = getMainImage(item);
+    const message = `Check out this beautiful jewellery from Vimaleshwara Jewellers!\n\n*${item.name}*\nID: ${item.id}\nWeight: ${item.weight}g\nMetal: ${item.metal}\n\n${mainImage || ''}`;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages && page !== currentPage) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      goToPage(currentPage + 1);
+    }
+  };
+
+  const getPaginationRange = () => {
+    const range = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        range.push(i);
+      }
+    } else {
+      let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+      let end = Math.min(totalPages, start + maxVisible - 1);
+
+      if (end - start + 1 < maxVisible) {
+        start = Math.max(1, end - maxVisible + 1);
+      }
+
+      for (let i = start; i <= end; i++) {
+        range.push(i);
+      }
+    }
+
+    return range;
+  };
+
+  const getAllCategories = () => {
+    return categories.filter(cat => cat !== 'All Jewellery');
+  };
+
+  const getAllSubCategories = () => {
+    const subcategories = jewellery
+      .map(item => item.category?.sub)
+      .filter(sub => sub && sub.trim() !== '')
+      .filter((sub, index, arr) => arr.indexOf(sub) === index);
+
+    return subcategories.sort();
+  };
+
+  const getFilteredSubCategories = () => {
+    if (selectedCategory.length === 0) {
+      return getAllSubCategories();
+    }
+
+    const filteredSubcategories = jewellery
+      .filter(item => selectedCategory.includes(item.category?.main))
+      .map(item => item.category?.sub)
+      .filter(sub => sub && sub.trim() !== '')
+      .filter((sub, index, arr) => arr.indexOf(sub) === index);
+
+    return filteredSubcategories.sort();
   };
 
   const clearAllFilters = () => {
@@ -199,519 +488,909 @@ function UserCatalogue() {
     setSelectedGender('');
     setStoneFilter('');
     setMetalFilter('');
-    setDesignFilter('');
     setWeightRange([0, 200]);
     setSearchQuery('');
     setSearchId('');
+    setDesignFilter('');
+    setCurrentPage(1);
+  };
+
+  const clearAllSorts = () => {
+    setSortField('weight');
+    setSortOrder('desc');
+    setSortByDate('');
     setCurrentPage(1);
   };
 
   const getActiveSortDescription = () => {
-    if (sortField === 'date' && sortOrder === 'desc') return 'Newest Arrivals';
-    if (sortField === 'date' && sortOrder === 'asc') return 'Oldest Items';
+    if (sortByDate === 'newest') return 'Date: Newest First';
+    if (sortByDate === 'oldest') return 'Date: Oldest First';
     if (sortField === 'weight' && sortOrder === 'asc') return 'Weight: Low to High';
     if (sortField === 'weight' && sortOrder === 'desc') return 'Weight: High to Low';
-    return 'Default';
+    return 'Weight: High to Low';
   };
 
-  // --- WhatsApp Share Logic ---
-  const handleShare = (item) => {
-    if (!item) return;
-    
-    const mainImg = getMainImage(item);
-    // Construct a nice message
-    const text = `*Check out this item from Vimaleshwara Jewellers!* 💎\n\n` +
-      `*Name:* ${item.name}\n` +
-      `*ID:* ${item.id}\n` +
-      `*Weight:* ${item.weight}g\n` +
-      `*Metal:* ${item.metal || 'N/A'}\n` +
-      (mainImg ? `*Image:* ${mainImg}\n\n` : `\n`) +
-      `Enquire for more details!`;
-
-    const encodedText = encodeURIComponent(text);
-    // Opens WhatsApp Web or App with pre-filled text
-    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+  const openMediaModal = (media, startIndex = 0) => {
+    setModalMedia(media);
+    setCurrentMediaIndex(startIndex);
   };
 
-  // --- Slider Logic Fixed ---
-  const handleWeightChange = (e, index) => {
-    const value = Math.min(Math.max(parseInt(e.target.value), 0), 200);
-    setWeightRange(prev => {
-      const newRange = [...prev];
-      newRange[index] = value;
-      // Ensure min doesn't pass max
-      if (index === 0 && value > newRange[1]) newRange[0] = newRange[1] - 1;
-      if (index === 1 && value < newRange[0]) newRange[1] = newRange[0] + 1;
-      return newRange;
-    });
+  const closeMediaModal = () => {
+    setModalMedia([]);
+    setCurrentMediaIndex(0);
   };
 
-  // --- Media Helpers ---
-  const getItemImages = (item) => {
-    if (!item) return [];
-    if (Array.isArray(item.images) && item.images.length) return item.images.filter(Boolean);
-    if (item.image) return [item.image];
-    return [];
-  };
-  const getMainImage = (item) => getItemImages(item)[0] || null;
-
-  const navigateToItem = (direction) => {
-    let newIndex = direction === 'next' ? selectedItemIndex + 1 : selectedItemIndex - 1;
-    if (newIndex >= jewellery.length) newIndex = 0;
-    if (newIndex < 0) newIndex = jewellery.length - 1;
-    setSelectedItem(jewellery[newIndex]);
-    setSelectedItemIndex(newIndex);
+  const navigateMedia = (direction) => {
+    if (direction === 'next') {
+      setCurrentMediaIndex(prev => (prev + 1) % modalMedia.length);
+    } else {
+      setCurrentMediaIndex(prev => (prev - 1 + modalMedia.length) % modalMedia.length);
+    }
   };
 
-  // Touch handlers
-  const onTouchStart = (e) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    if (distance > 50) navigateToItem('next');
-    if (distance < -50) navigateToItem('prev');
-  };
-
-  const getAllSubcategories = () => {
-    const base = selectedCategory.length === 0 ? jewellery : jewellery.filter(i => selectedCategory.includes(i.category?.main));
-    return [...new Set(base.map(i => i.category?.sub).filter(Boolean))].sort();
+  const getGridIcon = () => {
+    if (isMobile) {
+      return gridCols === 1 ? (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7" />
+        </svg>
+      );
+    } else {
+      switch (gridCols) {
+        case 2:
+          return (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7" />
+            </svg>
+          );
+        case 3:
+          return (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h4M4 12h4M4 18h4M10 6h4M10 12h4M10 18h4M16 6h4M16 12h4M16 18h4" />
+            </svg>
+          );
+        case 4:
+          return (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="4" height="4" />
+              <rect x="10" y="3" width="4" height="4" />
+              <rect x="17" y="3" width="4" height="4" />
+              <rect x="3" y="10" width="4" height="4" />
+              <rect x="10" y="10" width="4" height="4" />
+              <rect x="17" y="10" width="4" height="4" />
+              <rect x="3" y="17" width="4" height="4" />
+              <rect x="10" y="17" width="4" height="4" />
+              <rect x="17" y="17" width="4" height="4" />
+            </svg>
+          );
+        case 6:
+          return (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="2" y="3" width="3" height="3" />
+              <rect x="6" y="3" width="3" height="3" />
+              <rect x="10" y="3" width="3" height="3" />
+              <rect x="14" y="3" width="3" height="3" />
+              <rect x="18" y="3" width="3" height="3" />
+              <rect x="2" y="10" width="3" height="3" />
+              <rect x="6" y="10" width="3" height="3" />
+              <rect x="10" y="10" width="3" height="3" />
+              <rect x="14" y="10" width="3" height="3" />
+              <rect x="18" y="10" width="3" height="3" />
+              <rect x="2" y="17" width="3" height="3" />
+              <rect x="6" y="17" width="3" height="3" />
+              <rect x="10" y="17" width="3" height="3" />
+              <rect x="14" y="17" width="3" height="3" />
+              <rect x="18" y="17" width="3" height="3" />
+            </svg>
+          );
+        default:
+          return (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="4" height="4" />
+              <rect x="10" y="3" width="4" height="4" />
+              <rect x="17" y="3" width="4" height="4" />
+              <rect x="3" y="10" width="4" height="4" />
+              <rect x="10" y="10" width="4" height="4" />
+              <rect x="17" y="10" width="4" height="4" />
+              <rect x="3" y="17" width="4" height="4" />
+              <rect x="10" y="17" width="4" height="4" />
+              <rect x="17" y="17" width="4" height="4" />
+            </svg>
+          );
+      }
+    }
   };
 
   return (
-    <div style={{ backgroundColor: colors.bg, color: colors.text }} className="min-h-screen font-sans">
-      
-      {/* Styles for Range Slider */}
-      <style>{`
-        input[type=range]::-webkit-slider-thumb {
-          pointer-events: auto;
-          width: 20px;
-          height: 20px;
-          -webkit-appearance: none;
-          background: ${colors.bg};
-          border: 2px solid ${colors.primary};
-          border-radius: 50%;
-          cursor: pointer;
-          margin-top: -8px; 
-          z-index: 50;
-          position: relative;
-        }
-        /* Firefox */
-        input[type=range]::-moz-range-thumb {
-          pointer-events: auto;
-          width: 20px;
-          height: 20px;
-          border: 2px solid ${colors.primary};
-          border-radius: 50%;
-          background: ${colors.bg};
-          cursor: pointer;
-          z-index: 50;
-          position: relative;
-        }
-      `}</style>
-
-      {/* --- Header --- */}
-      <div className="fixed top-0 left-0 w-full z-[90] backdrop-blur-md shadow-sm transition-all duration-300" 
-           style={{ backgroundColor: 'rgba(255, 248, 230, 0.95)', borderBottom: `1px solid ${colors.accent}` }}>
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative group cursor-pointer">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full p-[2px]" style={{ background: `linear-gradient(to right, ${colors.accent}, ${colors.primary})` }}>
-                <img src="logo.png" alt="Logo" className="w-full h-full rounded-full object-cover border-2 border-white" />
-              </div>
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-serif font-bold tracking-tight" style={{ color: colors.primary }}>
-                VIMALESHWARA
-              </h1>
-              <p className="text-xs font-medium tracking-widest uppercase" style={{ color: '#888' }}>Fine Jewellery</p>
-            </div>
+    <div className="bg-cream min-h-screen">
+      {/* Header */}
+      <div className="bg-burgundy fixed top-0 left-0 w-full z-[90] shadow-lg p-4 border-b-4 border-paleGold">
+        <div className="flex items-center gap-4 justify-center sm:justify-start">
+          <div className="relative">
+            <img
+              src="logo.png"
+              alt="Logo"
+              loading="lazy"
+              className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-4 border-paleGold shadow-xl"
+            />
+            <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-6 sm:h-6 bg-brightGold rounded-full border-2 border-white shadow-lg"></div>
           </div>
-          
-          {/* Mobile Grid Toggle (1 or 2 Only) */}
-          {isMobile && (
-             <button onClick={cycleGrid} className="p-2 transition-colors" style={{ color: colors.primary }}>
-               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-             </button>
-          )}
+          <div className="text-center sm:text-left">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-playfair font-bold text-paleGold tracking-wide drop-shadow-lg">
+              VIMALESHWARA JEWELLERS
+            </h1>
+            <p className="text-cream text-xs sm:text-sm font-medium">Premium Jewellery Collection</p>
+          </div>
         </div>
       </div>
 
-      {/* --- Control Bar --- */}
-      <div className="fixed top-[70px] sm:top-[80px] left-0 w-full z-[85] backdrop-blur-sm shadow-sm py-4"
-           style={{ backgroundColor: 'rgba(255, 248, 230, 0.95)', borderBottom: '1px solid #e5e5e5' }}>
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center gap-4">
-          
-          {/* Search Input */}
-          <div className="relative w-full sm:flex-1">
-            <input
-              type="text"
-              placeholder="Search jewellery..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border-none rounded-full focus:ring-2 transition-all placeholder-gray-400"
-              style={{ backgroundColor: '#fff', color: colors.text, boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}
-            />
-            <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+      {/* Controls Bar */}
+      <div className="bg-white/95 backdrop-blur-md fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-md p-4 border-b-2 border-paleGold">
+        <div className="w-full max-w-5xl mx-auto">
+          <div className="relative mb-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search jewellery by name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-16 py-3 bg-white border-2 border-gray-300 rounded-xl text-charcoal placeholder-gray-500 focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all duration-300 text-sm sm:text-base font-medium"
+              />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+
+              <button
+                onClick={cycleGrid}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-burgundy text-white p-2 rounded-lg hover:bg-burgundy/80 transition-all duration-300 flex items-center gap-1 shadow-md"
+                title={`Grid: ${gridCols} column${gridCols > 1 ? 's' : ''} (${isMobile ? 'Mobile' : 'Desktop'})`}
+              >
+                {getGridIcon()}
+                <span className="text-xs font-bold hidden sm:inline">{gridCols}</span>
+              </button>
+
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-16 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-charcoal transition-colors duration-200"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-            
-            {/* Filter Toggle */}
+          <div className="flex items-center justify-center gap-3">
+            {/* Filter Button */}
             <div className="relative">
               <button
-                onClick={() => { setShowFilterPanel(!showFilterPanel); setShowSortPanel(false); }}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-all shadow-sm`}
-                style={{ 
-                  backgroundColor: showFilterPanel ? colors.primary : '#fff', 
-                  color: showFilterPanel ? '#fff' : colors.text,
-                  border: `1px solid ${showFilterPanel ? colors.primary : '#e5e5e5'}`
+                onClick={() => {
+                  setShowFilterPanel(!showFilterPanel);
+                  setShowSortPanel(false);
                 }}
+                className="bg-burgundy text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-md hover:bg-burgundy/80 transition-all duration-300 flex items-center gap-2"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-                Filters
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <span className="text-sm sm:text-base">Filter</span>
+                <svg className={`w-3 h-3 sm:w-4 sm:h-4 transform transition-transform duration-300 ${showFilterPanel ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
-              
-              {/* --- Filter Panel --- */}
+
+              {/* Filter Panel */}
               {showFilterPanel && (
-                <div className="absolute top-full mt-3 left-0 sm:right-0 sm:left-auto w-[90vw] sm:w-[400px] bg-white rounded-2xl shadow-2xl p-6 z-50 max-h-[75vh] overflow-y-auto"
-                     style={{ border: `1px solid ${colors.accent}` }}>
-                  <div className="space-y-6">
-                    <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                      <h3 className="font-serif text-lg font-bold" style={{ color: colors.primary }}>Refine Selection</h3>
-                      <button onClick={clearAllFilters} className="text-xs font-bold text-red-500 hover:text-red-700 uppercase tracking-wide">Reset All</button>
-                    </div>
-
-                    {/* Weight Slider (Dual Range Fixed) */}
+                <div className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 border-burgundy rounded-xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]">
+                  <div className="space-y-4">
                     <div>
-                      <div className="flex justify-between items-center mb-3">
-                        <label className="text-sm font-bold" style={{ color: colors.text }}>Weight Range</label>
-                        <span className="text-sm font-medium" style={{ color: colors.primary }}>{weightRange[0]}g — {weightRange[1]}g</span>
-                      </div>
-                      <div className="relative h-12 flex items-center">
-                        {/* Track Background */}
-                        <div className="absolute w-full h-1 bg-gray-200 rounded-full overflow-hidden"></div>
-                        {/* Active Range Track */}
-                        <div 
-                          className="absolute h-1 rounded-full"
-                          style={{ 
-                            background: colors.primary,
-                            left: `${(weightRange[0] / 200) * 100}%`, 
-                            right: `${100 - (weightRange[1] / 200) * 100}%`,
-                            zIndex: 10
-                          }}
-                        />
-                        
-                        {/* Input 1 (Min) */}
-                        <input 
-                          type="range" min="0" max="200" value={weightRange[0]} 
-                          onChange={(e) => handleWeightChange(e, 0)}
-                          className="absolute w-full h-1 opacity-0 z-20"
-                          style={{ pointerEvents: 'none', WebkitAppearance: 'none' }}
-                        />
-                        
-                        {/* Input 2 (Max) */}
-                        <input 
-                          type="range" min="0" max="200" value={weightRange[1]} 
-                          onChange={(e) => handleWeightChange(e, 1)}
-                          className="absolute w-full h-1 opacity-0 z-20"
-                          style={{ pointerEvents: 'none', WebkitAppearance: 'none' }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Categories */}
-                    <div>
-                      <label className="block text-sm font-bold mb-2" style={{ color: colors.text }}>Category</label>
-                      <div className="flex flex-wrap gap-2">
-                        {categories.filter(c => c !== 'All Jewellery').map(cat => (
-                          <button
-                            key={cat}
-                            onClick={() => {
-                              setSelectedCategory(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
-                              if (selectedCategory.includes(cat)) setSelectedSubCategory('');
-                            }}
-                            className={`px-3 py-1.5 text-xs rounded-lg transition-all border`}
-                            style={{
-                              backgroundColor: selectedCategory.includes(cat) ? colors.primary : '#fff',
-                              color: selectedCategory.includes(cat) ? '#fff' : colors.text,
-                              borderColor: selectedCategory.includes(cat) ? colors.primary : '#ddd'
-                            }}
-                          >
+                      <label className="block font-bold text-charcoal mb-2">Categories</label>
+                      <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-gray-50">
+                        {getAllCategories().map((cat) => (
+                          <label key={cat} className="flex items-center gap-2 text-sm p-1 hover:bg-burgundy/5 rounded cursor-pointer">
+                            <input
+                              type="checkbox"
+                              value={cat}
+                              checked={selectedCategory.includes(cat)}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setSelectedCategory((prev) =>
+                                  e.target.checked
+                                    ? [...prev, value]
+                                    : prev.filter((v) => v !== value)
+                                );
+                                if (!e.target.checked) {
+                                  setSelectedSubCategory('');
+                                }
+                              }}
+                              className="w-4 h-4 text-burgundy accent-burgundy"
+                            />
                             {cat}
-                          </button>
+                          </label>
                         ))}
                       </div>
                     </div>
 
-                    {/* Select Dropdowns */}
-                    <div className="grid grid-cols-2 gap-4">
-                      {[{l:'Metal',v:metalFilter,f:setMetalFilter,o:metals},{l:'Sub Category',v:selectedSubCategory,f:setSelectedSubCategory,o:['All',...getAllSubcategories()]},{l:'Gender',v:selectedGender,f:setSelectedGender,o:genders},{l:'Design',v:designFilter,f:setDesignFilter,o:['All','our','Others']}].map((item,i) => (
-                        <div key={i} className="space-y-1">
-                          <label className="text-xs font-bold uppercase" style={{ color: '#888' }}>{item.l}</label>
-                          <select value={item.v} onChange={(e) => item.f(e.target.value)} className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-amber-500">
-                             {item.o.map(opt => <option key={opt} value={opt==='All'?'':opt}>{opt==='our'?'In House':opt==='Others'?'Others':opt}</option>)}
-                          </select>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    {/* Search ID */}
                     <div>
-                        <label className="block text-xs font-bold uppercase mb-1" style={{ color: '#888' }}>Search by ID</label>
-                        <input type="text" value={searchId} onChange={(e) => setSearchId(e.target.value)} className="w-full p-2 bg-gray-50 border border-gray-200 rounded-lg text-sm outline-none focus:border-amber-500" placeholder="Enter Item ID"/>
+                      <label className="block font-bold text-charcoal mb-2">Sub-Category</label>
+                      <select
+                        value={selectedSubCategory}
+                        onChange={(e) => setSelectedSubCategory(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-burgundy focus:ring-2 focus:ring-burgundy/20"
+                      >
+                        <option value="">All Sub-Categories</option>
+                        {getFilteredSubCategories().map((subCat) => (
+                          <option key={subCat} value={subCat}>{subCat}</option>
+                        ))}
+                      </select>
                     </div>
-                    
-                    <button onClick={() => setShowFilterPanel(false)} className="w-full py-3 text-white font-bold rounded-xl hover:opacity-90 transition-opacity" style={{ backgroundColor: colors.primary }}>
-                        View Results
+
+                    <div>
+                      <label className="block font-bold text-charcoal mb-2">Type</label>
+                      <select
+                        value={selectedType}
+                        onChange={(e) => setSelectedType(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-burgundy focus:ring-2 focus:ring-burgundy/20"
+                      >
+                        {types.map((typeOpt, i) => (
+                          <option key={i} value={typeOpt === 'All' ? '' : typeOpt}>
+                            {typeOpt === 'All' ? 'All Types' : typeOpt[0].toUpperCase() + typeOpt.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-charcoal mb-2">Gender</label>
+                      <select
+                        value={selectedGender}
+                        onChange={(e) => setSelectedGender(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-burgundy focus:ring-2 focus:ring-burgundy/20"
+                      >
+                        {genders.map((gender, idx) => (
+                          <option key={idx} value={gender === 'All' ? '' : gender}>
+                            {gender}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-charcoal mb-2">Metal</label>
+                      <select
+                        value={metalFilter}
+                        onChange={(e) => setMetalFilter(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-burgundy focus:ring-2 focus:ring-burgundy/20"
+                      >
+                        {metals.map((metal, idx) => (
+                          <option key={idx} value={metal === 'All' ? '' : metal}>
+                            {metal === 'All' ? 'All Metals' : metal[0].toUpperCase() + metal.slice(1)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-charcoal mb-2">Stone</label>
+                      <select
+                        value={stoneFilter}
+                        onChange={(e) => setStoneFilter(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-burgundy focus:ring-2 focus:ring-burgundy/20"
+                      >
+                        <option value="">All Stones</option>
+                        <option value="with">With Stone</option>
+                        <option value="without">Without Stone</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-charcoal mb-2">Design</label>
+                      <select
+                        value={designFilter}
+                        onChange={(e) => setDesignFilter(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-burgundy focus:ring-2 focus:ring-burgundy/20"
+                      >
+                        <option value="">All Designs</option>
+                        <option value="our">In House</option>
+                        <option value="Others">Others Design</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-charcoal mb-3">Weight Range (0g - 200g)</label>
+                      <DualRangeSlider
+                        min={0}
+                        max={200}
+                        value={weightRange}
+                        onChange={setWeightRange}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-charcoal mb-2">Search by ID</label>
+                      <input
+                        type="text"
+                        placeholder="Enter Item ID"
+                        value={searchId}
+                        onChange={(e) => setSearchId(e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-burgundy focus:ring-2 focus:ring-burgundy/20"
+                      />
+                    </div>
+
+                    <button
+                      onClick={clearAllFilters}
+                      className="w-full px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Clear All Filters
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Sort Toggle */}
+            {/* Sort Button */}
             <div className="relative">
               <button
-                onClick={() => { setShowSortPanel(!showSortPanel); setShowFilterPanel(false); }}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-all shadow-sm`}
-                style={{ 
-                  backgroundColor: showSortPanel ? colors.primary : '#fff', 
-                  color: showSortPanel ? '#fff' : colors.text,
-                  border: `1px solid ${showSortPanel ? colors.primary : '#e5e5e5'}`
+                onClick={() => {
+                  setShowSortPanel(!showSortPanel);
+                  setShowFilterPanel(false);
                 }}
+                className="bg-burgundy text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-md hover:bg-burgundy/80 transition-all duration-300 flex items-center gap-2"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" /></svg>
-                Sort
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+                <span className="text-sm sm:text-base">Sort</span>
+                <svg className={`w-3 h-3 sm:w-4 sm:h-4 transform transition-transform duration-300 ${showSortPanel ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
 
-              {/* --- Sort Panel --- */}
               {showSortPanel && (
-                <div className="absolute top-full mt-3 right-0 w-64 bg-white rounded-2xl shadow-xl p-2 z-50" style={{ border: `1px solid ${colors.accent}` }}>
-                  <div className="flex flex-col">
-                    {[
-                      { l: 'Newest Arrivals', f: 'date', o: 'desc' },
-                      { l: 'Oldest Items', f: 'date', o: 'asc' },
-                      { l: 'Weight: Low to High', f: 'weight', o: 'asc' },
-                      { l: 'Weight: High to Low', f: 'weight', o: 'desc' }
-                    ].map((opt, i) => (
-                      <button 
-                        key={i}
-                        onClick={() => { setSortField(opt.f); setSortOrder(opt.o); setShowSortPanel(false); }}
-                        className={`text-left px-4 py-3 text-sm rounded-lg hover:bg-orange-50 ${sortField === opt.f && sortOrder === opt.o ? 'font-bold' : ''}`}
-                        style={{ color: sortField === opt.f && sortOrder === opt.o ? colors.primary : colors.text }}
+                <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 border-burgundy rounded-xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]">
+                  <div className="space-y-4">
+                    <div className="p-4 bg-paleGold/20 rounded-xl border border-paleGold">
+                      <h3 className="font-bold text-charcoal mb-2">Current Sort</h3>
+                      <p className="text-burgundy font-semibold">
+                        {getActiveSortDescription()}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-charcoal mb-2">Sort by Date</label>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => {
+                            setSortByDate('newest');
+                            setSortOrder('');
+                            setSortField('');
+                          }}
+                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                            sortByDate === 'newest'
+                              ? 'bg-burgundy text-white border-burgundy'
+                              : 'bg-white text-charcoal border-gray-300 hover:bg-burgundy/5 hover:border-burgundy/30'
+                          }`}
+                        >
+                          Newest First
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortByDate('oldest');
+                            setSortOrder('');
+                            setSortField('');
+                          }}
+                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                            sortByDate === 'oldest'
+                              ? 'bg-burgundy text-white border-burgundy'
+                              : 'bg-white text-charcoal border-gray-300 hover:bg-burgundy/5 hover:border-burgundy/30'
+                          }`}
+                        >
+                          Oldest First
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-charcoal mb-2">Sort by Weight</label>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => {
+                            setSortField('weight');
+                            setSortOrder('asc');
+                            setSortByDate('');
+                          }}
+                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                            sortField === 'weight' && sortOrder === 'asc' && !sortByDate
+                              ? 'bg-burgundy text-white border-burgundy'
+                              : 'bg-white text-charcoal border-gray-300 hover:bg-burgundy/5 hover:border-burgundy/30'
+                          }`}
+                        >
+                          Low to High
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortField('weight');
+                            setSortOrder('desc');
+                            setSortByDate('');
+                          }}
+                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
+                            sortField === 'weight' && sortOrder === 'desc' && !sortByDate
+                              ? 'bg-burgundy text-white border-burgundy'
+                              : 'bg-white text-charcoal border-gray-300 hover:bg-burgundy/5 hover:border-burgundy/30'
+                          }`}
+                        >
+                          High to Low
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={clearAllSorts}
+                      className="w-full px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-all duration-300 flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Reset Sort
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Overlay to close panels */}
+      {(showFilterPanel || showSortPanel) && (
+        <div
+          className="fixed inset-0 z-[70]"
+          onClick={() => {
+            setShowFilterPanel(false);
+            setShowSortPanel(false);
+          }}
+        />
+      )}
+
+      {/* Main Content */}
+      <div className="pt-60 sm:pt-64">
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-burgundy border-t-transparent mx-auto mb-4"></div>
+              <p className="text-lg font-semibold text-charcoal">Loading jewellery...</p>
+            </div>
+          </div>
+        )}
+
+        {isDataFetched && totalItems > 0 && (
+          <div className="px-4 sm:px-6 mb-6">
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 border-2 border-paleGold shadow-md">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-burgundy rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-charcoal">
+                      Showing {jewellery.length} of {totalItems} items
+                    </p>
+                    {totalPages > 1 && (
+                      <p className="text-sm text-gray-600">
+                        Page {currentPage} of {totalPages} • Grid: {gridCols} column{gridCols > 1 ? 's' : ''} ({isMobile ? 'Mobile' : 'Desktop'})
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="text-sm text-charcoal bg-white/80 px-3 py-2 rounded-lg border border-paleGold font-semibold">
+                  {getActiveSortDescription()}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className={`gap-3 sm:gap-4 lg:gap-6 px-3 sm:px-4 lg:px-6 pb-8 ${getGridClasses()}`}>
+          {!loading && jewellery.length === 0 ? (
+            <div className="col-span-full text-center py-20">
+              <div className="text-6xl sm:text-8xl mb-6">💎</div>
+              <p className="text-xl sm:text-2xl font-bold text-charcoal mb-2">No jewellery items found.</p>
+              <p className="text-gray-600 text-base sm:text-lg">Try adjusting your filters or search terms.</p>
+              <button
+                onClick={clearAllFilters}
+                className="mt-4 px-6 py-3 bg-burgundy text-white font-bold rounded-lg hover:bg-burgundy/80 transition-all duration-300 shadow-md"
+              >
+                Clear All Filters
+              </button>
+            </div>
+          ) : (
+            jewellery.map((item, index) => {
+              const itemImages = getItemImages(item);
+              const mainImage = getMainImage(item);
+              const textSizes = getTextSizeClasses();
+
+              return (
+                <div
+                  key={item._id}
+                  onClick={() => handleItemClick(item, index)}
+                  className="bg-white border-2 border-paleGold rounded-xl sm:rounded-2xl p-2 sm:p-3 lg:p-4 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer group overflow-hidden relative"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-burgundy/5 to-paleGold/5 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                  {mainImage ? (
+                    <div className="relative mb-2 sm:mb-3 overflow-hidden rounded-lg sm:rounded-xl bg-gray-100">
+                      <img
+                        src={mainImage}
+                        alt={item.name}
+                        loading="lazy"
+                        className={`w-full object-cover border-2 border-paleGold group-hover:scale-110 transition-transform duration-500 ${getImageHeightClasses()}`}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="24"%3ENo Image%3C/text%3E%3C/svg%3E';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                      {itemImages.length > 0 && (
+                        <div className="absolute top-1 sm:top-2 left-1 sm:left-2 flex gap-1">
+                          <div className="bg-burgundy text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-md flex items-center gap-1">
+                            <svg className="w-2 h-2 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            {itemImages.length}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className={`absolute bottom-1 sm:bottom-2 left-1 sm:left-2 px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-md ${item.isOurDesign === false ? 'bg-gray-700 text-white' : 'bg-brightGold text-charcoal'
+                        }`}>
+                        {item.isOurDesign === false ? 'Others' : 'In House'}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`relative mb-2 sm:mb-3 overflow-hidden rounded-lg sm:rounded-xl bg-gray-100 flex items-center justify-center ${getImageHeightClasses()}`}>
+                      <div className="text-center text-gray-400">
+                        <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p className="text-xs">No Image</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-1 relative z-10">
+                    <h2 className={`font-bold text-charcoal truncate group-hover:text-burgundy transition-colors duration-300 ${textSizes.title}`}>
+                      {item.name}
+                    </h2>
+
+                    <div className={`flex items-center justify-between text-gray-700 ${textSizes.details}`}>
+                      <span className="font-semibold text-burgundy">{item.weight}g</span>
+                      <span className="font-semibold truncate ml-1">{item.category?.main}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Pagination */}
+        {isDataFetched && totalPages > 1 && jewellery.length > 0 && (
+          <div className="px-4 sm:px-6 pb-8 mt-8">
+            <div className="bg-white/95 backdrop-blur-md rounded-xl p-6 border-2 border-paleGold shadow-lg">
+              <div className="flex flex-col items-center gap-6">
+                <div className="text-center">
+                  <p className="text-lg font-bold text-charcoal mb-2">
+                    Page {currentPage} of {totalPages}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Showing {jewellery.length} items per page • {totalItems} total items
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap justify-center">
+                  <button
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 ${currentPage === 1
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-burgundy text-white hover:bg-burgundy/80 transform hover:scale-105 shadow-md'
+                      }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    Previous
+                  </button>
+
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {!getPaginationRange().includes(1) && totalPages > 5 && (
+                      <>
+                        <button
+                          onClick={() => goToPage(1)}
+                          className="w-10 h-10 rounded-lg font-bold transition-all duration-300 bg-white text-charcoal border border-gray-300 hover:bg-burgundy/5 hover:border-burgundy"
+                        >
+                          1
+                        </button>
+                        <span className="px-2 text-gray-500">...</span>
+                      </>
+                    )}
+
+                    {getPaginationRange().map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => goToPage(page)}
+                        className={`w-10 h-10 rounded-lg font-bold transition-all duration-300 ${page === currentPage
+                          ? 'bg-burgundy text-white shadow-md transform scale-110'
+                          : 'bg-white text-charcoal border border-gray-300 hover:bg-burgundy/5 hover:border-burgundy'
+                          }`}
                       >
-                        {opt.l}
+                        {page}
                       </button>
                     ))}
+
+                    {!getPaginationRange().includes(totalPages) && totalPages > 5 && (
+                      <>
+                        <span className="px-2 text-gray-500">...</span>
+                        <button
+                          onClick={() => goToPage(totalPages)}
+                          className="w-10 h-10 rounded-lg font-bold transition-all duration-300 bg-white text-charcoal border border-gray-300 hover:bg-burgundy/5 hover:border-burgundy"
+                        >
+                          {totalPages}
+                        </button>
+                      </>
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
 
-            {/* Desktop Grid Toggle */}
-            {!isMobile && (
-              <button 
-                onClick={cycleGrid}
-                className="hidden sm:flex items-center justify-center w-10 h-10 bg-white border border-gray-200 rounded-full hover:border-amber-500 transition-all"
-                style={{ color: colors.text }}
-                title="Change Grid View"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* --- Overlay --- */}
-      {(showFilterPanel || showSortPanel) && <div className="fixed inset-0 z-[40]" onClick={() => { setShowFilterPanel(false); setShowSortPanel(false); }} />}
-
-      {/* --- Main Grid Content --- */}
-      <div className="pt-40 sm:pt-48 pb-10 max-w-[1400px] mx-auto">
-        
-        {/* Results Info */}
-        {isDataFetched && (
-          <div className="px-4 mb-6 flex justify-between items-end">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-serif font-bold" style={{ color: colors.text }}>
-                {selectedCategory.length > 0 ? selectedCategory.join(', ') : 'All Collection'}
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">{totalItems} items found</p>
-            </div>
-            <div className="text-xs font-medium text-gray-400 hidden sm:block">
-              Sorted by: <span style={{ color: colors.primary }}>{getActiveSortDescription()}</span>
-            </div>
-          </div>
-        )}
-
-        {/* Loading */}
-        {loading && (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin w-10 h-10 border-2 border-gray-200 rounded-full" style={{ borderTopColor: colors.primary }}></div>
-          </div>
-        )}
-
-        {/* Product Grid */}
-        <div className={`grid gap-4 sm:gap-6 px-4 ${getGridClasses()}`}>
-          {!loading && jewellery.map((item, index) => {
-            const mainImg = getMainImage(item);
-            const mediaCount = getItemImages(item).length;
-            
-            return (
-              <div
-                key={item._id}
-                onClick={() => handleItemClick(item, index)}
-                className="group bg-white rounded-xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 border border-transparent"
-                style={{ boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}
-              >
-                {/* Image Container */}
-                <div className={`relative bg-gray-100 overflow-hidden ${getImageHeightClasses()}`}>
-                  {mainImg ? (
-                    <img
-                      src={mainImg}
-                      alt={item.name}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300">No Image</div>
-                  )}
-                  
-                  {/* Media Badge */}
-                  <div className="absolute top-2 left-2 flex gap-1">
-                     {mediaCount > 1 && (
-                       <span className="bg-black/60 backdrop-blur-sm text-white text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
-                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                         {mediaCount}
-                       </span>
-                     )}
-                  </div>
-                  
-                  {/* Design Badge */}
-                  <div className="absolute bottom-2 left-2">
-                     <span className={`text-[10px] px-2 py-0.5 rounded-sm font-bold tracking-wider uppercase shadow-sm`}
-                           style={{ 
-                             backgroundColor: item.isOurDesign === false ? '#fff' : colors.primary,
-                             color: item.isOurDesign === false ? colors.text : '#fff'
-                           }}>
-                       {item.isOurDesign === false ? 'Partner' : 'In House'}
-                     </span>
-                  </div>
+                  <button
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    className={`px-4 py-2 rounded-xl font-bold transition-all duration-300 flex items-center gap-2 ${currentPage === totalPages
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-burgundy text-white hover:bg-burgundy/80 transform hover:scale-105 shadow-md'
+                      }`}
+                  >
+                    Next
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
                 </div>
 
-                {/* Details */}
-                <div className="p-3 sm:p-4">
-                  <h3 className="text-sm sm:text-base font-bold truncate mb-1" style={{ color: colors.text }}>{item.name}</h3>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-serif font-bold" style={{ color: colors.primary }}>{item.weight}g</span>
-                    <span className="text-gray-400 text-xs uppercase tracking-wide">{item.category?.main}</span>
-                  </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-charcoal">Jump to page:</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max={totalPages}
+                    placeholder={currentPage.toString()}
+                    onChange={(e) => {
+                      const page = parseInt(e.target.value);
+                      if (page >= 1 && page <= totalPages) {
+                        goToPage(page);
+                      }
+                    }}
+                    className="w-20 px-2 py-1 text-center border border-gray-300 rounded-lg focus:border-burgundy focus:ring-2 focus:ring-burgundy/20"
+                  />
+                  <span className="text-sm text-gray-600">of {totalPages}</span>
                 </div>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Pagination (Simplified) */}
-        {isDataFetched && totalPages > 1 && (
-          <div className="mt-12 flex justify-center gap-2">
-            <button onClick={() => currentPage > 1 && setCurrentPage(p => p - 1)} disabled={currentPage === 1} className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm font-medium disabled:opacity-50">Previous</button>
-            <span className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold">{currentPage} / {totalPages}</span>
-            <button onClick={() => currentPage < totalPages && setCurrentPage(p => p + 1)} disabled={currentPage === totalPages} className="px-4 py-2 rounded-lg bg-white border border-gray-200 text-sm font-medium disabled:opacity-50">Next</button>
+            </div>
           </div>
         )}
       </div>
 
-      {/* --- Details Modal --- */}
+      {/* Detail Modal */}
       {selectedItem && (
-        <div 
-          className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-0 sm:p-4"
-          onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd}
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
         >
-          <div className="bg-white w-full h-full sm:h-auto sm:max-h-[90vh] sm:max-w-5xl sm:rounded-2xl overflow-hidden flex flex-col sm:flex-row shadow-2xl relative">
-            
-            {/* Close Mobile */}
-            <button onClick={() => setSelectedItem(null)} className="absolute top-4 right-4 z-20 sm:hidden bg-white/20 p-2 rounded-full text-white">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
+          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+            <div className="bg-burgundy p-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => navigateToItem('prev')}
+                  className="text-white hover:text-paleGold transition-colors duration-200 p-1 rounded-lg hover:bg-black/10"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
 
-            {/* Left: Image Viewer */}
-            <div className="w-full sm:w-3/5 bg-gray-100 flex flex-col relative h-[50vh] sm:h-[80vh]">
-               {/* Nav Arrows Desktop */}
-               <button onClick={() => navigateToItem('prev')} className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full hover:bg-white transition hidden sm:block"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg></button>
-               <button onClick={() => navigateToItem('next')} className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/80 rounded-full hover:bg-white transition hidden sm:block"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg></button>
+                <h2 className="text-lg font-bold text-white truncate max-w-md">
+                  {selectedItem.name}
+                </h2>
 
-              <div className="flex-1 flex items-center justify-center p-6 bg-white">
-                <img 
-                  src={getMainImage(selectedItem)} 
-                  className="max-w-full max-h-full object-contain drop-shadow-xl" 
-                  alt={selectedItem.name} 
-                  onClick={() => setModalMedia(getItemImages(selectedItem).map(src => ({ type: 'image', src })))}
-                />
-              </div>
-
-              {/* Thumbnails */}
-              {getItemImages(selectedItem).length > 1 && (
-                <div className="h-20 bg-gray-50 border-t border-gray-200 flex items-center justify-center gap-2 overflow-x-auto px-4">
-                  {getItemImages(selectedItem).slice(0,5).map((img, i) => (
-                    <img key={i} src={img} className="w-12 h-12 rounded-lg object-cover cursor-pointer border-2 hover:border-amber-500 transition-colors" style={{ borderColor: 'transparent' }} alt="thumb" />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Right: Details */}
-            <div className="w-full sm:w-2/5 flex flex-col h-[50vh] sm:h-[80vh] bg-white">
-              
-              <div className="p-6 border-b border-gray-100 flex justify-between items-start" style={{ backgroundColor: colors.bg }}>
-                <div>
-                  <h2 className="text-2xl font-serif font-bold" style={{ color: colors.text }}>{selectedItem.name}</h2>
-                  <p className="font-medium mt-1 text-sm" style={{ color: colors.primary }}>ID: {selectedItem.id}</p>
-                </div>
-                <button onClick={() => setSelectedItem(null)} className="hidden sm:block text-gray-400 hover:text-gray-600">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <button
+                  onClick={() => navigateToItem('next')}
+                  className="text-white hover:text-paleGold transition-colors duration-200 p-1 rounded-lg hover:bg-black/10"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6">
-                <div className="grid grid-cols-2 gap-y-6 gap-x-4">
-                  <div className="col-span-2 p-4 rounded-xl border flex items-center justify-between" style={{ backgroundColor: '#fff', borderColor: colors.accent }}>
-                    <span className="font-medium" style={{ color: colors.primary }}>Gross Weight</span>
-                    <span className="text-2xl font-bold" style={{ color: colors.text }}>{selectedItem.weight}g</span>
-                  </div>
-
-                  {[
-                    { l: 'Category', v: selectedItem.category?.main },
-                    { l: 'Sub-Category', v: selectedItem.category?.sub },
-                    { l: 'Type', v: selectedItem.type, c: true },
-                    { l: 'Gender', v: selectedItem.gender, c: true },
-                    { l: 'Metal', v: selectedItem.metal, c: true },
-                    { l: 'Stone', v: selectedItem.stoneWeight ? `${selectedItem.stoneWeight}g` : null },
-                    { l: 'Design', v: selectedItem.isOurDesign === false ? 'Others Design' : 'In House' },
-                  ].map((s, i) => s.v ? (
-                    <div key={i}>
-                      <span className="text-xs font-bold uppercase tracking-wider" style={{ color: '#999' }}>{s.l}</span>
-                      <div className={`text-sm font-semibold mt-1 ${s.c ? 'capitalize' : ''}`} style={{ color: colors.text }}>{s.v}</div>
-                    </div>
-                  ) : null)}
+              <div className="flex items-center gap-3">
+                <div className="text-white text-sm font-semibold bg-black/20 px-3 py-1 rounded-full">
+                  {selectedItemIndex + 1} / {jewellery.length}
                 </div>
+                <button
+                  onClick={() => {
+                    setSelectedItem(null);
+                    setSelectedItemIndex(-1);
+                  }}
+                  className="text-white hover:text-red-200 transition-colors duration-200"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+              <div className="lg:w-3/5 p-6 flex flex-col bg-gray-50">
+                {(() => {
+                  const itemMedia = getItemMedia(selectedItem);
+                  const mainImage = getMainImage(selectedItem);
+
+                  if (!mainImage) {
+                    return (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center text-gray-400">
+                          <svg className="w-24 h-24 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p>No Image Available</p>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <>
+                      <div className="flex-1 flex items-center justify-center mb-4 bg-white rounded-xl p-4">
+                        <img
+                          src={mainImage}
+                          alt={selectedItem.name}
+                          loading="lazy"
+                          onClick={() => openMediaModal(itemMedia, 0)}
+                          className="max-w-full max-h-96 object-contain rounded-xl cursor-pointer border-2 border-paleGold hover:border-burgundy transition-all duration-300 shadow-lg"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="24"%3ENo Image%3C/text%3E%3C/svg%3E';
+                          }}
+                        />
+                      </div>
+
+                      {itemMedia.length > 1 && (
+                        <div className="flex justify-center gap-2 flex-wrap">
+                          {itemMedia.slice(1, 5).map((media, index) => (
+                            <div
+                              key={index + 1}
+                              onClick={() => openMediaModal(itemMedia, index + 1)}
+                              className="w-16 h-16 rounded-lg cursor-pointer border-2 border-paleGold hover:border-burgundy transition-all duration-300 overflow-hidden flex-shrink-0"
+                            >
+                              {media.type === 'image' ? (
+                                <img
+                                  src={media.src}
+                                  alt={`${selectedItem.name} ${index + 2}`}
+                                  loading="lazy"
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-burgundy flex items-center justify-center">
+                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                          {itemMedia.length > 5 && (
+                            <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-charcoal font-bold text-xs">
+                              +{itemMedia.length - 5}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="mt-4 text-center">
+                        <p className="text-xs text-gray-500">
+                          Swipe left/right • Use arrow keys • Tap image for full gallery
+                        </p>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
-              {/* Share Button */}
-              <div className="p-6 border-t border-gray-100 bg-white">
-                <button 
-                  onClick={() => handleShare(selectedItem)}
-                  className="w-full py-3 text-white rounded-xl font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg"
-                  style={{ backgroundColor: '#25D366' }} // WhatsApp Green
+              <div className="lg:w-2/5 p-6 bg-white overflow-y-auto">
+                <div className="grid grid-cols-2 gap-3 text-sm mb-6">
+                  <div className="col-span-2 bg-paleGold/20 p-3 rounded-lg border-2 border-paleGold">
+                    <span className="font-semibold text-charcoal">ID:</span>
+                    <div className="font-bold text-burgundy mt-1">{selectedItem.id}</div>
+                  </div>
+
+                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <span className="font-semibold text-charcoal text-xs">Weight</span>
+                    <div className="font-bold text-burgundy">{selectedItem.weight}g</div>
+                  </div>
+
+                  {selectedItem.stoneWeight && (
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <span className="font-semibold text-charcoal text-xs">Stone Weight</span>
+                      <div className="font-bold text-burgundy">{selectedItem.stoneWeight}g</div>
+                    </div>
+                  )}
+
+                  {selectedItem.carat && (
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <span className="font-semibold text-charcoal text-xs">Carat</span>
+                      <div className="font-bold text-burgundy">{selectedItem.carat}</div>
+                    </div>
+                  )}
+
+                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <span className="font-semibold text-charcoal text-xs">Metal</span>
+                    <div className="font-bold text-burgundy capitalize">{selectedItem.metal}</div>
+                  </div>
+
+                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <span className="font-semibold text-charcoal text-xs">Type</span>
+                    <div className="font-bold text-burgundy capitalize">{selectedItem.type}</div>
+                  </div>
+
+                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <span className="font-semibold text-charcoal text-xs">Gender</span>
+                    <div className="font-bold text-burgundy">{selectedItem.gender}</div>
+                  </div>
+
+                  <div className="col-span-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <span className="font-semibold text-charcoal text-xs">Category</span>
+                    <div className="font-bold text-burgundy">{selectedItem.category?.main}{selectedItem.category?.sub && ` - ${selectedItem.category.sub}`}</div>
+                  </div>
+
+                  <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <span className="font-semibold text-charcoal text-xs">Design</span>
+                    <div className="font-bold text-burgundy">{selectedItem.isOurDesign === false ? 'Others' : 'In House'}</div>
+                  </div>
+
+                  {selectedItem.date && (
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <span className="font-semibold text-charcoal text-xs">Date</span>
+                      <div className="font-bold text-burgundy">{new Date(selectedItem.date).toLocaleDateString()}</div>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => shareOnWhatsApp(selectedItem)}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-md"
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                  </svg>
                   Share on WhatsApp
                 </button>
               </div>
@@ -720,24 +1399,74 @@ function UserCatalogue() {
         </div>
       )}
 
-      {/* --- Full Screen Gallery --- */}
+      {/* Media Modal */}
       {modalMedia.length > 0 && (
-        <div className="fixed inset-0 z-[150] bg-black flex items-center justify-center">
-          <button onClick={() => setModalMedia([])} className="absolute top-4 right-4 text-white z-20 bg-white/10 p-2 rounded-full hover:bg-white/20"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
-          
-          <div className="w-full h-full flex items-center justify-center">
-             <img src={modalMedia[currentMediaIndex]?.src} className="max-w-full max-h-full object-contain" alt="Gallery" />
-          </div>
-          
-          {modalMedia.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4">
-              <button onClick={() => setCurrentMediaIndex(prev => (prev - 1 + modalMedia.length) % modalMedia.length)} className="p-3 bg-white/10 rounded-full text-white hover:bg-white/20"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg></button>
-              <button onClick={() => setCurrentMediaIndex(prev => (prev + 1) % modalMedia.length)} className="p-3 bg-white/10 rounded-full text-white hover:bg-white/20"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg></button>
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[999] flex items-center justify-center">
+          <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-4">
+            <button
+              onClick={closeMediaModal}
+              className="absolute top-4 right-4 z-20 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
+            >
+              <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {modalMedia.length > 1 && (
+              <>
+                <button
+                  onClick={() => navigateMedia('prev')}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
+                >
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => navigateMedia('next')}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 sm:p-3 transition-all duration-300"
+                >
+                  <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
+
+            <div className="w-full h-full flex items-center justify-center">
+              {modalMedia[currentMediaIndex].type === 'image' ? (
+                <img
+                  src={modalMedia[currentMediaIndex].src}
+                  alt={`Gallery ${currentMediaIndex + 1}`}
+                  loading="lazy"
+                  className="max-w-full max-h-full object-contain rounded-lg border-4 border-white/20"
+                  style={{
+                    maxWidth: 'calc(100vw - 2rem)',
+                    maxHeight: 'calc(100vh - 2rem)'
+                  }}
+                />
+              ) : (
+                <video
+                  src={modalMedia[currentMediaIndex].src}
+                  controls
+                  autoPlay
+                  className="max-w-full max-h-full object-contain rounded-lg border-4 border-white/20"
+                  style={{
+                    maxWidth: 'calc(100vw - 2rem)',
+                    maxHeight: 'calc(100vh - 2rem)'
+                  }}
+                />
+              )}
             </div>
-          )}
+
+            {modalMedia.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full backdrop-blur-sm">
+                {currentMediaIndex + 1} / {modalMedia.length}
+              </div>
+            )}
+          </div>
         </div>
       )}
-
     </div>
   );
 }
