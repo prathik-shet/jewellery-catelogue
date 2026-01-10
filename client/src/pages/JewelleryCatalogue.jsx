@@ -1036,11 +1036,21 @@ const handleEdit = (item) => {
   setIsEditing(true);
   setSelectedItem(null);
 
-  setImageUrls(item.images || []);
-  setVideoUrls(item.videos || []);
+  // ✅ FIX: support BOTH old `image` and new `images[]`
+  setImageUrls(
+    Array.isArray(item.images) && item.images.length > 0
+      ? item.images
+      : item.image
+      ? [item.image]
+      : []
+  );
 
+  // videos safe
+  setVideoUrls(Array.isArray(item.videos) ? item.videos : []);
+
+  // Handle custom category safely
   if (!catagories.slice(1).includes(item.category?.main)) {
-    setCustomCategory(item.category.main);
+    setCustomCategory(item.category?.main || '');
     setNewItem((prev) => ({
       ...prev,
       category: { ...prev.category, main: 'Custom' },
@@ -1052,11 +1062,29 @@ const handleEdit = (item) => {
 
 
 
+
 // ================= UPDATE ITEM =================
 const handleUpdateItem = async (e) => {
   e.preventDefault();
 
   try {
+    // 🔒 SAFETY: preserve existing images/videos if user didn't change them
+    const finalImages =
+      imageUrls.length > 0
+        ? imageUrls
+        : Array.isArray(newItem.images)
+        ? newItem.images
+        : newItem.image
+        ? [newItem.image]
+        : [];
+
+    const finalVideos =
+      videoUrls.length > 0
+        ? videoUrls
+        : Array.isArray(newItem.videos)
+        ? newItem.videos
+        : [];
+
     const payload = {
       id: newItem.id.trim(),
       name: newItem.name.trim(),
@@ -1075,9 +1103,14 @@ const handleUpdateItem = async (e) => {
       type: newItem.type || 'normal',
       orderNo: newItem.orderNo || null,
       isOurDesign: newItem.isOurDesign !== false,
-      images: imageUrls,
-      videos: videoUrls,
-      image: imageUrls[0] || null,
+
+      // ✅ FIXED MEDIA
+      images: finalImages,
+      videos: finalVideos,
+
+      // backward compatibility
+      image: finalImages[0] || null,
+
       updatedAt: new Date(),
     };
 
@@ -1103,7 +1136,7 @@ const handleUpdateItem = async (e) => {
 };
 
 
-  const handleDelete = async (id) => {
+const handleDelete = async (id) => {
   if (!id) return;
 
   const confirmDelete = window.confirm(
@@ -1128,6 +1161,7 @@ const handleUpdateItem = async (e) => {
     alert(error.response?.data?.message || 'Error deleting item.');
   }
 };
+
 
 
   const textSizes = getTextSizeClasses();
@@ -1936,7 +1970,12 @@ const handleUpdateItem = async (e) => {
               <div className="lg:w-3/5 p-6 flex flex-col">
                 {(() => {
                   const itemMedia = getItemMedia(selectedItem);
-                  const mainImage = getMainImage(selectedItem);
+                  const mainImage =
+  getMainImage(selectedItem) ||
+  (selectedItem.image && typeof selectedItem.image === 'string'
+    ? selectedItem.image
+    : null);
+
                   
                   if (!mainImage) return null;
                   
@@ -2457,41 +2496,48 @@ const handleUpdateItem = async (e) => {
   </div>
 
   {/* Image Preview */}
-  {imageUrls.length > 0 && (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl border-2 border-blue-200">
-      <h4 className="font-bold text-blue-800 mb-3">
-        Selected Images ({imageUrls.length})
-      </h4>
+{imageUrls.length > 0 && (
+  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl border-2 border-blue-200">
+    <h4 className="font-bold text-blue-800 mb-3">
+      Selected Images ({imageUrls.length})
+    </h4>
 
-      <div className="grid grid-cols-2 gap-3">
-        {imageUrls.map((url, index) => (
-          <div key={index} className="relative group">
-            <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden border-2">
-              <img
-                src={url}
-                alt={`Image ${index + 1}`}
-                className="w-full h-full object-cover"
-                onError={(e) => (e.target.style.display = 'none')}
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => removeImageUrl(index)}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
-            >
-              ✕
-            </button>
-
-            <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-1 rounded">
-              {index === 0 ? 'Main' : index + 1}
-            </div>
+    <div className="grid grid-cols-2 gap-3">
+      {imageUrls.map((url, index) => (
+        <div key={index} className="relative group">
+          <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden border-2 flex items-center justify-center">
+            <img
+              src={url}
+              alt={`Image ${index + 1}`}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={(e) => {
+                // 🔒 DO NOT HIDE — fallback instead
+                e.currentTarget.src = '/no-image.png';
+              }}
+            />
           </div>
-        ))}
-      </div>
+
+          {/* Remove Image */}
+          <button
+            type="button"
+            onClick={() => removeImageUrl(index)}
+            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow-lg"
+            title="Remove image"
+          >
+            ✕
+          </button>
+
+          {/* Main Image Badge */}
+          <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-1 rounded">
+            {index === 0 ? 'Main Image' : `Image ${index + 1}`}
+          </div>
+        </div>
+      ))}
     </div>
-  )}
-</div>
+  </div>
+)}
+
 
             
             {/* ================= VIDEO URL INPUT ================= */}
