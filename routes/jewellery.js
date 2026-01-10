@@ -6,6 +6,9 @@ const upload = require("../server/middleware/upload"); // multer + s3
 // ===============================
 // CREATE JEWELLERY ITEM (S3)
 // ===============================
+// ===============================
+// CREATE JEWELLERY ITEM (S3 + URL)
+// ===============================
 router.post(
   "/",
   upload.fields([
@@ -17,7 +20,8 @@ router.post(
       const {
         id,
         name,
-        category,
+        categoryMain,
+        categorySub,
         weight,
         gender,
         stoneWeight,
@@ -26,52 +30,64 @@ router.post(
         carat,
         orderNo,
         isOurDesign,
+        images: imageUrls = [],
+        videos: videoUrls = [],
       } = req.body;
 
-      if (!id || !name || !category?.main || !weight || !metal || !carat) {
-        return res.status(400).json({
-          error: "ID, name, category, metal, carat and weight are required",
-        });
+      if (!id || !name || !categoryMain || !weight || !metal || !carat) {
+        return res.status(400).json({ error: "Missing required fields" });
       }
 
-      const imageFiles = req.files?.images || [];
-      const videoFiles = req.files?.videos || [];
+      // FILE uploads (S3)
+      const uploadedImages = (req.files?.images || []).map(f => f.location);
+      const uploadedVideos = (req.files?.videos || []).map(f => f.location);
 
-      const images = imageFiles.map((f) => f.location);
-      const videos = videoFiles.map((f) => f.location);
+      // URL uploads (JSON)
+      const finalImages = [
+        ...uploadedImages,
+        ...(Array.isArray(imageUrls) ? imageUrls : [])
+      ];
+
+      const finalVideos = [
+        ...uploadedVideos,
+        ...(Array.isArray(videoUrls) ? videoUrls : [])
+      ];
 
       const item = new Jewellery({
         id: id.trim(),
         name: name.trim(),
-        category,
-        weight: parseFloat(weight),
-        images,
-        image: images[0] || null, // backward compatibility
-        videos,
+        category: {
+          main: categoryMain,
+          sub: categorySub || "",
+        },
+        weight: Number(weight),
+        images: finalImages,
+        image: finalImages[0] || null,
+        videos: finalVideos,
         gender: gender || "Unisex",
-        stoneWeight: stoneWeight ? parseFloat(stoneWeight) : null,
+        stoneWeight: stoneWeight ? Number(stoneWeight) : null,
         type: type || "normal",
         metal,
-        carat: parseInt(carat),
-        orderNo: orderNo ? parseInt(orderNo) : null,
-        isOurDesign:
-          isOurDesign !== undefined ? Boolean(isOurDesign) : true,
+        carat: Number(carat),
+        orderNo: orderNo || null,
+        isOurDesign: isOurDesign !== false,
       });
 
       const saved = await item.save();
       res.status(201).json(saved);
     } catch (err) {
-      console.error("Create error:", err);
-      if (err.code === 11000) {
-        return res.status(409).json({ error: "Duplicate jewellery ID" });
-      }
+      console.error(err);
       res.status(500).json({ error: err.message });
     }
   }
 );
 
+
 // ===============================
 // UPDATE JEWELLERY ITEM (S3)
+// ===============================
+// ===============================
+// UPDATE JEWELLERY ITEM (S3 + URL)
 // ===============================
 router.put(
   "/:id",
@@ -84,7 +100,8 @@ router.put(
       const {
         id,
         name,
-        category,
+        categoryMain,
+        categorySub,
         weight,
         gender,
         stoneWeight,
@@ -93,54 +110,57 @@ router.put(
         carat,
         orderNo,
         isOurDesign,
+        images: imageUrls = [],
+        videos: videoUrls = [],
       } = req.body;
 
-      if (!id || !name || !category?.main || !weight || !metal || !carat) {
-        return res.status(400).json({
-          error: "ID, name, category, metal, carat and weight are required",
-        });
-      }
+      const uploadedImages = (req.files?.images || []).map(f => f.location);
+      const uploadedVideos = (req.files?.videos || []).map(f => f.location);
 
-      const imageFiles = req.files?.images || [];
-      const videoFiles = req.files?.videos || [];
+      const finalImages =
+        uploadedImages.length > 0 || imageUrls.length > 0
+          ? [...uploadedImages, ...imageUrls]
+          : undefined;
+
+      const finalVideos =
+        uploadedVideos.length > 0 || videoUrls.length > 0
+          ? [...uploadedVideos, ...videoUrls]
+          : undefined;
 
       const updateData = {
         id: id.trim(),
         name: name.trim(),
-        category,
-        weight: parseFloat(weight),
-        gender: gender || "Unisex",
-        stoneWeight: stoneWeight ? parseFloat(stoneWeight) : null,
-        type: type || "normal",
+        category: {
+          main: categoryMain,
+          sub: categorySub || "",
+        },
+        weight: Number(weight),
+        gender,
+        stoneWeight: stoneWeight || null,
+        type,
         metal,
-        carat: parseInt(carat),
-        orderNo: orderNo ? parseInt(orderNo) : null,
-        isOurDesign:
-          isOurDesign !== undefined ? Boolean(isOurDesign) : true,
+        carat: Number(carat),
+        orderNo,
+        isOurDesign,
       };
 
-      if (imageFiles.length > 0) {
-        updateData.images = imageFiles.map((f) => f.location);
-        updateData.image = updateData.images[0];
+      if (finalImages) {
+        updateData.images = finalImages;
+        updateData.image = finalImages[0] || null;
       }
 
-      if (videoFiles.length > 0) {
-        updateData.videos = videoFiles.map((f) => f.location);
+      if (finalVideos) {
+        updateData.videos = finalVideos;
       }
 
       const updated = await Jewellery.findByIdAndUpdate(
         req.params.id,
         updateData,
-        { new: true, runValidators: true }
+        { new: true }
       );
-
-      if (!updated) {
-        return res.status(404).json({ error: "Item not found" });
-      }
 
       res.json(updated);
     } catch (err) {
-      console.error("Update error:", err);
       res.status(500).json({ error: err.message });
     }
   }

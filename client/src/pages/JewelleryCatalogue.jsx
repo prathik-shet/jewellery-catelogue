@@ -601,39 +601,41 @@ function JewelleryCatalogue() {
   // ================= MEDIA HELPERS (S3 READY + BACKWARD COMPATIBLE) =================
 
 // Returns all images (supports legacy `image` field)
+// ================= MEDIA HELPERS (URL-FIRST, NO LEGACY) =================
+
+// ✅ Returns ONLY URL-based images (NO fallback to old `image`)
 const getItemImages = (item) => {
   if (!item) return [];
 
   if (Array.isArray(item.images) && item.images.length > 0) {
-    return item.images.filter(Boolean);
-  }
-
-  // Backward compatibility for old data
-  if (item.image) {
-    return [item.image];
+    return item.images.filter(
+      (url) => typeof url === 'string' && url.trim() !== ''
+    );
   }
 
   return [];
 };
 
-// Returns all videos
+// ✅ Returns videos (URL-based)
 const getItemVideos = (item) => {
   if (!item) return [];
 
   if (Array.isArray(item.videos) && item.videos.length > 0) {
-    return item.videos.filter(Boolean);
+    return item.videos.filter(
+      (url) => typeof url === 'string' && url.trim() !== ''
+    );
   }
 
   return [];
 };
 
-// Returns main image (always first image)
+// ✅ Always returns a valid image (or placeholder)
 const getMainImage = (item) => {
   const images = getItemImages(item);
-  return images.length > 0 ? images[0] : null;
+  return images.length > 0 ? images[0] : '/no-image.png';
 };
 
-// Returns combined media array for gallery/modal
+// ✅ Combined media list for modal/gallery
 const getItemMedia = (item) => {
   if (!item) return [];
 
