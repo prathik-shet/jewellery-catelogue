@@ -1,170 +1,142 @@
 const express = require("express");
 const router = express.Router();
 const Jewellery = require("../models/Jewellery");
-const upload = require("../server/middleware/upload"); // multer + s3
 
 // ===============================
-// CREATE JEWELLERY ITEM (S3)
+// CREATE JEWELLERY ITEM (URL ONLY)
 // ===============================
-// ===============================
-// CREATE JEWELLERY ITEM (S3 + URL)
-// ===============================
-router.post(
-  "/",
-  upload.fields([
-    { name: "images", maxCount: 10 },
-    { name: "videos", maxCount: 5 },
-  ]),
-  async (req, res) => {
-    try {
-      const {
-        id,
-        name,
-        categoryMain,
-        categorySub,
-        weight,
-        gender,
-        stoneWeight,
-        type,
-        metal,
-        carat,
-        orderNo,
-        isOurDesign,
-        images: imageUrls = [],
-        videos: videoUrls = [],
-      } = req.body;
+router.post("/", async (req, res) => {
+  try {
+    const {
+      id,
+      name,
+      category,
+      weight,
+      gender,
+      stoneWeight,
+      type,
+      metal,
+      carat,
+      orderNo,
+      isOurDesign,
+      images = [],
+      videos = [],
+    } = req.body;
 
-      if (!id || !name || !categoryMain || !weight || !metal || !carat) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
-
-      // FILE uploads (S3)
-      const uploadedImages = (req.files?.images || []).map(f => f.location);
-      const uploadedVideos = (req.files?.videos || []).map(f => f.location);
-
-      // URL uploads (JSON)
-      const finalImages = [
-        ...uploadedImages,
-        ...(Array.isArray(imageUrls) ? imageUrls : [])
-      ];
-
-      const finalVideos = [
-        ...uploadedVideos,
-        ...(Array.isArray(videoUrls) ? videoUrls : [])
-      ];
-
-      const item = new Jewellery({
-        id: id.trim(),
-        name: name.trim(),
-        category: {
-          main: categoryMain,
-          sub: categorySub || "",
-        },
-        weight: Number(weight),
-        images: finalImages,
-        image: finalImages[0] || null,
-        videos: finalVideos,
-        gender: gender || "Unisex",
-        stoneWeight: stoneWeight ? Number(stoneWeight) : null,
-        type: type || "normal",
-        metal,
-        carat: Number(carat),
-        orderNo: orderNo || null,
-        isOurDesign: isOurDesign !== false,
+    if (!id || !name || !category?.main || !weight || !metal || !carat) {
+      return res.status(400).json({
+        error: "ID, name, category, weight, metal and carat are required",
       });
-
-      const saved = await item.save();
-      res.status(201).json(saved);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: err.message });
     }
+
+    const finalImages = Array.isArray(images)
+      ? images.filter(Boolean)
+      : [];
+
+    const finalVideos = Array.isArray(videos)
+      ? videos.filter(Boolean)
+      : [];
+
+    const item = new Jewellery({
+      id: id.trim(),
+      name: name.trim(),
+      category: {
+        main: category.main,
+        sub: category.sub || "",
+      },
+      weight: Number(weight),
+      images: finalImages,
+      image: finalImages[0] || null, // ✅ MAIN IMAGE
+      videos: finalVideos,
+      gender: gender || "Unisex",
+      stoneWeight: stoneWeight ? Number(stoneWeight) : null,
+      type: type || "normal",
+      metal,
+      carat: Number(carat),
+      orderNo: orderNo || null,
+      isOurDesign: isOurDesign !== false,
+    });
+
+    const saved = await item.save();
+    res.status(201).json(saved);
+  } catch (err) {
+    console.error("CREATE ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
-);
-
+});
 
 // ===============================
-// UPDATE JEWELLERY ITEM (S3)
+// UPDATE JEWELLERY ITEM (URL ONLY)
 // ===============================
-// ===============================
-// UPDATE JEWELLERY ITEM (S3 + URL)
-// ===============================
-router.put(
-  "/:id",
-  upload.fields([
-    { name: "images", maxCount: 10 },
-    { name: "videos", maxCount: 5 },
-  ]),
-  async (req, res) => {
-    try {
-      const {
-        id,
-        name,
-        categoryMain,
-        categorySub,
-        weight,
-        gender,
-        stoneWeight,
-        type,
-        metal,
-        carat,
-        orderNo,
-        isOurDesign,
-        images: imageUrls = [],
-        videos: videoUrls = [],
-      } = req.body;
+router.put("/:id", async (req, res) => {
+  try {
+    const {
+      id,
+      name,
+      category,
+      weight,
+      gender,
+      stoneWeight,
+      type,
+      metal,
+      carat,
+      orderNo,
+      isOurDesign,
+      images = [],
+      videos = [],
+    } = req.body;
 
-      const uploadedImages = (req.files?.images || []).map(f => f.location);
-      const uploadedVideos = (req.files?.videos || []).map(f => f.location);
-
-      const finalImages =
-        uploadedImages.length > 0 || imageUrls.length > 0
-          ? [...uploadedImages, ...imageUrls]
-          : undefined;
-
-      const finalVideos =
-        uploadedVideos.length > 0 || videoUrls.length > 0
-          ? [...uploadedVideos, ...videoUrls]
-          : undefined;
-
-      const updateData = {
-        id: id.trim(),
-        name: name.trim(),
-        category: {
-          main: categoryMain,
-          sub: categorySub || "",
-        },
-        weight: Number(weight),
-        gender,
-        stoneWeight: stoneWeight || null,
-        type,
-        metal,
-        carat: Number(carat),
-        orderNo,
-        isOurDesign,
-      };
-
-      if (finalImages) {
-        updateData.images = finalImages;
-        updateData.image = finalImages[0] || null;
-      }
-
-      if (finalVideos) {
-        updateData.videos = finalVideos;
-      }
-
-      const updated = await Jewellery.findByIdAndUpdate(
-        req.params.id,
-        updateData,
-        { new: true }
-      );
-
-      res.json(updated);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
+    if (!id || !name || !category?.main || !weight || !metal || !carat) {
+      return res.status(400).json({
+        error: "ID, name, category, weight, metal and carat are required",
+      });
     }
+
+    const finalImages = Array.isArray(images)
+      ? images.filter(Boolean)
+      : [];
+
+    const finalVideos = Array.isArray(videos)
+      ? videos.filter(Boolean)
+      : [];
+
+    const updateData = {
+      id: id.trim(),
+      name: name.trim(),
+      category: {
+        main: category.main,
+        sub: category.sub || "",
+      },
+      weight: Number(weight),
+      gender: gender || "Unisex",
+      stoneWeight: stoneWeight ? Number(stoneWeight) : null,
+      type: type || "normal",
+      metal,
+      carat: Number(carat),
+      orderNo: orderNo || null,
+      isOurDesign: isOurDesign !== false,
+      images: finalImages,
+      image: finalImages[0] || null, // ✅ KEEP MAIN IMAGE IN SYNC
+      videos: finalVideos,
+      updatedAt: new Date(),
+    };
+
+    const updated = await Jewellery.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    res.json(updated);
+  } catch (err) {
+    console.error("UPDATE ERROR:", err);
+    res.status(500).json({ error: err.message });
   }
-);
+});
 
 // ===============================
 // CLICK COUNT
@@ -217,14 +189,12 @@ router.get("/", async (req, res) => {
 
     if (catagories) {
       filters.push({
-        "category.main": { $in: catagories.split(",").map((c) => c.trim()) },
+        "category.main": { $in: catagories.split(",").map(c => c.trim()) },
       });
     }
 
     if (subCategory)
-      filters.push({
-        "category.sub": { $regex: subCategory, $options: "i" },
-      });
+      filters.push({ "category.sub": { $regex: subCategory, $options: "i" } });
 
     if (type && type !== "All")
       filters.push({ type: { $regex: type, $options: "i" } });
@@ -254,22 +224,19 @@ router.get("/", async (req, res) => {
       });
 
     if (weightRanges) {
-      const ranges = weightRanges.split(",").map((r) => {
-        if (r.endsWith("-+")) {
-          return { weight: { $gte: parseFloat(r) } };
-        }
+      const ranges = weightRanges.split(",").map(r => {
         const [min, max] = r.split("-").map(Number);
-        return { weight: { $gte: min, $lte: max } };
+        return max
+          ? { weight: { $gte: min, $lte: max } }
+          : { weight: { $gte: min } };
       });
       filters.push({ $or: ranges });
     }
 
     const query = filters.length ? { $and: filters } : {};
-
-    const sort =
-      sortField && sortField.trim()
-        ? { [sortField]: sortOrder === "asc" ? 1 : -1 }
-        : { clickCount: -1 };
+    const sort = sortField
+      ? { [sortField]: sortOrder === "asc" ? 1 : -1 }
+      : { clickCount: -1 };
 
     const [items, total] = await Promise.all([
       Jewellery.find(query).sort(sort).skip(skip).limit(pageSizeNum),
@@ -297,23 +264,6 @@ router.delete("/:id", async (req, res) => {
       return res.status(404).json({ error: "Item not found" });
     }
     res.json({ message: "Deleted successfully", deleted });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ===============================
-// STATS
-// ===============================
-router.get("/stats", async (req, res) => {
-  try {
-    const totalItems = await Jewellery.countDocuments();
-    const popularity = await Jewellery.find()
-      .sort({ clickCount: -1 })
-      .limit(10)
-      .select("name clickCount category");
-
-    res.json({ totalItems, popularity });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
