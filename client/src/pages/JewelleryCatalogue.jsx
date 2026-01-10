@@ -924,31 +924,41 @@ const getItemMedia = (item) => {
     }
   };
 
-  const handleImageFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 10) {
-      alert('Maximum 10 images allowed per item');
-      return;
-    }
-    setImageFiles(files);
-  };
+  // ================= IMAGE URL HANDLERS =================
 
-  const handleVideoFileChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 5) {
-      alert('Maximum 5 videos allowed per item');
-      return;
-    }
-    setVideoFiles(files);
-  };
+const addImageUrl = (url) => {
+  if (!url || !url.trim()) return;
 
-  const removeImageFile = (index) => {
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
-  };
+  if (imageUrls.length >= 10) {
+    alert('Maximum 10 images allowed per item');
+    return;
+  }
 
-  const removeVideoFile = (index) => {
-    setVideoFiles(prev => prev.filter((_, i) => i !== index));
-  };
+  setImageUrls((prev) => [...prev, url.trim()]);
+};
+
+const removeImageUrl = (index) => {
+  setImageUrls((prev) => prev.filter((_, i) => i !== index));
+};
+
+
+// ================= VIDEO URL HANDLERS =================
+
+const addVideoUrl = (url) => {
+  if (!url || !url.trim()) return;
+
+  if (videoUrls.length >= 5) {
+    alert('Maximum 5 videos allowed per item');
+    return;
+  }
+
+  setVideoUrls((prev) => [...prev, url.trim()]);
+};
+
+const removeVideoUrl = (index) => {
+  setVideoUrls((prev) => prev.filter((_, i) => i !== index));
+};
+
 
   // ================= ADD ITEM =================
 const handleAddItem = async (e) => {
@@ -1562,24 +1572,35 @@ const handleUpdateItem = async (e) => {
             </div>
 
             {/* Add Item Button (Admin Only) */}
-            {isAdmin && (
-              <button
-                onClick={() => {
-                  setShowForm(true);
-                  setNewItem({});
-                  setImageFiles([]);
-                  setVideoFiles([]);
-                  setIsEditing(false);
-                  setCustomCategory('');
-                }}
-                className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-lg hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
-              >
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                <span className="text-sm sm:text-base">Add Item</span>
-              </button>
-            )}
+{isAdmin && (
+  <button
+    onClick={() => {
+      setShowForm(true);
+      setNewItem({});
+      setImageUrls([]);   // ✅ reset image URLs
+      setVideoUrls([]);   // ✅ reset video URLs
+      setIsEditing(false);
+      setCustomCategory('');
+    }}
+    className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-lg hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+  >
+    <svg
+      className="w-4 h-4 sm:w-5 sm:h-5"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+      />
+    </svg>
+    <span className="text-sm sm:text-base">Add Item</span>
+  </button>
+)}
+
           </div>
         </div>
       </div>
@@ -2153,8 +2174,8 @@ const handleUpdateItem = async (e) => {
             onClick={() => {
               setShowForm(false);
               setNewItem({});
-              setImageFiles([]);
-              setVideoFiles([]);
+              setImageUrls([]);     // ✅ FIXED
+              setVideoUrls([]);     // ✅ FIXED
               setIsEditing(false);
               setCustomCategory('');
             }}
