@@ -2495,7 +2495,7 @@ const handleDelete = async (id) => {
     </button>
   </div>
 
-  {/* Image Preview */}
+  {/* ================= IMAGE PREVIEW ================= */}
 {imageUrls.length > 0 && (
   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl border-2 border-blue-200">
     <h4 className="font-bold text-blue-800 mb-3">
@@ -2505,42 +2505,41 @@ const handleDelete = async (id) => {
     <div className="grid grid-cols-2 gap-3">
       {imageUrls.map((url, index) => (
         <div key={index} className="relative group">
-          <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden border-2 flex items-center justify-center">
+          <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden border-2">
             <img
               src={url}
               alt={`Image ${index + 1}`}
               className="w-full h-full object-cover"
               loading="lazy"
               onError={(e) => {
-                // 🔒 DO NOT HIDE — fallback instead
+                // ✅ ALWAYS fallback to placeholder
+                e.currentTarget.onerror = null;
                 e.currentTarget.src = '/no-image.png';
               }}
             />
           </div>
 
-          {/* Remove Image */}
+          {/* Remove Button */}
           <button
             type="button"
             onClick={() => removeImageUrl(index)}
             className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 shadow-lg"
-            title="Remove image"
           >
             ✕
           </button>
 
           {/* Main Image Badge */}
           <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-1 rounded">
-            {index === 0 ? 'Main Image' : `Image ${index + 1}`}
+            {index === 0 ? 'Main' : `#${index + 1}`}
           </div>
         </div>
       ))}
     </div>
   </div>
 )}
+</div>
 
-
-            
-            {/* ================= VIDEO URL INPUT ================= */}
+{/* ================= VIDEO URL INPUT ================= */}
 <div className="space-y-4">
   <label className="block font-bold text-purple-700 text-lg">
     🎥 Video URLs (Optional — Max 5)
@@ -2601,31 +2600,32 @@ const handleDelete = async (id) => {
   )}
 </div>
 
-            
-            <button
-              type="submit"
-              disabled={isGeneratingId}
-              className={`w-full font-bold py-4 rounded-2xl shadow-xl transform transition-all duration-300 flex items-center justify-center gap-3 text-lg ${
-                isGeneratingId
-                  ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 hover:scale-105'
-              }`}
-            >
-              {isGeneratingId ? (
-                <>
-                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-600 border-t-transparent"></div>
-                  Generating ID...
-                </>
-              ) : (
-                <>
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  {isEditing ? 'Update Item' : 'Add Item'}
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                </>
-              )}
-            </button>
+{/* ================= SUBMIT BUTTON ================= */}
+<button
+  type="submit"
+  disabled={isGeneratingId}
+  className={`w-full font-bold py-4 rounded-2xl shadow-xl transform transition-all duration-300 flex items-center justify-center gap-3 text-lg ${
+    isGeneratingId
+      ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+      : 'bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 text-white hover:from-emerald-700 hover:via-green-700 hover:to-teal-700 hover:scale-105'
+  }`}
+>
+  {isGeneratingId ? (
+    <>
+      <div className="animate-spin rounded-full h-6 w-6 border-2 border-gray-600 border-t-transparent"></div>
+      Generating ID...
+    </>
+  ) : (
+    <>
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+      </svg>
+      {isEditing ? 'Update Item' : 'Add Item'}
+      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+    </>
+  )}
+</button>
+
           </form> 
         </div>
       )}
