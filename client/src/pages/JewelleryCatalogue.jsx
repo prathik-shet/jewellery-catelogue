@@ -1676,7 +1676,9 @@ const handleUpdateItem = async (e) => {
             jewellery.map((item, index) => {
               const itemImages = getItemImages(item);
               const itemVideos = getItemVideos(item);
-              const mainImage = getMainImage(item);
+              const resolvedMainImage = getMainImage(item) ||
+  (item.image && typeof item.image === 'string' ? item.image : null);
+
               
               return (
                 <div
@@ -1688,39 +1690,41 @@ const handleUpdateItem = async (e) => {
                   <div className="absolute inset-0 bg-gradient-to-r from-amber-400/20 to-orange-400/20 rounded-xl sm:rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   
                   {/* Enhanced Media Section */}
-                  {mainImage && (
-                    <div className="relative mb-2 sm:mb-3 overflow-hidden rounded-lg sm:rounded-xl">
-                      <img
-                        src={mainImage}
-                        alt={item.name}
-                        loading="lazy"
-                        className={`w-full object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500 ${getImageHeightClasses()}`}
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      
-                      {/* Media Indicators */}
-                      <div className="absolute top-1 sm:top-2 left-1 sm:left-2 flex gap-1">
-                        {itemImages.length > 0 && (
-                          <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-                            <svg className="w-2 h-2 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            {itemImages.length}
-                          </div>
-                        )}
-                        
-                        {itemVideos.length > 0 && (
-                          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-                            <svg className="w-2 h-2 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
-                            </svg>
-                            {itemVideos.length}
-                          </div>
-                        )}
-                      </div>
+{resolvedMainImage && (
+  <div className="relative mb-2 sm:mb-3 overflow-hidden rounded-lg sm:rounded-xl">
+    <img
+      src={resolvedMainImage}
+      alt={item.name}
+      loading="lazy"
+      className={`w-full object-cover border-2 border-amber-200 group-hover:scale-110 transition-transform duration-500 ${getImageHeightClasses()}`}
+      onError={(e) => {
+        // 🔒 NEVER hide image — always fallback
+        e.currentTarget.src = '/no-image.png';
+      }}
+    />
+
+    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+    {/* Media Indicators */}
+    <div className="absolute top-1 sm:top-2 left-1 sm:left-2 flex gap-1">
+      {itemImages.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+          <svg className="w-2 h-2 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          {itemImages.length}
+        </div>
+      )}
+
+      {itemVideos.length > 0 && (
+        <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-1 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+          <svg className="w-2 h-2 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3M9 17v-3" />
+          </svg>
+          {itemVideos.length}
+        </div>
+      )}
+    </div>
                       
                       {/* Popularity badge */}
                       {item.clickCount > 0 && (
