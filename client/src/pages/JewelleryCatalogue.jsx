@@ -25,8 +25,9 @@ function JewelleryCatalogue() {
   const [isDataFetched, setIsDataFetched] = useState(false);
   
   // Enhanced media file handling
-  const [imageFiles, setImageFiles] = useState([]);
-  const [videoFiles, setVideoFiles] = useState([]);
+  const [imageUrls, setImageUrls] = useState([]);
+  const [videoUrls, setVideoUrls] = useState([]);
+
   
   const [isEditing, setIsEditing] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
@@ -965,53 +966,46 @@ const handleAddItem = async (e) => {
     return;
   }
 
-  if (imageFiles.length === 0 && videoFiles.length === 0) {
-    alert('Please add at least one image or video.');
+  if (imageUrls.length === 0 && videoUrls.length === 0) {
+    alert('Please add at least one image or video URL.');
     return;
   }
 
   try {
-    const formData = new FormData();
-
-    formData.append('id', newItem.id.trim());
-    formData.append('name', newItem.name.trim());
-    formData.append(
-      'categoryMain',
-      newItem.category.main === 'Custom'
-        ? customCategory.trim()
-        : newItem.category.main.trim()
-    );
-    formData.append('categorySub', newItem.category.sub || '');
-    formData.append('weight', newItem.weight);
-    formData.append('metal', newItem.metal);
-    formData.append('carat', newItem.carat);
-    formData.append('gender', newItem.gender || 'Unisex');
-    formData.append('stoneWeight', newItem.stoneWeight || '');
-    formData.append('type', newItem.type || 'normal');
-    formData.append('orderNo', newItem.orderNo || '');
-    formData.append('isOurDesign', newItem.isOurDesign !== false);
-
-    imageFiles.forEach((file) => {
-      formData.append('images', file);
-    });
-
-    videoFiles.forEach((file) => {
-      formData.append('videos', file);
-    });
+    const payload = {
+      id: newItem.id.trim(),
+      name: newItem.name.trim(),
+      category: {
+        main:
+          newItem.category.main === 'Custom'
+            ? customCategory.trim()
+            : newItem.category.main.trim(),
+        sub: newItem.category.sub || '',
+      },
+      weight: Number(newItem.weight),
+      metal: newItem.metal,
+      carat: Number(newItem.carat),
+      gender: newItem.gender || 'Unisex',
+      stoneWeight: newItem.stoneWeight || null,
+      type: newItem.type || 'normal',
+      orderNo: newItem.orderNo || null,
+      isOurDesign: newItem.isOurDesign !== false,
+      images: imageUrls,
+      videos: videoUrls,
+      image: imageUrls[0] || null,
+      clickCount: 0,
+    };
 
     const token = localStorage.getItem('token');
 
-    await axios.post('/api/jewellery', formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
-      },
+    await axios.post('/api/jewellery', payload, {
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     fetchJewellery();
     setNewItem({});
-    setImageFiles([]);
-    setVideoFiles([]);
+    setImageUrls([]);
+    setVideoUrls([]);
     setCustomCategory('');
     setShowForm(false);
     setIsEditing(false);
@@ -1024,16 +1018,17 @@ const handleAddItem = async (e) => {
 };
 
 
+
 // ================= EDIT ITEM =================
 const handleEdit = (item) => {
   setNewItem(item);
   setShowForm(true);
   setIsEditing(true);
   setSelectedItem(null);
-  setImageFiles([]);
-  setVideoFiles([]);
 
-  // Handle custom category
+  setImageUrls(item.images || []);
+  setVideoUrls(item.videos || []);
+
   if (!catagories.slice(1).includes(item.category?.main)) {
     setCustomCategory(item.category.main);
     setNewItem((prev) => ({
@@ -1052,52 +1047,41 @@ const handleUpdateItem = async (e) => {
   e.preventDefault();
 
   try {
-    const formData = new FormData();
-
-    formData.append('id', newItem.id.trim());
-    formData.append('name', newItem.name.trim());
-    formData.append(
-      'categoryMain',
-      newItem.category?.main === 'Custom'
-        ? customCategory.trim()
-        : newItem.category?.main?.trim()
-    );
-    formData.append('categorySub', newItem.category?.sub || '');
-    formData.append('weight', newItem.weight);
-    formData.append('metal', newItem.metal);
-    formData.append('carat', newItem.carat);
-    formData.append('gender', newItem.gender || 'Unisex');
-    formData.append('stoneWeight', newItem.stoneWeight || '');
-    formData.append('type', newItem.type || 'normal');
-    formData.append('orderNo', newItem.orderNo || '');
-    formData.append('isOurDesign', newItem.isOurDesign !== false);
-
-    if (imageFiles.length > 0) {
-      imageFiles.forEach((file) => {
-        formData.append('images', file);
-      });
-    }
-
-    if (videoFiles.length > 0) {
-      videoFiles.forEach((file) => {
-        formData.append('videos', file);
-      });
-    }
+    const payload = {
+      id: newItem.id.trim(),
+      name: newItem.name.trim(),
+      category: {
+        main:
+          newItem.category?.main === 'Custom'
+            ? customCategory.trim()
+            : newItem.category?.main?.trim(),
+        sub: newItem.category?.sub || '',
+      },
+      weight: Number(newItem.weight),
+      metal: newItem.metal,
+      carat: Number(newItem.carat),
+      gender: newItem.gender || 'Unisex',
+      stoneWeight: newItem.stoneWeight || null,
+      type: newItem.type || 'normal',
+      orderNo: newItem.orderNo || null,
+      isOurDesign: newItem.isOurDesign !== false,
+      images: imageUrls,
+      videos: videoUrls,
+      image: imageUrls[0] || null,
+      updatedAt: new Date(),
+    };
 
     const token = localStorage.getItem('token');
 
-    await axios.put(`/api/jewellery/${newItem._id}`, formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
-      },
+    await axios.put(`/api/jewellery/${newItem._id}`, payload, {
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     fetchJewellery();
     setIsEditing(false);
     setNewItem({});
-    setImageFiles([]);
-    setVideoFiles([]);
+    setImageUrls([]);
+    setVideoUrls([]);
     setCustomCategory('');
     setShowForm(false);
 
@@ -2415,112 +2399,137 @@ const handleUpdateItem = async (e) => {
               </label>
             </div>
             
-            {/* Enhanced Multiple Image Upload */}
-            <div className="space-y-4">
-              <label className="block font-bold text-amber-700 text-lg">
-                📸 Upload Images (Max 10)*
-              </label>
-              <input
-                type="file"
-                name="images"
-                multiple
-                accept="image/*"
-                className="w-full border-2 border-amber-300 p-4 rounded-2xl focus:border-amber-500 focus:ring-4 focus:ring-amber-200 transition-all duration-300 font-medium text-lg shadow-lg"
-                onChange={handleImageFileChange}
+            {/* ================= IMAGE URL INPUT ================= */}
+<div className="space-y-4">
+  <label className="block font-bold text-amber-700 text-lg">
+    🖼 Image URLs (S3 / CDN) — Max 10*
+  </label>
+
+  <div className="flex gap-2">
+    <input
+      type="text"
+      placeholder="Paste image URL and press Add"
+      className="flex-1 border-2 border-amber-300 p-3 rounded-xl focus:border-amber-500"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addImageUrl(e.target.value);
+          e.target.value = '';
+        }
+      }}
+    />
+    <button
+      type="button"
+      onClick={(e) => {
+        const input = e.currentTarget.previousSibling;
+        addImageUrl(input.value);
+        input.value = '';
+      }}
+      className="px-4 py-2 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600"
+    >
+      Add
+    </button>
+  </div>
+
+  {/* Image Preview */}
+  {imageUrls.length > 0 && (
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl border-2 border-blue-200">
+      <h4 className="font-bold text-blue-800 mb-3">
+        Selected Images ({imageUrls.length})
+      </h4>
+
+      <div className="grid grid-cols-2 gap-3">
+        {imageUrls.map((url, index) => (
+          <div key={index} className="relative group">
+            <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden border-2">
+              <img
+                src={url}
+                alt={`Image ${index + 1}`}
+                className="w-full h-full object-cover"
+                onError={(e) => (e.target.style.display = 'none')}
               />
-              
-              {/* Image Preview Section */}
-              {imageFiles.length > 0 && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-2xl border-2 border-blue-200">
-                  <h4 className="font-bold text-blue-800 mb-3 flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Selected Images ({imageFiles.length})
-                  </h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    {imageFiles.map((file, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden border-2 border-gray-200">
-                          <img
-                            src={URL.createObjectURL(file)}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeImageFile(index)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                        <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                          {index === 0 ? 'Main' : index + 1}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
+
+            <button
+              type="button"
+              onClick={() => removeImageUrl(index)}
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+            >
+              ✕
+            </button>
+
+            <div className="absolute bottom-1 left-1 bg-black/70 text-white text-xs px-2 py-1 rounded">
+              {index === 0 ? 'Main' : index + 1}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
+
             
-            {/* Multiple Video Upload */}
-            <div className="space-y-4">
-              <label className="block font-bold text-purple-700 text-lg">
-                🎥 Upload Videos (Max 5)
-              </label>
-              <input
-                type="file"
-                name="videos"
-                multiple
-                accept="video/*"
-                className="w-full border-2 border-purple-300 p-4 rounded-2xl focus:border-purple-500 focus:ring-4 focus:ring-purple-200 transition-all duration-300 font-medium text-lg shadow-lg"
-                onChange={handleVideoFileChange}
-              />
-              
-              {/* Video Preview Section */}
-              {videoFiles.length > 0 && (
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border-2 border-purple-200">
-                  <h4 className="font-bold text-purple-800 mb-3 flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
-                    </svg>
-                    Selected Videos ({videoFiles.length})
-                  </h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    {videoFiles.map((file, index) => (
-                      <div key={index} className="relative group">
-                        <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-4 border-2 border-purple-200 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l.414.414c.187.187.293.442.293.707V13M15 10h-1.586a1 1 0 00-.707.293l-.414.414A1 1 0 0012 11.414V13M9 7h6m0 10v-3M9 17v-3m3-2h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01" />
-                              </svg>
-                            </div>
-                            <div>
-                              <p className="font-semibold text-purple-800 truncate max-w-48">{file.name}</p>
-                              <p className="text-sm text-purple-600">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeVideoFile(index)}
-                            className="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* ================= VIDEO URL INPUT ================= */}
+<div className="space-y-4">
+  <label className="block font-bold text-purple-700 text-lg">
+    🎥 Video URLs (Optional — Max 5)
+  </label>
+
+  <div className="flex gap-2">
+    <input
+      type="text"
+      placeholder="Paste video URL and press Add"
+      className="flex-1 border-2 border-purple-300 p-3 rounded-xl focus:border-purple-500"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addVideoUrl(e.target.value);
+          e.target.value = '';
+        }
+      }}
+    />
+    <button
+      type="button"
+      onClick={(e) => {
+        const input = e.currentTarget.previousSibling;
+        addVideoUrl(input.value);
+        input.value = '';
+      }}
+      className="px-4 py-2 bg-purple-500 text-white rounded-xl font-bold hover:bg-purple-600"
+    >
+      Add
+    </button>
+  </div>
+
+  {videoUrls.length > 0 && (
+    <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border-2 border-purple-200">
+      <h4 className="font-bold text-purple-800 mb-3">
+        Selected Videos ({videoUrls.length})
+      </h4>
+
+      <div className="space-y-2">
+        {videoUrls.map((url, index) => (
+          <div
+            key={index}
+            className="flex items-center justify-between bg-white p-3 rounded-xl border"
+          >
+            <span className="truncate max-w-xs text-purple-700 font-semibold">
+              {url}
+            </span>
+            <button
+              type="button"
+              onClick={() => removeVideoUrl(index)}
+              className="bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-red-600"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
+
             
             <button
               type="submit"
