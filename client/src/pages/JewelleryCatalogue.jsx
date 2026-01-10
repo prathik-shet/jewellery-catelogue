@@ -597,42 +597,57 @@ function JewelleryCatalogue() {
   }, [selectedItem, selectedItemIndex, jewellery]);
 
   // Helper functions for media handling
-  const getItemMedia = (item) => {
-    const media = [];
-    
-    if (item.images && Array.isArray(item.images) && item.images.length > 0) {
-      item.images.forEach(img => media.push({ type: 'image', src: img }));
-    } else if (item.image) {
-      media.push({ type: 'image', src: item.image });
-    }
-    
-    if (item.videos && Array.isArray(item.videos) && item.videos.length > 0) {
-      item.videos.forEach(vid => media.push({ type: 'video', src: vid }));
-    }
-    
-    return media;
-  };
+  // ================= MEDIA HELPERS (S3 READY + BACKWARD COMPATIBLE) =================
 
-  const getItemImages = (item) => {
-    if (item.images && Array.isArray(item.images) && item.images.length > 0) {
-      return item.images;
-    } else if (item.image) {
-      return [item.image];
-    }
-    return [];
-  };
+// Returns all images (supports legacy `image` field)
+const getItemImages = (item) => {
+  if (!item) return [];
 
-  const getItemVideos = (item) => {
-    if (item.videos && Array.isArray(item.videos) && item.videos.length > 0) {
-      return item.videos;
-    }
-    return [];
-  };
+  if (Array.isArray(item.images) && item.images.length > 0) {
+    return item.images.filter(Boolean);
+  }
 
-  const getMainImage = (item) => {
-    const images = getItemImages(item);
-    return images.length > 0 ? images[0] : null;
-  };
+  // Backward compatibility for old data
+  if (item.image) {
+    return [item.image];
+  }
+
+  return [];
+};
+
+// Returns all videos
+const getItemVideos = (item) => {
+  if (!item) return [];
+
+  if (Array.isArray(item.videos) && item.videos.length > 0) {
+    return item.videos.filter(Boolean);
+  }
+
+  return [];
+};
+
+// Returns main image (always first image)
+const getMainImage = (item) => {
+  const images = getItemImages(item);
+  return images.length > 0 ? images[0] : null;
+};
+
+// Returns combined media array for gallery/modal
+const getItemMedia = (item) => {
+  if (!item) return [];
+
+  const media = [];
+
+  getItemImages(item).forEach((url) => {
+    media.push({ type: 'image', src: url });
+  });
+
+  getItemVideos(item).forEach((url) => {
+    media.push({ type: 'video', src: url });
+  });
+
+  return media;
+};
 
   // Fixed pagination handlers
   const goToPage = (page) => {
@@ -934,191 +949,192 @@ function JewelleryCatalogue() {
     setVideoFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleAddItem = async (e) => {
-    e.preventDefault();
-    if (
-      !newItem.id ||
-      !newItem.name ||
-      !newItem.category?.main ||
-      !newItem.weight ||
-      !newItem.metal ||
-      !newItem.carat
-    ) {
-      return alert('All required fields must be filled.');
-    }
+  // ================= ADD ITEM =================
+const handleAddItem = async (e) => {
+  e.preventDefault();
 
-    if (imageFiles.length === 0 && videoFiles.length === 0) {
-      return alert('Please add at least one image or video.');
-    }
+  if (
+    !newItem.id ||
+    !newItem.name ||
+    !newItem.category?.main ||
+    !newItem.weight ||
+    !newItem.metal ||
+    !newItem.carat
+  ) {
+    alert('All required fields must be filled.');
+    return;
+  }
 
-    try {
-      const imagePromises = imageFiles.map(file => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(file);
-        });
-      });
+  if (imageFiles.length === 0 && videoFiles.length === 0) {
+    alert('Please add at least one image or video.');
+    return;
+  }
 
-      const videoPromises = videoFiles.map(file => {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result);
-          reader.readAsDataURL(file);
-        });
-      });
+  try {
+    const formData = new FormData();
 
-      const [imageResults, videoResults] = await Promise.all([
-        Promise.all(imagePromises),
-        Promise.all(videoPromises)
-      ]);
+    formData.append('id', newItem.id.trim());
+    formData.append('name', newItem.name.trim());
+    formData.append(
+      'categoryMain',
+      newItem.category.main === 'Custom'
+        ? customCategory.trim()
+        : newItem.category.main.trim()
+    );
+    formData.append('categorySub', newItem.category.sub || '');
+    formData.append('weight', newItem.weight);
+    formData.append('metal', newItem.metal);
+    formData.append('carat', newItem.carat);
+    formData.append('gender', newItem.gender || 'Unisex');
+    formData.append('stoneWeight', newItem.stoneWeight || '');
+    formData.append('type', newItem.type || 'normal');
+    formData.append('orderNo', newItem.orderNo || '');
+    formData.append('isOurDesign', newItem.isOurDesign !== false);
 
-      const payload = {
-        id: newItem.id.trim(),
-        name: newItem.name.trim(),
-        category: {
-          main: newItem.category.main === 'Custom' ? customCategory.trim() : newItem.category.main.trim(),
-          sub: newItem.category.sub?.trim() || '',
-        },
-        weight: parseFloat(newItem.weight),
-        metal: newItem.metal,
-        carat: parseInt(newItem.carat),
-        gender: newItem.gender || 'Unisex',
-        stoneWeight: newItem.stoneWeight ? parseFloat(newItem.stoneWeight) : null,
-        images: imageResults,
-        videos: videoResults,
-        image: imageResults[0] || null,
-        type: newItem.type || 'normal',
-        orderNo: newItem.orderNo ? parseInt(newItem.orderNo) : null,
-        isOurDesign: newItem.isOurDesign !== undefined ? newItem.isOurDesign : true,
-        clickCount: 0,
-      };
+    imageFiles.forEach((file) => {
+      formData.append('images', file);
+    });
 
-      const token = localStorage.getItem('token');
-      await axios.post(`/api/jewellery`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      fetchJewellery();
-      setNewItem({});
-      setImageFiles([]);
-      setVideoFiles([]);
-      setShowForm(false);
-      setCustomCategory('');
-      setIsEditing(false);
-      alert('Item added successfully!');
-    } catch (error) {
-      console.error('Error adding item:', error);
-      if (error.response?.data?.message) {
-        alert(`Error adding item: ${error.response.data.message}`);
-      } else {
-        alert('Error adding item.');
-      }
-    }
-  };
+    videoFiles.forEach((file) => {
+      formData.append('videos', file);
+    });
 
-  const handleEdit = (item) => {
-    setNewItem(item);
-    setShowForm(true);
-    setIsEditing(true);
-    setSelectedItem(null);
+    const token = localStorage.getItem('token');
+
+    await axios.post('/api/jewellery', formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    fetchJewellery();
+    setNewItem({});
     setImageFiles([]);
     setVideoFiles([]);
-    if (!catagories.slice(1).includes(item.category?.main)) {
-      setCustomCategory(item.category?.main);
-      setNewItem((prev) => ({
-        ...prev,
-        category: { ...prev.category, main: 'Custom' },
-      }));
-    }
-  };
+    setCustomCategory('');
+    setShowForm(false);
+    setIsEditing(false);
 
-  const handleUpdateItem = async (e) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        id: newItem.id,
-        name: newItem.name,
-        category: {
-          main: newItem.category?.main === 'Custom' ? customCategory.trim() : newItem.category?.main?.trim(),
-          sub: newItem.category?.sub?.trim() || '',
-        },
-        weight: parseFloat(newItem.weight),
-        metal: newItem.metal,
-        carat: parseInt(newItem.carat),
-        gender: newItem.gender,
-        stoneWeight: newItem.stoneWeight ? parseFloat(newItem.stoneWeight) : null,
-        type: newItem.type || 'normal',
-        orderNo: newItem.orderNo ? parseInt(newItem.orderNo) : null,
-        isOurDesign: newItem.isOurDesign !== undefined ? newItem.isOurDesign : true,
-      };
+    alert('Item added successfully!');
+  } catch (error) {
+    console.error(error);
+    alert(error.response?.data?.message || 'Error adding item');
+  }
+};
 
-      const token = localStorage.getItem('token');
-      
-      if (imageFiles.length > 0) {
-        const imagePromises = imageFiles.map(file => {
-          return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-          });
-        });
 
-        const imageResults = await Promise.all(imagePromises);
-        payload.images = imageResults;
-        payload.image = imageResults[0];
-      }
+// ================= EDIT ITEM =================
+const handleEdit = (item) => {
+  setNewItem(item);
+  setShowForm(true);
+  setIsEditing(true);
+  setSelectedItem(null);
+  setImageFiles([]);
+  setVideoFiles([]);
 
-      if (videoFiles.length > 0) {
-        const videoPromises = videoFiles.map(file => {
-          return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-          });
-        });
+  // Handle custom category
+  if (!catagories.slice(1).includes(item.category?.main)) {
+    setCustomCategory(item.category.main);
+    setNewItem((prev) => ({
+      ...prev,
+      category: { ...prev.category, main: 'Custom' },
+    }));
+  } else {
+    setCustomCategory('');
+  }
+};
 
-        const videoResults = await Promise.all(videoPromises);
-        payload.videos = videoResults;
-      }
 
-      await axios.put(`/api/jewellery/${newItem._id}`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
+
+// ================= UPDATE ITEM =================
+const handleUpdateItem = async (e) => {
+  e.preventDefault();
+
+  try {
+    const formData = new FormData();
+
+    formData.append('id', newItem.id.trim());
+    formData.append('name', newItem.name.trim());
+    formData.append(
+      'categoryMain',
+      newItem.category?.main === 'Custom'
+        ? customCategory.trim()
+        : newItem.category?.main?.trim()
+    );
+    formData.append('categorySub', newItem.category?.sub || '');
+    formData.append('weight', newItem.weight);
+    formData.append('metal', newItem.metal);
+    formData.append('carat', newItem.carat);
+    formData.append('gender', newItem.gender || 'Unisex');
+    formData.append('stoneWeight', newItem.stoneWeight || '');
+    formData.append('type', newItem.type || 'normal');
+    formData.append('orderNo', newItem.orderNo || '');
+    formData.append('isOurDesign', newItem.isOurDesign !== false);
+
+    if (imageFiles.length > 0) {
+      imageFiles.forEach((file) => {
+        formData.append('images', file);
       });
-      
-      fetchJewellery();
-      setIsEditing(false);
-      setNewItem({});
-      setImageFiles([]);
-      setVideoFiles([]);
-      setShowForm(false);
-      setCustomCategory('');
-      alert('Item updated successfully!');
-    } catch (error) {
-      console.error('Error updating item:', error);
-      if (error.response?.data?.message) {
-        alert(`Error updating item: ${error.response.data.message}`);
-      } else {
-        alert('Error updating item.');
-      }
     }
-  };
+
+    if (videoFiles.length > 0) {
+      videoFiles.forEach((file) => {
+        formData.append('videos', file);
+      });
+    }
+
+    const token = localStorage.getItem('token');
+
+    await axios.put(`/api/jewellery/${newItem._id}`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    fetchJewellery();
+    setIsEditing(false);
+    setNewItem({});
+    setImageFiles([]);
+    setVideoFiles([]);
+    setCustomCategory('');
+    setShowForm(false);
+
+    alert('Item updated successfully!');
+  } catch (error) {
+    console.error(error);
+    alert(error.response?.data?.message || 'Error updating item');
+  }
+};
+
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`/api/jewellery/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        fetchJewellery();
-        setSelectedItem(null);
-        alert('Item deleted successfully!');
-      } catch {
-        alert('Error deleting item.');
-      }
-    }
-  };
+  if (!id) return;
+
+  const confirmDelete = window.confirm(
+    'Are you sure you want to delete this item?\nThis action cannot be undone.'
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    const token = localStorage.getItem('token');
+
+    await axios.delete(`/api/jewellery/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    setSelectedItem(null);
+    fetchJewellery();
+
+    alert('Item deleted successfully!');
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    alert(error.response?.data?.message || 'Error deleting item.');
+  }
+};
+
 
   const textSizes = getTextSizeClasses();
 

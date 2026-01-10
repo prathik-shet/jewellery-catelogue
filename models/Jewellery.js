@@ -1,130 +1,130 @@
 const mongoose = require("mongoose");
 
-const jewellerySchema = new mongoose.Schema({
-  id: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true,
-  },
+const jewellerySchema = new mongoose.Schema(
+  {
+    // 🔑 Custom readable ID (SKU / Product ID)
+    id: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
 
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-
-  category: {
-    main: {
+    // 🏷️ Jewellery Name
+    name: {
       type: String,
       required: true,
       trim: true,
     },
-    sub: {
+
+    // 🗂️ Category structure
+    category: {
+      main: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      sub: {
+        type: String,
+        default: null,
+        trim: true,
+      },
+    },
+
+    // 🎨 Usage type
+    type: {
+      type: String,
+      enum: ["festival", "lightweight", "daily wear", "fancy", "normal"],
+      default: "normal",
+    },
+
+    // 🪙 Metal details
+    metal: {
+      type: String,
+      enum: ["gold", "silver", "diamond", "platinum", "rose gold"],
+      required: true,
+    },
+
+    carat: {
+      type: Number,
+      enum: [22, 18],
+      required: true,
+    },
+
+    // ⚖️ Weight details
+    weight: {
+      type: Number,
+      required: true,
+    },
+
+    stoneWeight: {
+      type: Number,
+      default: null,
+    },
+
+    // 🚻 Target gender
+    gender: {
+      type: String,
+      enum: ["Men", "Women", "Unisex"],
+      default: "Unisex",
+    },
+
+    // 🖼️ Image URLs (AWS S3)
+    images: {
+      type: [String], // S3 URLs
+      default: [],
+      validate: {
+        validator: function (images) {
+          return images.length <= 10;
+        },
+        message: "Maximum 10 images allowed per item",
+      },
+    },
+
+    // 🎥 Video URLs (AWS S3)
+    videos: {
+      type: [String], // S3 URLs
+      default: [],
+      validate: {
+        validator: function (videos) {
+          return videos.length <= 5;
+        },
+        message: "Maximum 5 videos allowed per item",
+      },
+    },
+
+    // 🧩 Backward compatibility (legacy single image)
+    image: {
       type: String,
       default: null,
-      trim: true,
+    },
+
+    // 🎨 Ownership flag
+    isOurDesign: {
+      type: Boolean,
+      default: true,
+      required: true,
+    },
+
+    // 🔢 Optional ordering
+    orderNo: {
+      type: Number,
+      sparse: true,
+    },
+
+    // 🔥 Popularity tracking
+    clickCount: {
+      type: Number,
+      default: 0,
     },
   },
-
-  type: {
-    type: String,
-    enum: ["festival", "lightweight", "daily wear", "fancy", "normal"],
-    default: "normal",
-  },
-
-  metal: {
-    type: String,
-    enum: ["gold", "silver", "diamond", "platinum", "rose gold"],
-    required: true,
-  },
-
-  carat: {
-    type: Number,
-    enum: [22, 18],
-    required: true,
-  },
-
-  weight: {
-    type: Number,
-    required: true,
-  },
-
-  stoneWeight: {
-    type: Number,
-    default: null,
-  },
-
-  gender: {
-    type: String,
-    enum: ['Men', 'Women', 'Unisex'],
-    default: 'Unisex',
-  },
-
-  // ✅ Multiple images support
-  images: {
-    type: [String],
-    default: [],
-    validate: {
-      validator: function(images) {
-        return images.length <= 10; // Maximum 10 images per item
-      },
-      message: 'Maximum 10 images allowed per item'
-    }
-  },
-
-  // ✅ NEW: Multiple videos support
-  videos: {
-    type: [String],
-    default: [],
-    validate: {
-      validator: function(videos) {
-        return videos.length <= 5; // Maximum 5 videos per item
-      },
-      message: 'Maximum 5 videos allowed per item'
-    }
-  },
-
-  // ✅ Maintain backward compatibility
-  image: {
-    type: String,
-    default: null
-  },
-
-  // ✅ Design ownership tracking
-  isOurDesign: {
-    type: Boolean,
-    default: true,
-    required: true
-  },
-
-  date: {
-    type: Date,
-    default: Date.now,
-  },
-
-  orderNo: {
-    type: Number,
-    required: false,
-    sparse: true, // Allows multiple null values
-  },
-
-  // ✅ Click count for popularity
-  clickCount: {
-    type: Number,
-    default: 0,
-  },
-
-  updatedAt: {
-    type: Date,
-    default: Date.now,
+  {
+    timestamps: true, // createdAt & updatedAt auto-handled
   }
-}, {
-  timestamps: true
-});
+);
 
-// ✅ Pre-save middleware to ensure images array includes the main image
-jewellerySchema.pre('save', function(next) {
+// ✅ Ensure main image is always included in images array
+jewellerySchema.pre("save", function (next) {
   if (this.image && !this.images.includes(this.image)) {
     this.images.unshift(this.image);
   }

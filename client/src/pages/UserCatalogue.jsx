@@ -402,35 +402,54 @@ function UserCatalogue() {
   }, [selectedItem, selectedItemIndex, jewellery]);
 
   // Helper functions for media handling
-  const getItemMedia = (item) => {
-    const media = [];
-    
-    if (item.images && Array.isArray(item.images) && item.images.length > 0) {
-      item.images.forEach(img => media.push({ type: 'image', src: img }));
-    } else if (item.image) {
-      media.push({ type: 'image', src: item.image });
-    }
-    
-    if (item.videos && Array.isArray(item.videos) && item.videos.length > 0) {
-      item.videos.forEach(vid => media.push({ type: 'video', src: vid }));
-    }
-    
-    return media;
-  };
-
   const getItemImages = (item) => {
-    if (item.images && Array.isArray(item.images) && item.images.length > 0) {
-      return item.images;
-    } else if (item.image) {
-      return [item.image];
-    }
-    return [];
-  };
+  if (!item) return [];
 
-  const getMainImage = (item) => {
-    const images = getItemImages(item);
-    return images.length > 0 ? images[0] : null;
-  };
+  if (Array.isArray(item.images) && item.images.length > 0) {
+    return item.images.filter(Boolean);
+  }
+
+  // Backward compatibility
+  if (item.image) {
+    return [item.image];
+  }
+
+  return [];
+};
+
+// Always return a clean videos array
+const getItemVideos = (item) => {
+  if (!item) return [];
+
+  if (Array.isArray(item.videos) && item.videos.length > 0) {
+    return item.videos.filter(Boolean);
+  }
+
+  return [];
+};
+
+// First image is always treated as main image
+const getMainImage = (item) => {
+  const images = getItemImages(item);
+  return images.length > 0 ? images[0] : null;
+};
+
+// Combined media list for gallery & modal
+const getItemMedia = (item) => {
+  if (!item) return [];
+
+  const media = [];
+
+  getItemImages(item).forEach((img) => {
+    media.push({ type: 'image', src: img });
+  });
+
+  getItemVideos(item).forEach((vid) => {
+    media.push({ type: 'video', src: vid });
+  });
+
+  return media;
+};
 
   // Fixed pagination handlers
   const goToPage = (page) => {

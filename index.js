@@ -1,61 +1,82 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const path = require('path');
-require('dotenv').config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const path = require("path");
+require("dotenv").config();
 
 const app = express();
 
-// ✅ Allowed origins (frontend URLs)
+// ===============================
+// CORS CONFIGURATION
+// ===============================
 const allowedOrigins = [
   "https://jewellery-catelogue.onrender.com", // production frontend
-  "http://localhost:3000"                     // local frontend for dev
+  "http://localhost:3000"                     // local dev frontend
 ];
 
-// ✅ CORS setup
-app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (like Postman or curl)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow server-to-server, Postman, curl
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    credentials: true
+  })
+);
 
-// ✅ Middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// ===============================
+// BODY PARSERS
+// ===============================
+// NOTE: Files are handled by Multer (not here)
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// ✅ API Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/jewellery', require('./routes/jewellery'));
+// ===============================
+// API ROUTES
+// ===============================
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/jewellery", require("./routes/jewellery"));
 
-// ✅ Serve React frontend in production
+// ===============================
+// PRODUCTION FRONTEND SERVING
+// ===============================
 if (process.env.NODE_ENV === "production") {
   const clientBuildPath = path.join(__dirname, "client", "build");
   app.use(express.static(clientBuildPath));
 
-  // FIX: Express route for SPA
-  app.get("/*", (req, res) => {
+  // SPA fallback (React Router support)
+  app.get("*", (req, res) => {
     res.sendFile(path.join(clientBuildPath, "index.html"));
   });
 }
 
-// ✅ MongoDB Connection and Server Startup
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Server running on port ${PORT}`);
-  });
-})
-.catch(err => {
-  console.error('❌ MongoDB connection error:', err);
+// ===============================
+// GLOBAL ERROR HANDLER (OPTIONAL BUT PRO)
+// ===============================
+app.use((err, req, res, next) => {
+  console.error("🔥 Global Error:", err.message);
+  res.status(500).json({ error: err.message });
 });
+
+// ===============================
+// DATABASE & SERVER START
+// ===============================
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  })
+  .then(() => {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`✅ Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err);
+  });
