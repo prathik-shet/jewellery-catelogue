@@ -92,14 +92,14 @@ function UserCatalogue() {
 
   const getImageHeightClasses = () => {
     if (isMobile) {
-      return gridCols === 1 ? 'h-64' : 'h-40';
+      return gridCols === 1 ? 'h-72' : 'h-48';
     } else {
       switch (gridCols) {
-        case 2: return 'h-64';
-        case 3: return 'h-56';
-        case 4: return 'h-48';
-        case 6: return 'h-40';
-        default: return 'h-48';
+        case 2: return 'h-72';
+        case 3: return 'h-64';
+        case 4: return 'h-56';
+        case 6: return 'h-44';
+        default: return 'h-56';
       }
     }
   };
@@ -130,6 +130,8 @@ function UserCatalogue() {
 
       if (sortByDate) {
         params.append('sortByDate', sortByDate);
+        params.append('sortField', 'createdAt');
+        params.append('sortOrder', sortByDate === 'newest' ? 'desc' : 'asc');
       } else if (sortField === 'weight') {
         params.append('sortField', 'weight');
         params.append('sortOrder', sortOrder);
@@ -483,29 +485,68 @@ function UserCatalogue() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
         .brand-font { font-family: 'Playfair Display', serif; }
+
+        .smooth-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .hover-lift:hover { transform: translateY(-4px); }
+        .hover-scale:hover { transform: scale(1.02); }
+
+        .glass-effect {
+          backdrop-filter: blur(12px);
+          background: rgba(255, 255, 255, 0.95);
+        }
+
+        .gradient-gold {
+          background: linear-gradient(135deg, #efb20c 0%, #fae382 100%);
+        }
+
+        .gradient-maroon {
+          background: linear-gradient(135deg, #7f1a2b 0%, #a52438 100%);
+        }
+
+        .shadow-soft {
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .shadow-hover {
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+          opacity: 1;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+          animation: fadeIn 0.4s ease-out;
+        }
       `}</style>
 
-      <div style={{ backgroundColor: '#fae382' }} className="fixed top-0 left-0 w-full z-[90] shadow-xl p-4 border-b border-amber-300">
-        <div className="flex items-center gap-4 justify-center sm:justify-start">
+      <div className="gradient-gold fixed top-0 left-0 w-full z-[90] shadow-xl p-4 border-b-2 border-amber-400">
+        <div className="flex items-center gap-4 justify-center sm:justify-start max-w-7xl mx-auto">
           <div className="relative">
             <img
               src="logo.png"
               alt="Logo"
               loading="lazy"
-              className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-3 border-white shadow-xl"
+              className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-4 border-white shadow-2xl smooth-transition hover-scale"
             />
           </div>
           <div className="text-center sm:text-left">
-            <h1 style={{ color: '#2e2e2e' }} className="text-xl sm:text-2xl lg:text-3xl font-black tracking-wide brand-font">
+            <h1 style={{ color: '#2e2e2e' }} className="text-xl sm:text-2xl lg:text-3xl font-black tracking-wide brand-font drop-shadow-sm">
               VIMALESHWARA JEWELLERS
             </h1>
-            <p style={{ color: '#7f1a2b' }} className="text-xs sm:text-sm font-semibold">Premium Jewellery Collection</p>
+            <p style={{ color: '#7f1a2b' }} className="text-xs sm:text-sm font-semibold tracking-wider">Premium Jewellery Collection</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white/95 fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-4 border-b" style={{ borderColor: '#efb20c' }}>
-        <div className="w-full max-w-5xl mx-auto">
+      <div className="glass-effect fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-4 border-b-2" style={{ borderColor: '#efb20c' }}>
+        <div className="w-full max-w-7xl mx-auto">
           <div className="relative mb-3">
             <div className="relative">
               <input
@@ -513,11 +554,10 @@ function UserCatalogue() {
                 placeholder="Search jewellery by name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-16 py-3 bg-white border-2 border-gray-200 rounded-2xl text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 transition-all duration-300 text-sm sm:text-base font-medium"
-                style={{ focusBorderColor: '#efb20c' }}
+                className="w-full pl-12 pr-16 py-3.5 bg-white border-2 border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-amber-200 focus:border-amber-400 smooth-transition text-sm sm:text-base font-medium shadow-sm"
               />
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
@@ -525,7 +565,7 @@ function UserCatalogue() {
               <button
                 onClick={cycleGrid}
                 style={{ backgroundColor: '#efb20c' }}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white p-2 rounded-xl hover:opacity-90 transition-all duration-300 flex items-center gap-1"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white p-2.5 rounded-xl hover:opacity-90 smooth-transition hover-scale flex items-center gap-1.5 shadow-md"
                 title={`Grid: ${gridCols} column${gridCols > 1 ? 's' : ''}`}
               >
                 {getGridIcon()}
@@ -535,7 +575,7 @@ function UserCatalogue() {
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-16 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute right-16 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-700 smooth-transition"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -552,8 +592,7 @@ function UserCatalogue() {
                   setShowFilterPanel(!showFilterPanel);
                   setShowSortPanel(false);
                 }}
-                style={{ backgroundColor: '#7f1a2b' }}
-                className="text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                className="gradient-maroon text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl font-bold shadow-lg hover:shadow-xl smooth-transition hover-lift flex items-center gap-2"
               >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -562,17 +601,17 @@ function UserCatalogue() {
               </button>
 
               {showFilterPanel && (
-                <div className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]" style={{ borderColor: '#7f1a2b' }}>
-                  <div className="space-y-4">
+                <div className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90] fade-in" style={{ borderColor: '#7f1a2b' }}>
+                  <div className="space-y-5">
 
                     <div>
-                      <label className="block font-bold mb-2" style={{ color: '#7f1a2b' }}>Categories</label>
+                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Categories</label>
                       <div className="flex flex-wrap gap-2">
                         {categories.map((cat) => (
                           <button
                             key={cat}
                             onClick={() => toggleCategory(cat)}
-                            className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
+                            className={`px-3.5 py-2 rounded-lg text-sm font-semibold smooth-transition hover-scale ${
                               selectedCategory.includes(cat)
                                 ? 'text-white shadow-md'
                                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -586,11 +625,11 @@ function UserCatalogue() {
                     </div>
 
                     <div>
-                      <label className="block font-bold mb-2" style={{ color: '#7f1a2b' }}>Sub-Category</label>
+                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Sub-Category</label>
                       <select
                         value={selectedSubCategory}
                         onChange={(e) => setSelectedSubCategory(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg"
+                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
                       >
                         <option value="">All Sub-Categories</option>
                         {getFilteredSubcatagories().map((subCat) => (
@@ -600,11 +639,11 @@ function UserCatalogue() {
                     </div>
 
                     <div>
-                      <label className="block font-bold mb-2" style={{ color: '#7f1a2b' }}>Type</label>
+                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Type</label>
                       <select
                         value={selectedType}
                         onChange={(e) => setSelectedType(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg"
+                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
                       >
                         {types.map((typeOpt) => (
                           <option key={typeOpt} value={typeOpt === 'All' ? '' : typeOpt}>
@@ -615,11 +654,11 @@ function UserCatalogue() {
                     </div>
 
                     <div>
-                      <label className="block font-bold mb-2" style={{ color: '#7f1a2b' }}>Gender</label>
+                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Gender</label>
                       <select
                         value={selectedGender}
                         onChange={(e) => setSelectedGender(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg"
+                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
                       >
                         {genders.map((gender) => (
                           <option key={gender} value={gender === 'All' ? '' : gender}>
@@ -630,11 +669,11 @@ function UserCatalogue() {
                     </div>
 
                     <div>
-                      <label className="block font-bold mb-2" style={{ color: '#7f1a2b' }}>Metal</label>
+                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Metal</label>
                       <select
                         value={metalFilter}
                         onChange={(e) => setMetalFilter(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg"
+                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
                       >
                         {metals.map((metal) => (
                           <option key={metal} value={metal === 'All' ? '' : metal}>
@@ -645,11 +684,11 @@ function UserCatalogue() {
                     </div>
 
                     <div>
-                      <label className="block font-bold mb-2" style={{ color: '#7f1a2b' }}>Stone</label>
+                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Stone</label>
                       <select
                         value={stoneFilter}
                         onChange={(e) => setStoneFilter(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg"
+                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
                       >
                         <option value="">All Stones</option>
                         <option value="with">With Stone</option>
@@ -658,11 +697,11 @@ function UserCatalogue() {
                     </div>
 
                     <div>
-                      <label className="block font-bold mb-2" style={{ color: '#7f1a2b' }}>Design Ownership</label>
+                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Design Ownership</label>
                       <select
                         value={designFilter}
                         onChange={(e) => setDesignFilter(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg"
+                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
                       >
                         <option value="">All Designs</option>
                         <option value="our">In House</option>
@@ -671,46 +710,58 @@ function UserCatalogue() {
                     </div>
 
                     <div>
-                      <label className="block font-bold mb-2" style={{ color: '#7f1a2b' }}>
-                        Weight Range: {weightMin}g - {weightMax}g
+                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>
+                        Weight Range (grams)
                       </label>
-                      <div className="space-y-2">
-                        <input
-                          type="range"
-                          min="0"
-                          max="200"
-                          value={weightMin}
-                          onChange={(e) => setWeightMin(Math.min(Number(e.target.value), weightMax - 1))}
-                          className="w-full"
-                          style={{ accentColor: '#efb20c' }}
-                        />
-                        <input
-                          type="range"
-                          min="0"
-                          max="200"
-                          value={weightMax}
-                          onChange={(e) => setWeightMax(Math.max(Number(e.target.value), weightMin + 1))}
-                          className="w-full"
-                          style={{ accentColor: '#efb20c' }}
-                        />
+                      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-xl border-2 border-amber-200">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Min Weight</label>
+                            <input
+                              type="number"
+                              min="0"
+                              max={weightMax - 1}
+                              value={weightMin}
+                              onChange={(e) => setWeightMin(Math.max(0, Math.min(Number(e.target.value), weightMax - 1)))}
+                              className="w-full p-2.5 border-2 border-gray-300 rounded-lg text-center font-bold smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                              style={{ color: '#7f1a2b' }}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Max Weight</label>
+                            <input
+                              type="number"
+                              min={weightMin + 1}
+                              max="200"
+                              value={weightMax}
+                              onChange={(e) => setWeightMax(Math.max(weightMin + 1, Math.min(200, Number(e.target.value))))}
+                              className="w-full p-2.5 border-2 border-gray-300 rounded-lg text-center font-bold smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                              style={{ color: '#7f1a2b' }}
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-3 text-center">
+                          <span className="inline-block px-4 py-1.5 bg-white rounded-full text-sm font-bold shadow-sm" style={{ color: '#efb20c' }}>
+                            {weightMin}g - {weightMax}g
+                          </span>
+                        </div>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block font-bold mb-2" style={{ color: '#7f1a2b' }}>Search by ID</label>
+                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Search by ID</label>
                       <input
                         type="text"
                         placeholder="Enter exact ID"
                         value={searchId}
                         onChange={(e) => setSearchId(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg"
+                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
                       />
                     </div>
 
                     <button
                       onClick={clearAllFilters}
-                      style={{ backgroundColor: '#7f1a2b' }}
-                      className="w-full px-4 py-2 text-white font-bold rounded-lg hover:opacity-90 transition-all"
+                      className="gradient-maroon w-full px-4 py-3 text-white font-bold rounded-xl hover:shadow-lg smooth-transition hover-lift"
                     >
                       Clear All Filters
                     </button>
@@ -725,8 +776,7 @@ function UserCatalogue() {
                   setShowSortPanel(!showSortPanel);
                   setShowFilterPanel(false);
                 }}
-                style={{ backgroundColor: '#efb20c' }}
-                className="text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold shadow-lg hover:opacity-90 transform hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                className="gradient-gold text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl font-bold shadow-lg hover:shadow-xl smooth-transition hover-lift flex items-center gap-2"
               >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
@@ -735,24 +785,24 @@ function UserCatalogue() {
               </button>
 
               {showSortPanel && (
-                <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 z-[90]" style={{ borderColor: '#efb20c' }}>
-                  <div className="space-y-4">
-                    <div className="p-4 rounded-xl border" style={{ backgroundColor: '#fff8e6', borderColor: '#efb20c' }}>
-                      <p className="font-semibold" style={{ color: '#7f1a2b' }}>
+                <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 z-[90] fade-in" style={{ borderColor: '#efb20c' }}>
+                  <div className="space-y-5">
+                    <div className="p-4 rounded-xl border-2 shadow-sm" style={{ backgroundColor: '#fff8e6', borderColor: '#efb20c' }}>
+                      <p className="font-bold text-center text-base" style={{ color: '#7f1a2b' }}>
                         {getActiveSortDescription()}
                       </p>
                     </div>
 
                     <div>
-                      <label className="block font-bold mb-2" style={{ color: '#7f1a2b' }}>Sort by Date</label>
-                      <div className="space-y-2">
+                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Sort by Date</label>
+                      <div className="space-y-3">
                         <button
                           onClick={() => {
                             setSortByDate('newest');
                             setSortField('');
                           }}
-                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all ${
-                            sortByDate === 'newest' ? 'text-white' : 'bg-white text-gray-700 border-gray-300'
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortByDate === 'newest' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
                           }`}
                           style={sortByDate === 'newest' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
                         >
@@ -763,8 +813,8 @@ function UserCatalogue() {
                             setSortByDate('oldest');
                             setSortField('');
                           }}
-                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all ${
-                            sortByDate === 'oldest' ? 'text-white' : 'bg-white text-gray-700 border-gray-300'
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortByDate === 'oldest' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
                           }`}
                           style={sortByDate === 'oldest' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
                         >
@@ -774,16 +824,16 @@ function UserCatalogue() {
                     </div>
 
                     <div>
-                      <label className="block font-bold mb-2" style={{ color: '#7f1a2b' }}>Sort by Weight</label>
-                      <div className="space-y-2">
+                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Sort by Weight</label>
+                      <div className="space-y-3">
                         <button
                           onClick={() => {
                             setSortField('weight');
                             setSortOrder('desc');
                             setSortByDate('');
                           }}
-                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all ${
-                            sortField === 'weight' && sortOrder === 'desc' ? 'text-white' : 'bg-white text-gray-700 border-gray-300'
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortField === 'weight' && sortOrder === 'desc' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
                           }`}
                           style={sortField === 'weight' && sortOrder === 'desc' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
                         >
@@ -795,8 +845,8 @@ function UserCatalogue() {
                             setSortOrder('asc');
                             setSortByDate('');
                           }}
-                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all ${
-                            sortField === 'weight' && sortOrder === 'asc' ? 'text-white' : 'bg-white text-gray-700 border-gray-300'
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortField === 'weight' && sortOrder === 'asc' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
                           }`}
                           style={sortField === 'weight' && sortOrder === 'asc' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
                         >
@@ -807,8 +857,7 @@ function UserCatalogue() {
 
                     <button
                       onClick={clearAllSorts}
-                      style={{ backgroundColor: '#7f1a2b' }}
-                      className="w-full px-4 py-2 text-white font-bold rounded-lg hover:opacity-90 transition-all"
+                      className="gradient-maroon w-full px-4 py-3 text-white font-bold rounded-xl hover:shadow-lg smooth-transition hover-lift"
                     >
                       Reset Sort
                     </button>
@@ -822,7 +871,7 @@ function UserCatalogue() {
 
       {(showFilterPanel || showSortPanel) && (
         <div
-          className="fixed inset-0 z-[70]"
+          className="fixed inset-0 z-[70] bg-black/20 backdrop-blur-sm"
           onClick={() => {
             setShowFilterPanel(false);
             setShowSortPanel(false);
@@ -833,7 +882,7 @@ function UserCatalogue() {
       <div className="pt-60 sm:pt-64">
         {loading && (
           <div className="flex items-center justify-center py-20">
-            <div className="text-center">
+            <div className="text-center fade-in">
               <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-transparent mx-auto mb-4" style={{ borderColor: '#efb20c', borderTopColor: 'transparent' }}></div>
               <p className="text-lg font-semibold" style={{ color: '#7f1a2b' }}>Loading jewellery...</p>
             </div>
@@ -841,20 +890,20 @@ function UserCatalogue() {
         )}
 
         {isDataFetched && totalItems > 0 && (
-          <div className="px-4 sm:px-6 mb-6">
-            <div className="bg-white/90 rounded-2xl p-4 border-2 shadow-lg" style={{ borderColor: '#efb20c' }}>
+          <div className="px-4 sm:px-6 mb-6 fade-in">
+            <div className="bg-white/95 rounded-2xl p-5 border-2 shadow-lg max-w-7xl mx-auto" style={{ borderColor: '#efb20c' }}>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                   <p className="text-lg font-bold" style={{ color: '#7f1a2b' }}>
                     Showing {jewellery.length} of {totalItems} items
                   </p>
                   {totalPages > 1 && (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 mt-1">
                       Page {currentPage} of {totalPages}
                     </p>
                   )}
                 </div>
-                <div className="text-sm text-gray-600 bg-white px-3 py-2 rounded-lg border" style={{ borderColor: '#efb20c' }}>
+                <div className="text-sm font-semibold text-gray-700 bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-2.5 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
                   {getActiveSortDescription()}
                 </div>
               </div>
@@ -862,15 +911,14 @@ function UserCatalogue() {
           </div>
         )}
 
-        <div className={`gap-3 sm:gap-4 lg:gap-6 px-3 sm:px-4 lg:px-6 pb-8 ${getGridClasses()}`}>
+        <div className={`gap-4 sm:gap-5 lg:gap-6 px-4 sm:px-6 pb-8 max-w-7xl mx-auto ${getGridClasses()}`}>
           {!loading && jewellery.length === 0 ? (
-            <div className="col-span-full text-center py-20">
+            <div className="col-span-full text-center py-20 fade-in">
               <div className="text-6xl sm:text-8xl mb-6">💎</div>
               <p className="text-xl sm:text-2xl font-bold text-gray-600 mb-2">No jewellery items found.</p>
               <button
                 onClick={clearAllFilters}
-                style={{ backgroundColor: '#efb20c' }}
-                className="mt-4 px-6 py-3 text-white font-bold rounded-lg hover:opacity-90"
+                className="gradient-gold mt-6 px-8 py-3.5 text-white font-bold rounded-xl hover:shadow-lg smooth-transition hover-lift"
               >
                 Clear All Filters
               </button>
@@ -884,19 +932,19 @@ function UserCatalogue() {
                 <div
                   key={item._id}
                   onClick={() => handleItemClick(item, index)}
-                  className="bg-white border-2 rounded-xl p-2 sm:p-3 lg:p-4 shadow-lg hover:shadow-2xl transform hover:scale-105 transition-all duration-300 cursor-pointer group"
+                  className="bg-white border-2 rounded-2xl p-3 sm:p-4 shadow-soft hover:shadow-hover smooth-transition hover-lift cursor-pointer group overflow-hidden"
                   style={{ borderColor: '#efb20c' }}
                 >
                   {mainImage && (
-                    <div className="relative mb-2 sm:mb-3 overflow-hidden rounded-lg">
+                    <div className="relative mb-3 overflow-hidden rounded-xl">
                       <img
                         src={mainImage}
                         alt={item.name}
                         loading="lazy"
-                        className={`w-full object-cover border-2 group-hover:scale-110 transition-transform duration-500 ${getImageHeightClasses()}`}
+                        className={`w-full object-cover border-2 group-hover:scale-110 smooth-transition ${getImageHeightClasses()}`}
                         style={{ borderColor: '#efb20c' }}
                       />
-                      <div className={`absolute bottom-1 sm:bottom-2 left-1 sm:left-2 px-2 py-1 rounded-full text-xs font-bold shadow-lg ${
+                      <div className={`absolute bottom-2 left-2 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg smooth-transition ${
                         item.isOurDesign === false ? 'text-white' : 'text-white'
                       }`}
                       style={{ backgroundColor: item.isOurDesign === false ? '#7f1a2b' : '#efb20c' }}
@@ -906,12 +954,12 @@ function UserCatalogue() {
                     </div>
                   )}
 
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     <h2 className={`font-bold truncate ${textSizes.title}`} style={{ color: '#2e2e2e' }}>
                       {item.name}
                     </h2>
                     <div className={`flex items-center justify-between text-gray-600 ${textSizes.details}`}>
-                      <span className="font-semibold" style={{ color: '#efb20c' }}>{item.weight}g</span>
+                      <span className="font-bold" style={{ color: '#efb20c' }}>{item.weight}g</span>
                       <span className="font-semibold truncate ml-1">{item.category?.main}</span>
                     </div>
                   </div>
@@ -922,7 +970,7 @@ function UserCatalogue() {
         </div>
 
         {isDataFetched && totalPages > 1 && jewellery.length > 0 && (
-          <div className="px-4 sm:px-6 pb-8 mt-8">
+          <div className="px-4 sm:px-6 pb-8 mt-8 max-w-7xl mx-auto">
             <div className="bg-white/95 rounded-2xl p-6 border-2 shadow-2xl" style={{ borderColor: '#efb20c' }}>
               <div className="flex flex-col items-center gap-6">
                 <div className="text-center">
@@ -938,21 +986,20 @@ function UserCatalogue() {
                   <button
                     onClick={() => goToPage(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className={`px-4 py-2 rounded-xl font-bold transition-all ${
-                      currentPage === 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'text-white'
+                    className={`px-5 py-2.5 rounded-xl font-bold smooth-transition ${
+                      currentPage === 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'gradient-maroon text-white hover:shadow-lg hover-scale'
                     }`}
-                    style={currentPage !== 1 ? { backgroundColor: '#7f1a2b' } : {}}
                   >
                     Previous
                   </button>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     {getPaginationRange().map((page) => (
                       <button
                         key={page}
                         onClick={() => goToPage(page)}
-                        className={`w-10 h-10 rounded-lg font-bold transition-all ${
-                          page === currentPage ? 'text-white shadow-lg' : 'bg-white text-gray-700 border'
+                        className={`w-11 h-11 rounded-xl font-bold smooth-transition hover-scale ${
+                          page === currentPage ? 'text-white shadow-md' : 'bg-white text-gray-700 border-2 hover:border-amber-400'
                         }`}
                         style={page === currentPage ? { backgroundColor: '#efb20c' } : { borderColor: '#efb20c' }}
                       >
@@ -964,10 +1011,9 @@ function UserCatalogue() {
                   <button
                     onClick={() => goToPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className={`px-4 py-2 rounded-xl font-bold transition-all ${
-                      currentPage === totalPages ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'text-white'
+                    className={`px-5 py-2.5 rounded-xl font-bold smooth-transition ${
+                      currentPage === totalPages ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'gradient-maroon text-white hover:shadow-lg hover-scale'
                     }`}
-                    style={currentPage !== totalPages ? { backgroundColor: '#7f1a2b' } : {}}
                   >
                     Next
                   </button>
@@ -980,20 +1026,20 @@ function UserCatalogue() {
 
       {selectedItem && (
         <div
-          className="fixed inset-0 bg-black/70 z-[95] flex items-center justify-center p-2"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2"
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
-            <div className="p-3 flex items-center justify-between" style={{ backgroundColor: '#fae382' }}>
+          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col fade-in">
+            <div className="gradient-gold p-4 flex items-center justify-between border-b-2 border-amber-400">
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => navigateToItem('prev')}
-                  className="text-gray-700 hover:text-gray-900 p-1 rounded-lg"
+                  className="text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-white/30 smooth-transition"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
 
@@ -1003,10 +1049,10 @@ function UserCatalogue() {
 
                 <button
                   onClick={() => navigateToItem('next')}
-                  className="text-gray-700 hover:text-gray-900 p-1 rounded-lg"
+                  className="text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-white/30 smooth-transition"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </div>
@@ -1014,7 +1060,7 @@ function UserCatalogue() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={shareOnWhatsApp}
-                  className="text-white px-3 py-2 rounded-lg font-semibold hover:opacity-90 transition-all flex items-center gap-2"
+                  className="text-white px-4 py-2 rounded-xl font-semibold hover:opacity-90 smooth-transition flex items-center gap-2 shadow-md hover-scale"
                   style={{ backgroundColor: '#25D366' }}
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -1027,17 +1073,17 @@ function UserCatalogue() {
                     setSelectedItem(null);
                     setSelectedItemIndex(-1);
                   }}
-                  className="text-gray-700 hover:text-gray-900"
+                  className="text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-white/30 smooth-transition"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             </div>
 
             <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-              <div className="lg:w-3/5 p-6 flex flex-col">
+              <div className="lg:w-3/5 p-6 flex flex-col bg-gray-50">
                 {(() => {
                   const itemMedia = getItemMedia(selectedItem);
                   const mainImage = getMainImage(selectedItem);
@@ -1052,7 +1098,7 @@ function UserCatalogue() {
                           alt={selectedItem.name}
                           loading="lazy"
                           onClick={() => openMediaModal(itemMedia, 0)}
-                          className="max-w-full max-h-96 object-contain rounded-xl cursor-pointer border-2 hover:opacity-90 transition-all shadow-lg"
+                          className="max-w-full max-h-96 object-contain rounded-xl cursor-pointer border-2 hover:opacity-90 smooth-transition shadow-lg hover-scale"
                           style={{ borderColor: '#efb20c' }}
                         />
                       </div>
@@ -1063,7 +1109,7 @@ function UserCatalogue() {
                             <div
                               key={index + 1}
                               onClick={() => openMediaModal(itemMedia, index + 1)}
-                              className="w-16 h-16 rounded-lg cursor-pointer border-2 hover:opacity-80 transition-all overflow-hidden"
+                              className="w-16 h-16 rounded-lg cursor-pointer border-2 hover:opacity-80 smooth-transition hover-scale overflow-hidden shadow-md"
                               style={{ borderColor: '#efb20c' }}
                             >
                               {media.type === 'image' ? (
@@ -1074,7 +1120,7 @@ function UserCatalogue() {
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: '#7f1a2b' }}>
+                                <div className="w-full h-full flex items-center justify-center gradient-maroon">
                                   <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1092,46 +1138,46 @@ function UserCatalogue() {
 
               <div className="lg:w-2/5 p-6 overflow-y-auto" style={{ backgroundColor: '#fff8e6' }}>
                 <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="col-span-2 bg-white p-3 rounded-lg border-2" style={{ borderColor: '#efb20c' }}>
-                    <span className="font-semibold text-gray-700">ID:</span>
-                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.id}</div>
+                  <div className="col-span-2 bg-white p-4 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
+                    <span className="font-semibold text-gray-700 text-xs">ID</span>
+                    <div className="font-black text-lg mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.id}</div>
                   </div>
 
-                  <div className="col-span-2 bg-white p-3 rounded-lg border">
+                  <div className="col-span-2 bg-white p-4 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
                     <span className="font-semibold text-gray-700 text-xs">Category</span>
-                    <div className="font-bold" style={{ color: '#7f1a2b' }}>
+                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>
                       {selectedItem.category?.main}{selectedItem.category?.sub && ` - ${selectedItem.category.sub}`}
                     </div>
                   </div>
 
-                  <div className="bg-white p-3 rounded-lg border">
+                  <div className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
                     <span className="font-semibold text-gray-700 text-xs">Type</span>
-                    <div className="font-bold" style={{ color: '#7f1a2b' }}>{selectedItem.type}</div>
+                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.type}</div>
                   </div>
 
-                  <div className="bg-white p-3 rounded-lg border">
+                  <div className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
                     <span className="font-semibold text-gray-700 text-xs">Gender</span>
-                    <div className="font-bold" style={{ color: '#7f1a2b' }}>{selectedItem.gender}</div>
+                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.gender}</div>
                   </div>
 
-                  <div className="bg-white p-3 rounded-lg border">
+                  <div className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
                     <span className="font-semibold text-gray-700 text-xs">Purity</span>
-                    <div className="font-bold" style={{ color: '#7f1a2b' }}>{selectedItem.carat || 'N/A'}</div>
+                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.carat || 'N/A'}</div>
                   </div>
 
-                  <div className="bg-white p-3 rounded-lg border">
+                  <div className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
                     <span className="font-semibold text-gray-700 text-xs">Weight</span>
-                    <div className="font-bold" style={{ color: '#7f1a2b' }}>{selectedItem.weight}g</div>
+                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.weight}g</div>
                   </div>
 
-                  <div className="bg-white p-3 rounded-lg border">
+                  <div className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
                     <span className="font-semibold text-gray-700 text-xs">Stone Weight</span>
-                    <div className="font-bold" style={{ color: '#7f1a2b' }}>{selectedItem.stoneWeight || 'N/A'}g</div>
+                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.stoneWeight || 'N/A'}g</div>
                   </div>
 
-                  <div className="bg-white p-3 rounded-lg border">
+                  <div className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
                     <span className="font-semibold text-gray-700 text-xs">Design</span>
-                    <div className="font-bold" style={{ color: '#7f1a2b' }}>
+                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>
                       {selectedItem.isOurDesign === false ? 'Others' : 'In House'}
                     </div>
                   </div>
@@ -1147,7 +1193,7 @@ function UserCatalogue() {
           <div className="relative w-full h-full flex items-center justify-center p-4">
             <button
               onClick={closeMediaModal}
-              className="absolute top-4 right-4 z-20 text-white bg-black/50 rounded-full p-3 hover:bg-black/70"
+              className="absolute top-4 right-4 z-20 text-white bg-black/50 rounded-full p-3 hover:bg-black/70 smooth-transition hover-scale"
             >
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1158,18 +1204,18 @@ function UserCatalogue() {
               <>
                 <button
                   onClick={() => navigateMedia('prev')}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/50 rounded-full p-3 hover:bg-black/70"
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/50 rounded-full p-3 hover:bg-black/70 smooth-transition hover-scale"
                 >
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
                 <button
                   onClick={() => navigateMedia('next')}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/50 rounded-full p-3 hover:bg-black/70"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/50 rounded-full p-3 hover:bg-black/70 smooth-transition hover-scale"
                 >
                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
               </>
@@ -1194,7 +1240,7 @@ function UserCatalogue() {
             </div>
 
             {modalMedia.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full">
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-5 py-2.5 rounded-full font-bold shadow-lg">
                 {currentMediaIndex + 1} / {modalMedia.length}
               </div>
             )}
