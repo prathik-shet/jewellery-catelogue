@@ -223,15 +223,34 @@ router.get("/", async (req, res) => {
         ],
       });
 
-    if (weightRanges) {
-      const ranges = weightRanges.split(",").map(r => {
-        const [min, max] = r.split("-").map(Number);
-        return max
-          ? { weight: { $gte: min, $lte: max } }
-          : { weight: { $gte: min } };
-      });
-      filters.push({ $or: ranges });
+   // weight range checkboxes (optional support)
+if (req.query.weightRanges) {
+  const ranges = req.query.weightRanges.split(",").map(r => {
+    if (r.includes("+")) {
+      const min = Number(r.replace("+", ""));
+      return { weight: { $gte: min } };
     }
+
+    const [min, max] = r.split("-").map(Number);
+    return { weight: { $gte: min, $lte: max } };
+  });
+
+  filters.push({ $or: ranges });
+}
+
+// ✅ NEW: Min–Max weight filter (PRIMARY)
+const weightMin = Number(req.query.weightMin);
+const weightMax = Number(req.query.weightMax);
+
+if (!isNaN(weightMin) || !isNaN(weightMax)) {
+  filters.push({
+    weight: {
+      ...( !isNaN(weightMin) && { $gte: weightMin } ),
+      ...( !isNaN(weightMax) && { $lte: weightMax } )
+    }
+  });
+}
+
 
     const query = filters.length ? { $and: filters } : {};
     const sort = sortField
