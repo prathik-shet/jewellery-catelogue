@@ -564,7 +564,7 @@ const enquireOnWhatsApp = () => {
         <div className="flex items-center gap-4 justify-center sm:justify-start max-w-7xl mx-auto">
           <div className="relative">
             <img
-              src="logo.png"
+              src="https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/desings/logo.png"
               alt="Logo"
               loading="lazy"
               className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-4 border-white shadow-2xl smooth-transition hover-scale"
