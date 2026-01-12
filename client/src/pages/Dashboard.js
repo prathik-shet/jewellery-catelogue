@@ -116,19 +116,19 @@ export default function Dashboard() {
             designed to last generations.
           </p>
 
-          <div className="mt-8">
-            <button
-              onClick={() => navigate("/user")}
-              className="px-10 py-4 rounded-full text-lg font-bold shadow-xl hover:scale-105 transition"
-              style={{
-                background:
-                  "linear-gradient(135deg,#ffcc00,#e6b800)",
-                color: "#2e2e2e",
-              }}
-            >
-              💎 View Catalogue
-            </button>
-          </div>
+          <div className="mt-10">
+  <button
+    onClick={() => navigate("/user")}
+    className="px-14 py-6 rounded-full text-xl font-bold shadow-2xl hover:scale-105 transition-transform duration-300"
+    style={{
+      background: "#fae382",
+      color: "#2e2e2e",
+    }}
+  >
+    View Catalogue
+  </button>
+</div>
+
         </section>
 
         {/* ================= SLIDER ================= */}

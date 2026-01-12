@@ -429,13 +429,14 @@ function UserCatalogue() {
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
   window.open(whatsappUrl, '_blank');
 };
+
 const enquireOnWhatsApp = () => {
   if (!selectedItem) return;
 
   const mainImage = getMainImage(selectedItem);
   const imageUrl = mainImage || '';
 
-  const businessNumber = '918088305913'; // country code added
+  const businessNumber = '918088305913';
   const websiteUrl = 'https://jewellery-catelogue.onrender.com/';
 
   const message =
@@ -456,8 +457,6 @@ const enquireOnWhatsApp = () => {
   const whatsappUrl = `https://wa.me/${businessNumber}?text=${encodeURIComponent(message)}`;
   window.open(whatsappUrl, '_blank');
 };
-
-
 
   const getGridIcon = () => {
     if (isMobile) {
@@ -560,24 +559,35 @@ const enquireOnWhatsApp = () => {
         }
       `}</style>
 
-      <div className="gradient-gold fixed top-0 left-0 w-full z-[90] shadow-xl p-4 border-b-2 border-amber-400">
-        <div className="flex items-center gap-4 justify-center sm:justify-start max-w-7xl mx-auto">
-          <div className="relative">
-            <img
-              src="https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/desings/logo.png"
-              alt="Logo"
-              loading="lazy"
-              className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-4 border-white shadow-2xl smooth-transition hover-scale"
-            />
-          </div>
-          <div className="text-center sm:text-left">
-            <h1 style={{ color: '#2e2e2e' }} className="text-xl sm:text-2xl lg:text-3xl font-black tracking-wide brand-font drop-shadow-sm">
-              VIMALESHWARA JEWELLERS
-            </h1>
-            <p style={{ color: '#7f1a2b' }} className="text-xs sm:text-sm font-semibold tracking-wider">Premium Jewellery Collection</p>
-          </div>
-        </div>
-      </div>
+      <div className="fixed top-0 left-0 w-full z-[90] p-4">
+  <div className="flex items-center gap-4 justify-center sm:justify-start max-w-7xl mx-auto">
+
+    <div className="relative">
+      <img
+        src="https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/desings/logo.png"
+        alt="Logo"
+        loading="lazy"
+        className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full smooth-transition hover-scale"
+      />
+    </div>
+
+    <div className="text-center sm:text-left">
+      <h1
+        style={{ color: "#2e2e2e" }}
+        className="text-xl sm:text-2xl lg:text-3xl font-black tracking-wide brand-font"
+      >
+        VIMALESHWARA JEWELLERS
+      </h1>
+      <p
+        style={{ color: "#7f1a2b" }}
+        className="text-xs sm:text-sm font-semibold tracking-wider"
+      >
+        Premium Jewellery Collection
+      </p>
+    </div>
+
+  </div>
+</div>
 
       <div className="glass-effect fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-4 border-b-2" style={{ borderColor: '#efb20c' }}>
         <div className="w-full max-w-7xl mx-auto">
@@ -673,7 +683,7 @@ const enquireOnWhatsApp = () => {
                     </div>
 
                     <div>
-                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}> Occation</label>
+                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Occation</label>
                       <select
                         value={selectedType}
                         onChange={(e) => setSelectedType(e.target.value)}
@@ -966,35 +976,33 @@ const enquireOnWhatsApp = () => {
                 <div
                   key={item._id}
                   onClick={() => handleItemClick(item, index)}
-                  className="bg-white border-2 rounded-2xl p-3 sm:p-4 shadow-soft hover:shadow-hover smooth-transition hover-lift cursor-pointer group overflow-hidden"
-                  style={{ borderColor: '#efb20c' }}
+                  className="bg-white rounded-lg p-2 sm:p-3 shadow-sm hover:shadow-xl smooth-transition hover-lift cursor-pointer group overflow-hidden"
                 >
                   {mainImage && (
-                    <div className="relative mb-3 overflow-hidden rounded-xl">
+                    <div className="relative mb-2 overflow-hidden rounded-lg">
                       <img
                         src={mainImage}
                         alt={item.name}
                         loading="lazy"
-                        className={`w-full object-cover border-2 group-hover:scale-110 smooth-transition ${getImageHeightClasses()}`}
-                        style={{ borderColor: '#efb20c' }}
+                        className={`w-full object-cover group-hover:scale-105 smooth-transition ${getImageHeightClasses()}`}
                       />
-                      <div className={`absolute bottom-2 left-2 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg smooth-transition ${
+                      <div className={`absolute bottom-2 left-2 px-2.5 py-1 rounded-full text-xs font-bold shadow-md smooth-transition ${
                         item.isOurDesign === false ? 'text-white' : 'text-white'
                       }`}
-                      style={{ backgroundColor: item.isOurDesign === false ? '#7f1a2b' : '#efb20c' }}
+                      style={{ backgroundColor: item.isOurDesign === false ? '#7f1a2b' : '#2e2e2e' }}
                       >
                         {item.isOurDesign === false ? 'Others' : 'In House'}
                       </div>
                     </div>
                   )}
 
-                  <div className="space-y-1.5">
+                  <div className="space-y-1 px-1">
                     <h2 className={`font-bold truncate ${textSizes.title}`} style={{ color: '#2e2e2e' }}>
                       {item.name}
                     </h2>
                     <div className={`flex items-center justify-between text-gray-600 ${textSizes.details}`}>
-                      <span className="font-bold" style={{ color: '#efb20c' }}>{item.weight}g</span>
-                      <span className="font-semibold truncate ml-1">{item.category?.main}</span>
+                      <span className="font-bold text-gray-800">{item.weight}g</span>
+                      <span className="font-medium truncate ml-1 text-gray-700">{item.category?.main}</span>
                     </div>
                   </div>
                 </div>
@@ -1058,7 +1066,6 @@ const enquireOnWhatsApp = () => {
         )}
       </div>
 
-      {/* --- 1. MAIN PRODUCT DETAIL MODAL --- */}
 {selectedItem && (
   <div
     className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[95] flex items-center justify-center p-4 fade-in"
@@ -1068,7 +1075,6 @@ const enquireOnWhatsApp = () => {
   >
     <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[88vh] overflow-hidden shadow-[0_12px_35px_rgba(0,0,0,0.22)] flex flex-col relative">
 
-      {/* HEADER – CLEAN WHITE */}
       <div className="bg-white px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
@@ -1101,10 +1107,8 @@ const enquireOnWhatsApp = () => {
         </button>
       </div>
 
-      {/* BODY */}
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
-        {/* LEFT – IMAGE */}
         <div className="lg:w-3/5 bg-gray-50 px-4 py-6 flex flex-col items-center justify-center">
           {(() => {
             const itemMedia = getItemMedia(selectedItem);
@@ -1126,7 +1130,6 @@ const enquireOnWhatsApp = () => {
                   </div>
                 </div>
 
-                {/* THUMBNAILS */}
                 {itemMedia.length > 1 && (
                   <div className="mt-6 flex gap-3 flex-wrap justify-center">
                     {itemMedia.slice(1, 6).map((media, index) => (
@@ -1155,11 +1158,9 @@ const enquireOnWhatsApp = () => {
           })()}
         </div>
 
-        {/* RIGHT – DETAILS */}
         <div className="lg:w-2/5 px-6 py-6 overflow-y-auto bg-[#fff8e6]">
           <div className="grid grid-cols-2 gap-4 text-sm">
 
-            {/* PRODUCT ID */}
             <div className="col-span-2 bg-white rounded-xl px-4 py-3 shadow-sm">
               <div className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
                 Product ID
@@ -1194,7 +1195,6 @@ const enquireOnWhatsApp = () => {
         </div>
       </div>
 
-      {/* FOOTER */}
       <div className="bg-white px-4 py-3 flex justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)]">
         <button
           onClick={enquireOnWhatsApp}
@@ -1216,12 +1216,10 @@ const enquireOnWhatsApp = () => {
   </div>
 )}
 
-{/* LIGHTBOX MEDIA VIEWER – BORDERLESS */}
 {modalMedia.length > 0 && (
   <div className="fixed inset-0 bg-black/95 z-[999] flex items-center justify-center backdrop-blur-md animate-fade-in">
     <div className="relative w-full h-full flex items-center justify-center p-4">
 
-      {/* CLOSE */}
       <button
         onClick={closeMediaModal}
         className="absolute top-6 right-6 z-50 text-white bg-white/10 hover:bg-white/20 rounded-full p-3 backdrop-blur-sm transition-all hover:scale-110"
@@ -1229,7 +1227,6 @@ const enquireOnWhatsApp = () => {
         ✕
       </button>
 
-      {/* NAVIGATION */}
       {modalMedia.length > 1 && (
         <>
           <button
@@ -1247,7 +1244,6 @@ const enquireOnWhatsApp = () => {
         </>
       )}
 
-      {/* MEDIA */}
       <div className="w-full h-full flex items-center justify-center">
         {modalMedia[currentMediaIndex].type === 'image' ? (
           <img
@@ -1265,7 +1261,6 @@ const enquireOnWhatsApp = () => {
         )}
       </div>
 
-      {/* COUNTER */}
       {modalMedia.length > 1 && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/10 text-white px-6 py-2 rounded-full text-sm">
           {currentMediaIndex + 1} / {modalMedia.length}
