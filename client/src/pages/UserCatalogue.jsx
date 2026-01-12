@@ -405,25 +405,59 @@ function UserCatalogue() {
   };
 
   const shareOnWhatsApp = () => {
-    if (!selectedItem) return;
+  if (!selectedItem) return;
 
-    const mainImage = getMainImage(selectedItem);
-    const imageUrl = mainImage || '';
+  const mainImage = getMainImage(selectedItem);
+  const imageUrl = mainImage || '';
 
-    const message = `*${selectedItem.name}*\n\n` +
-      `*ID:* ${selectedItem.id}\n` +
-      `*Category:* ${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}\n` +
-      `*Type:* ${selectedItem.type}\n` +
-      `*Gender:* ${selectedItem.gender}\n` +
-      `*Purity:* ${selectedItem.carat || 'N/A'}\n` +
-      `*Weight:* ${selectedItem.weight}g\n` +
-      `*Stone Weight:* ${selectedItem.stoneWeight || 'N/A'}g\n` +
-      `*Design:* ${selectedItem.isOurDesign === false ? 'Others' : 'In House'}\n\n` +
-      (imageUrl ? `📸 ${imageUrl}` : '');
+  const websiteUrl = 'https://jewellery-catelogue.onrender.com/';
 
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
-  };
+  const message =
+    `*${selectedItem.name}*\n\n` +
+    `*ID:* ${selectedItem.id}\n` +
+    `*Category:* ${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}\n` +
+    `*Type:* ${selectedItem.type}\n` +
+    `*Gender:* ${selectedItem.gender}\n` +
+    `*Purity:* ${selectedItem.carat || 'N/A'}\n` +
+    `*Weight:* ${selectedItem.weight}g\n` +
+    `*Stone Weight:* ${selectedItem.stoneWeight || 'N/A'}g\n` +
+    `*Design:* ${selectedItem.isOurDesign === false ? 'Others' : 'In House'}\n\n` +
+    (imageUrl ? `📸 Image: ${imageUrl}\n\n` : '') +
+    `✨ *More designs available*\n` +
+    `👉 ${websiteUrl}`;
+
+  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(whatsappUrl, '_blank');
+};
+const enquireOnWhatsApp = () => {
+  if (!selectedItem) return;
+
+  const mainImage = getMainImage(selectedItem);
+  const imageUrl = mainImage || '';
+
+  const businessNumber = '918088305913'; // country code added
+  const websiteUrl = 'https://jewellery-catelogue.onrender.com/';
+
+  const message =
+    `👋 *Enquiry for Jewellery*\n\n` +
+    `*${selectedItem.name}*\n\n` +
+    `*ID:* ${selectedItem.id}\n` +
+    `*Category:* ${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}\n` +
+    `*Type:* ${selectedItem.type}\n` +
+    `*Gender:* ${selectedItem.gender}\n` +
+    `*Purity:* ${selectedItem.carat || 'N/A'}\n` +
+    `*Weight:* ${selectedItem.weight}g\n` +
+    `*Stone Weight:* ${selectedItem.stoneWeight || 'N/A'}g\n` +
+    `*Design:* ${selectedItem.isOurDesign === false ? 'Others' : 'In House'}\n\n` +
+    (imageUrl ? `📸 Image: ${imageUrl}\n\n` : '') +
+    `🔗 Catalogue: ${websiteUrl}\n\n` +
+    `Please share price and availability.`;
+
+  const whatsappUrl = `https://wa.me/${businessNumber}?text=${encodeURIComponent(message)}`;
+  window.open(whatsappUrl, '_blank');
+};
+
+
 
   const getGridIcon = () => {
     if (isMobile) {
@@ -1025,228 +1059,148 @@ function UserCatalogue() {
       </div>
 
       {selectedItem && (
-        <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2"
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
+  <div
+    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2"
+    onTouchStart={onTouchStart}
+    onTouchMove={onTouchMove}
+    onTouchEnd={onTouchEnd}
+  >
+    <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col fade-in">
+
+      {/* HEADER */}
+      <div className="gradient-gold p-4 flex items-center justify-between border-b border-amber-300">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigateToItem('prev')}
+            className="p-2 rounded-lg hover:bg-white/30 transition"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          <h2 className="text-lg font-black truncate max-w-md text-[#2e2e2e]">
+            {selectedItem.name}
+          </h2>
+
+          <button
+            onClick={() => navigateToItem('next')}
+            className="p-2 rounded-lg hover:bg-white/30 transition"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        <button
+          onClick={() => {
+            setSelectedItem(null);
+            setSelectedItemIndex(-1);
+          }}
+          className="p-2 rounded-lg hover:bg-white/30 transition"
         >
-          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col fade-in">
-            <div className="gradient-gold p-4 flex items-center justify-between border-b-2 border-amber-400">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => navigateToItem('prev')}
-                  className="text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-white/30 smooth-transition"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
 
-                <h2 className="text-lg font-black truncate max-w-md" style={{ color: '#2e2e2e' }}>
-                  {selectedItem.name}
-                </h2>
+      {/* CONTENT */}
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
-                <button
-                  onClick={() => navigateToItem('next')}
-                  className="text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-white/30 smooth-transition"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
+        {/* IMAGE SECTION */}
+        <div className="lg:w-3/5 p-5 bg-gray-50 flex flex-col">
+          {(() => {
+            const itemMedia = getItemMedia(selectedItem);
+            const mainImage = getMainImage(selectedItem);
+            if (!mainImage) return null;
 
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={shareOnWhatsApp}
-                  className="text-white px-4 py-2 rounded-xl font-semibold hover:opacity-90 smooth-transition flex items-center gap-2 shadow-md hover-scale"
-                  style={{ backgroundColor: '#25D366' }}
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                  </svg>
-                  Share
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedItem(null);
-                    setSelectedItemIndex(-1);
-                  }}
-                  className="text-gray-700 hover:text-gray-900 p-2 rounded-lg hover:bg-white/30 smooth-transition"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-              <div className="lg:w-3/5 p-6 flex flex-col bg-gray-50">
-                {(() => {
-                  const itemMedia = getItemMedia(selectedItem);
-                  const mainImage = getMainImage(selectedItem);
-
-                  if (!mainImage) return null;
-
-                  return (
-                    <>
-                      <div className="flex-1 flex items-center justify-center mb-4">
-                        <img
-                          src={mainImage}
-                          alt={selectedItem.name}
-                          loading="lazy"
-                          onClick={() => openMediaModal(itemMedia, 0)}
-                          className="max-w-full max-h-96 object-contain rounded-xl cursor-pointer border-2 hover:opacity-90 smooth-transition shadow-lg hover-scale"
-                          style={{ borderColor: '#efb20c' }}
-                        />
-                      </div>
-
-                      {itemMedia.length > 1 && (
-                        <div className="flex justify-center gap-2 flex-wrap">
-                          {itemMedia.slice(1, 5).map((media, index) => (
-                            <div
-                              key={index + 1}
-                              onClick={() => openMediaModal(itemMedia, index + 1)}
-                              className="w-16 h-16 rounded-lg cursor-pointer border-2 hover:opacity-80 smooth-transition hover-scale overflow-hidden shadow-md"
-                              style={{ borderColor: '#efb20c' }}
-                            >
-                              {media.type === 'image' ? (
-                                <img
-                                  src={media.src}
-                                  alt={`Thumbnail ${index + 2}`}
-                                  loading="lazy"
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center gradient-maroon">
-                                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-
-              <div className="lg:w-2/5 p-6 overflow-y-auto" style={{ backgroundColor: '#fff8e6' }}>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="col-span-2 bg-white p-4 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
-                    <span className="font-semibold text-gray-700 text-xs">ID</span>
-                    <div className="font-black text-lg mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.id}</div>
-                  </div>
-
-                  <div className="col-span-2 bg-white p-4 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
-                    <span className="font-semibold text-gray-700 text-xs">Category</span>
-                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>
-                      {selectedItem.category?.main}{selectedItem.category?.sub && ` - ${selectedItem.category.sub}`}
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
-                    <span className="font-semibold text-gray-700 text-xs">Type</span>
-                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.type}</div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
-                    <span className="font-semibold text-gray-700 text-xs">Gender</span>
-                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.gender}</div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
-                    <span className="font-semibold text-gray-700 text-xs">Purity</span>
-                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.carat || 'N/A'}</div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
-                    <span className="font-semibold text-gray-700 text-xs">Weight</span>
-                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.weight}g</div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
-                    <span className="font-semibold text-gray-700 text-xs">Stone Weight</span>
-                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>{selectedItem.stoneWeight || 'N/A'}g</div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
-                    <span className="font-semibold text-gray-700 text-xs">Design</span>
-                    <div className="font-bold mt-1" style={{ color: '#7f1a2b' }}>
-                      {selectedItem.isOurDesign === false ? 'Others' : 'In House'}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {modalMedia.length > 0 && (
-        <div className="fixed inset-0 bg-black/90 z-[999] flex items-center justify-center">
-          <div className="relative w-full h-full flex items-center justify-center p-4">
-            <button
-              onClick={closeMediaModal}
-              className="absolute top-4 right-4 z-20 text-white bg-black/50 rounded-full p-3 hover:bg-black/70 smooth-transition hover-scale"
-            >
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {modalMedia.length > 1 && (
+            return (
               <>
-                <button
-                  onClick={() => navigateMedia('prev')}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/50 rounded-full p-3 hover:bg-black/70 smooth-transition hover-scale"
-                >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => navigateMedia('next')}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 text-white bg-black/50 rounded-full p-3 hover:bg-black/70 smooth-transition hover-scale"
-                >
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+                <div className="flex-1 flex items-center justify-center mb-4">
+                  <img
+                    src={mainImage}
+                    alt={selectedItem.name}
+                    onClick={() => openMediaModal(itemMedia, 0)}
+                    className="max-h-80 object-contain rounded-xl cursor-pointer border shadow-md hover:opacity-90 transition"
+                    style={{ borderColor: '#efb20c' }}
+                  />
+                </div>
+
+                {itemMedia.length > 1 && (
+                  <div className="flex justify-center gap-2 flex-wrap">
+                    {itemMedia.slice(1, 5).map((media, index) => (
+                      <div
+                        key={index}
+                        onClick={() => openMediaModal(itemMedia, index + 1)}
+                        className="w-14 h-14 rounded-lg border cursor-pointer overflow-hidden shadow-sm hover:opacity-80 transition"
+                        style={{ borderColor: '#efb20c' }}
+                      >
+                        {media.type === 'image' ? (
+                          <img src={media.src} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-[#7f1a2b]">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132z" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
-            )}
+            );
+          })()}
+        </div>
 
-            <div className="w-full h-full flex items-center justify-center">
-              {modalMedia[currentMediaIndex].type === 'image' ? (
-                <img
-                  src={modalMedia[currentMediaIndex].src}
-                  alt={`Gallery ${currentMediaIndex + 1}`}
-                  loading="lazy"
-                  className="max-w-full max-h-full object-contain rounded-lg"
-                />
-              ) : (
-                <video
-                  src={modalMedia[currentMediaIndex].src}
-                  controls
-                  autoPlay
-                  className="max-w-full max-h-full object-contain rounded-lg"
-                />
-              )}
-            </div>
-
-            {modalMedia.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-5 py-2.5 rounded-full font-bold shadow-lg">
-                {currentMediaIndex + 1} / {modalMedia.length}
+        {/* DETAILS */}
+        <div className="lg:w-2/5 p-5 overflow-y-auto bg-[#fff8e6]">
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            {[
+              ['ID', selectedItem.id],
+              ['Category', `${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}`],
+              ['Type', selectedItem.type],
+              ['Gender', selectedItem.gender],
+              ['Purity', selectedItem.carat || 'N/A'],
+              ['Weight', `${selectedItem.weight}g`],
+              ['Stone Weight', `${selectedItem.stoneWeight || 'N/A'}g`],
+              ['Design', selectedItem.isOurDesign === false ? 'Others' : 'In House'],
+            ].map(([label, value], i) => (
+              <div key={i} className="bg-white p-3 rounded-xl border shadow-sm" style={{ borderColor: '#efb20c' }}>
+                <span className="text-xs font-semibold text-gray-600">{label}</span>
+                <div className="font-bold mt-1 text-[#7f1a2b]">{value}</div>
               </div>
-            )}
+            ))}
           </div>
         </div>
-      )}
+      </div>
+
+      {/* BOTTOM ACTION BAR */}
+      <div className="border-t bg-white px-6 py-4 flex justify-end gap-4 sticky bottom-0">
+
+        <button
+          onClick={enquireOnWhatsApp}
+          className="px-6 py-3 rounded-xl text-white font-bold flex items-center gap-2 shadow-md hover:opacity-90 transition"
+          style={{ backgroundColor: '#128C7E' }}
+        >
+          💬 Enquire
+        </button>
+
+        <button
+          onClick={shareOnWhatsApp}
+          className="px-6 py-3 rounded-xl text-white font-bold flex items-center gap-2 shadow-md hover:opacity-90 transition"
+          style={{ backgroundColor: '#25D366' }}
+        >
+          🔗 Share
+        </button>
+
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }
