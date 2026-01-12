@@ -4,7 +4,7 @@ import axios from 'axios';
 function UserCatalogue() {
   const [jewellery, setJewellery] = useState([]);
   const [sortOrder, setSortOrder] = useState('desc');
-  const [sortByDate, setSortByDate] = useState('');
+  const [sortByDate, setSortByDate] = useState('newest');
   const [stoneFilter, setStoneFilter] = useState('');
   const [metalFilter, setMetalFilter] = useState('');
   const [weightMin, setWeightMin] = useState(0);
@@ -383,7 +383,7 @@ function UserCatalogue() {
     if (sortByDate === 'oldest') return 'Date: Oldest First';
     if (sortField === 'weight' && sortOrder === 'asc') return 'Weight: Low to High';
     if (sortField === 'weight' && sortOrder === 'desc') return 'Weight: High to Low';
-    return 'Default Order';
+    return 'Date: Newest First';
   };
 
   const openMediaModal = (media, startIndex = 0) => {
@@ -673,7 +673,7 @@ const enquireOnWhatsApp = () => {
                     </div>
 
                     <div>
-                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Type</label>
+                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}> Occation</label>
                       <select
                         value={selectedType}
                         onChange={(e) => setSelectedType(e.target.value)}
@@ -724,7 +724,7 @@ const enquireOnWhatsApp = () => {
                         onChange={(e) => setStoneFilter(e.target.value)}
                         className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
                       >
-                        <option value="">All Stones</option>
+                        <option value="">With & Without</option>
                         <option value="with">With Stone</option>
                         <option value="without">Without Stone</option>
                       </select>
