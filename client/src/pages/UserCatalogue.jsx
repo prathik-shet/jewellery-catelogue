@@ -1058,66 +1058,42 @@ const enquireOnWhatsApp = () => {
         )}
       </div>
 
-      {/* ================= ITEM DETAIL MODAL ================= */}
+      {/* --- 1. MAIN PRODUCT DETAIL MODAL --- */}
 {selectedItem && (
   <div
-    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2"
+    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[95] flex items-center justify-center p-4 fade-in"
     onTouchStart={onTouchStart}
     onTouchMove={onTouchMove}
     onTouchEnd={onTouchEnd}
   >
-    <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+    <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[88vh] overflow-hidden shadow-[0_12px_35px_rgba(0,0,0,0.22)] flex flex-col relative">
 
       {/* HEADER */}
-      <div className="gradient-gold p-4 flex items-center justify-between border-b-2 border-amber-400">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigateToItem('prev')} className="p-2 rounded-lg hover:bg-white/30">
-            ‹
-          </button>
-
-          <h2 className="text-lg font-black truncate max-w-md text-[#2e2e2e]">
+      <div className="gradient-gold px-4 py-3 flex items-center justify-between border-b border-amber-300">
+        <div className="flex items-center gap-2">
+          <button onClick={() => navigateToItem('prev')} className="px-2 py-1 rounded hover:bg-white/30 transition">◀</button>
+          <h2 className="text-base font-semibold truncate max-w-md text-[#2e2e2e]">
             {selectedItem.name}
           </h2>
-
-          <button onClick={() => navigateToItem('next')} className="p-2 rounded-lg hover:bg-white/30">
-            ›
-          </button>
+          <button onClick={() => navigateToItem('next')} className="px-2 py-1 rounded hover:bg-white/30 transition">▶</button>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={enquireOnWhatsApp}
-            className="px-4 py-2 rounded-xl text-white font-semibold"
-            style={{ backgroundColor: '#128C7E' }}
-          >
-            Enquire
-          </button>
-
-          <button
-            onClick={shareOnWhatsApp}
-            className="px-4 py-2 rounded-xl text-white font-semibold"
-            style={{ backgroundColor: '#25D366' }}
-          >
-            Share
-          </button>
-
-          <button
-            onClick={() => {
-              setSelectedItem(null);
-              setSelectedItemIndex(-1);
-            }}
-            className="p-2 rounded-lg hover:bg-white/30"
-          >
-            ✕
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            setSelectedItem(null);
+            setSelectedItemIndex(-1);
+          }}
+          className="px-2 py-1 rounded hover:bg-white/30 transition text-gray-800 font-bold"
+        >
+          ✕
+        </button>
       </div>
 
-      {/* BODY */}
+      {/* BODY CONTENT */}
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
-        {/* IMAGE SECTION */}
-        <div className="lg:w-3/5 p-6 flex flex-col bg-gray-50">
+        {/* LEFT: IMAGE SECTION */}
+        <div className="lg:w-3/5 bg-gray-50 px-4 py-6 flex flex-col items-center justify-center relative">
           {(() => {
             const itemMedia = getItemMedia(selectedItem);
             const mainImage = getMainImage(selectedItem);
@@ -1125,30 +1101,36 @@ const enquireOnWhatsApp = () => {
 
             return (
               <>
-                <div className="flex-1 flex items-center justify-center mb-4">
+                {/* Main Large Image */}
+                <div className="relative group w-full flex justify-center items-center flex-1">
                   <img
                     src={mainImage}
                     alt={selectedItem.name}
-                    loading="lazy"
                     onClick={() => openMediaModal(itemMedia, 0)}
-                    className="max-w-full max-h-96 object-contain rounded-xl cursor-pointer border-2 shadow-lg"
+                    className="max-h-[350px] w-auto object-contain rounded-xl border bg-white shadow-sm cursor-zoom-in hover:opacity-95 transition-all duration-300"
                     style={{ borderColor: '#efb20c' }}
                   />
+                  
+                  {/* Hover Hint */}
+                  <div className="absolute bottom-4 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                    Tap to expand 🔍
+                  </div>
                 </div>
 
+                {/* Thumbnail Strip */}
                 {itemMedia.length > 1 && (
-                  <div className="flex justify-center gap-2 flex-wrap">
-                    {itemMedia.slice(1, 5).map((media, index) => (
+                  <div className="mt-6 flex gap-3 flex-wrap justify-center">
+                    {itemMedia.slice(1, 6).map((media, index) => (
                       <div
                         key={index}
                         onClick={() => openMediaModal(itemMedia, index + 1)}
-                        className="w-16 h-16 rounded-lg cursor-pointer border-2 overflow-hidden"
+                        className="w-14 h-14 rounded-lg border-2 overflow-hidden cursor-pointer hover:scale-105 hover:border-amber-500 transition-all shadow-sm"
                         style={{ borderColor: '#efb20c' }}
                       >
                         {media.type === 'image' ? (
-                          <img src={media.src} className="w-full h-full object-cover" />
+                          <img src={media.src} className="w-full h-full object-cover" alt="thumbnail" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-[#7f1a2b] text-white">
+                          <div className="w-full h-full flex items-center justify-center bg-[#7f1a2b] text-white text-xs">
                             ▶
                           </div>
                         )}
@@ -1161,11 +1143,16 @@ const enquireOnWhatsApp = () => {
           })()}
         </div>
 
-        {/* DETAILS */}
-        <div className="lg:w-2/5 p-6 overflow-y-auto bg-[#fff8e6]">
-          <div className="grid grid-cols-2 gap-3 text-sm">
+        {/* RIGHT: DETAILS SECTION */}
+        <div className="lg:w-2/5 px-6 py-6 overflow-y-auto bg-[#fff8e6] border-l border-amber-100">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+             {/* ID Block */}
+             <div className="col-span-2 bg-white rounded-xl px-4 py-3 border shadow-sm" style={{ borderColor: '#efb20c' }}>
+                <div className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">Product ID</div>
+                <div className="text-lg font-bold text-[#7f1a2b]">{selectedItem.id}</div>
+             </div>
+
             {[
-              ['ID', selectedItem.id],
               ['Category', `${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}`],
               ['Type', selectedItem.type],
               ['Gender', selectedItem.gender],
@@ -1174,73 +1161,107 @@ const enquireOnWhatsApp = () => {
               ['Stone Weight', `${selectedItem.stoneWeight || 'N/A'}g`],
               ['Design', selectedItem.isOurDesign === false ? 'Others' : 'In House'],
             ].map(([label, value], i) => (
-              <div key={i} className="bg-white p-3 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
-                <span className="text-xs font-semibold text-gray-600">{label}</span>
-                <div className="font-bold mt-1 text-[#7f1a2b]">{value}</div>
+              <div key={i} className="bg-white rounded-xl px-3 py-2 border shadow-sm hover:shadow-md transition-shadow" style={{ borderColor: '#efb20c' }}>
+                <div className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
+                  {label}
+                </div>
+                <div className="text-sm font-bold text-[#7f1a2b] mt-0.5">
+                  {value}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
+
+      {/* FOOTER ACTION BAR */}
+      <div className="border-t bg-white px-4 py-3 flex justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <button
+          onClick={enquireOnWhatsApp}
+          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 hover:opacity-90 transition active:scale-95"
+          style={{ backgroundColor: '#128C7E' }}
+        >
+          <span>💬</span> Enquire
+        </button>
+
+        <button
+          onClick={shareOnWhatsApp}
+          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 hover:opacity-90 transition active:scale-95"
+          style={{ backgroundColor: '#25D366' }}
+        >
+          <span>🔗</span> Share
+        </button>
+      </div>
     </div>
   </div>
 )}
 
-{/* ================= FULLSCREEN MEDIA MODAL ================= */}
+{/* --- 2. POP-OUT LIGHTBOX MEDIA VIEWER (Restored) --- */}
 {modalMedia.length > 0 && (
-  <div className="fixed inset-0 bg-black/90 z-[999] flex items-center justify-center">
+  <div className="fixed inset-0 bg-black/95 z-[999] flex items-center justify-center backdrop-blur-md animate-fade-in">
     <div className="relative w-full h-full flex items-center justify-center p-4">
-
+      
+      {/* Close Button */}
       <button
         onClick={closeMediaModal}
-        className="absolute top-4 right-4 z-20 text-white bg-black/50 rounded-full p-3"
+        className="absolute top-6 right-6 z-50 text-white bg-white/10 hover:bg-white/20 rounded-full p-3 backdrop-blur-sm transition-all transform hover:scale-110"
       >
-        ✕
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
       </button>
 
+      {/* Navigation Buttons */}
       {modalMedia.length > 1 && (
         <>
           <button
-            onClick={() => navigateMedia('prev')}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white bg-black/50 rounded-full p-3"
+            onClick={(e) => { e.stopPropagation(); navigateMedia('prev'); }}
+            className="absolute left-4 lg:left-8 top-1/2 transform -translate-y-1/2 z-50 text-white bg-white/10 hover:bg-white/20 rounded-full p-4 backdrop-blur-sm transition-all hover:scale-110"
           >
-            ‹
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+            </svg>
           </button>
-
           <button
-            onClick={() => navigateMedia('next')}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white bg-black/50 rounded-full p-3"
+            onClick={(e) => { e.stopPropagation(); navigateMedia('next'); }}
+            className="absolute right-4 lg:right-8 top-1/2 transform -translate-y-1/2 z-50 text-white bg-white/10 hover:bg-white/20 rounded-full p-4 backdrop-blur-sm transition-all hover:scale-110"
           >
-            ›
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </>
       )}
 
-      <div className="w-full h-full flex items-center justify-center">
-        {modalMedia[currentMediaIndex].type === 'image' ? (
-          <img
-            src={modalMedia[currentMediaIndex].src}
-            className="max-w-full max-h-full object-contain"
-          />
-        ) : (
-          <video
-            src={modalMedia[currentMediaIndex].src}
-            controls
-            autoPlay
-            className="max-w-full max-h-full object-contain"
-          />
-        )}
+      {/* Media Content */}
+      <div className="w-full h-full flex items-center justify-center pointer-events-none">
+        <div className="pointer-events-auto max-w-[95%] max-h-[90%] shadow-2xl">
+          {modalMedia[currentMediaIndex].type === 'image' ? (
+            <img
+              src={modalMedia[currentMediaIndex].src}
+              alt={`Gallery ${currentMediaIndex + 1}`}
+              className="max-w-full max-h-[85vh] object-contain rounded-md shadow-2xl"
+            />
+          ) : (
+            <video
+              src={modalMedia[currentMediaIndex].src}
+              controls
+              autoPlay
+              className="max-w-full max-h-[85vh] object-contain rounded-md shadow-2xl"
+            />
+          )}
+        </div>
       </div>
 
+      {/* Counter */}
       {modalMedia.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-1 rounded-full">
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/10 backdrop-blur-md text-white px-6 py-2 rounded-full font-medium tracking-widest border border-white/10">
           {currentMediaIndex + 1} / {modalMedia.length}
         </div>
       )}
     </div>
   </div>
 )}
-
     </div>
   );
 }
