@@ -1070,23 +1070,11 @@ const enquireOnWhatsApp = () => {
       {/* HEADER */}
       <div className="gradient-gold px-4 py-3 flex items-center justify-between border-b border-amber-300">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigateToItem('prev')}
-            className="p-1.5 rounded-full hover:bg-white/30 transition"
-          >
-            ◀
-          </button>
-
+          <button onClick={() => navigateToItem('prev')} className="px-2 py-1 rounded hover:bg-white/30">◀</button>
           <h2 className="text-base font-semibold truncate max-w-md text-[#2e2e2e]">
             {selectedItem.name}
           </h2>
-
-          <button
-            onClick={() => navigateToItem('next')}
-            className="p-1.5 rounded-full hover:bg-white/30 transition"
-          >
-            ▶
-          </button>
+          <button onClick={() => navigateToItem('next')} className="px-2 py-1 rounded hover:bg-white/30">▶</button>
         </div>
 
         <button
@@ -1094,7 +1082,7 @@ const enquireOnWhatsApp = () => {
             setSelectedItem(null);
             setSelectedItemIndex(-1);
           }}
-          className="p-1.5 rounded-full hover:bg-white/30 transition"
+          className="px-2 py-1 rounded hover:bg-white/30"
         >
           ✕
         </button>
@@ -1105,7 +1093,6 @@ const enquireOnWhatsApp = () => {
 
         {/* IMAGE SECTION */}
         <div className="lg:w-3/5 bg-gray-50 px-4 py-4 flex flex-col items-center justify-center">
-
           {(() => {
             const itemMedia = getItemMedia(selectedItem);
             const mainImage = getMainImage(selectedItem);
@@ -1113,34 +1100,30 @@ const enquireOnWhatsApp = () => {
 
             return (
               <>
-                {/* IMAGE CARD */}
-                <div className="relative group">
+                {/* MAIN IMAGE */}
+                <div className="relative">
                   <img
                     src={mainImage}
                     alt={selectedItem.name}
-                    className="max-h-[260px] object-contain rounded-xl border bg-white"
+                    onClick={() => openMediaModal(itemMedia, 0)}
+                    className="max-h-[260px] object-contain rounded-xl border bg-white shadow cursor-pointer hover:opacity-95 transition"
                     style={{ borderColor: '#efb20c' }}
                   />
 
-                  {/* EXPLICIT VIEW BUTTON */}
-                  <button
-                    onClick={() => openMediaModal(itemMedia, 0)}
-                    className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/35 transition rounded-xl"
-                  >
-                    <div className="opacity-0 group-hover:opacity-100 transition bg-white text-black px-4 py-2 rounded-full text-sm font-semibold shadow">
-                      👁 View Full Image
-                    </div>
-                  </button>
+                  {/* SMALL VIEW ICON (NON-BLOCKING) */}
+                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md pointer-events-none">
+                    Tap to view
+                  </div>
                 </div>
 
                 {/* THUMBNAILS */}
                 {itemMedia.length > 1 && (
                   <div className="mt-4 flex gap-2 flex-wrap justify-center">
                     {itemMedia.slice(1, 6).map((media, index) => (
-                      <button
+                      <div
                         key={index}
                         onClick={() => openMediaModal(itemMedia, index + 1)}
-                        className="w-12 h-12 rounded-lg border overflow-hidden hover:ring-2 hover:ring-amber-400 transition"
+                        className="w-12 h-12 rounded-lg border overflow-hidden cursor-pointer hover:ring-2 hover:ring-amber-400 transition"
                         style={{ borderColor: '#efb20c' }}
                       >
                         {media.type === 'image' ? (
@@ -1150,7 +1133,7 @@ const enquireOnWhatsApp = () => {
                             ▶
                           </div>
                         )}
-                      </button>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -1172,11 +1155,7 @@ const enquireOnWhatsApp = () => {
               ['Stone Weight', `${selectedItem.stoneWeight || 'N/A'}g`],
               ['Design', selectedItem.isOurDesign === false ? 'Others' : 'In House'],
             ].map(([label, value], i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl px-3 py-2 border"
-                style={{ borderColor: '#efb20c' }}
-              >
+              <div key={i} className="bg-white rounded-xl px-3 py-2 border" style={{ borderColor: '#efb20c' }}>
                 <div className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
                   {label}
                 </div>
@@ -1210,6 +1189,7 @@ const enquireOnWhatsApp = () => {
     </div>
   </div>
 )}
+
 
 
 
