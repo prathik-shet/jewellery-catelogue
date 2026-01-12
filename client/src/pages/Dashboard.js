@@ -14,10 +14,14 @@ const SLIDER_IMAGES = [
 const BG_IMAGE =
   "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768214198230.jpeg";
 
+const MAP_URL =
+  "https://www.google.com/maps/place/Vimaleshwara+Jewellers/@13.5364782,75.3646316,17z/data=!3m1!4b1!4m6!3m5!1s0x3bbb14e87902c949:0x9909b22e6458feda!8m2!3d13.5364782!4d75.3672065!16s%2Fg%2F11dy7dxygr?entry=ttu&g_ep=EgoyMDI2MDEwNy4wIKXMDSoASAFQAw%3D%3D";
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [scrolled, setScrolled] = useState(false);
+  const [popupImage, setPopupImage] = useState(null);
 
   /* -------- Auto Slide -------- */
   useEffect(() => {
@@ -34,6 +38,11 @@ export default function Dashboard() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  /* -------- Lock scroll when popup open -------- */
+  useEffect(() => {
+    document.body.style.overflow = popupImage ? "hidden" : "auto";
+  }, [popupImage]);
+
   return (
     <div className="min-h-screen bg-[#fff8e6] text-[#2e2e2e] overflow-x-hidden">
       {/* Fonts */}
@@ -44,15 +53,15 @@ export default function Dashboard() {
       {/* Background */}
       <div className="fixed inset-0 -z-10">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-40"
+          className="absolute inset-0 bg-cover bg-center opacity-55"
           style={{ backgroundImage: `url(${BG_IMAGE})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#fff8e6]/55 via-[#fff8e6]/60 to-[#fff8e6]/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#fff8e6]/45 via-[#fff8e6]/55 to-[#fff8e6]/90" />
       </div>
 
       {/* ---------------- HEADER ---------------- */}
       <header
-        className={`fixed top-0 left-0 w-full z-50 transition-all ${
+        className={`fixed top-0 left-0 w-full z-40 transition-all ${
           scrolled
             ? "bg-white/95 shadow-md backdrop-blur-md"
             : "bg-white/85"
@@ -89,7 +98,7 @@ export default function Dashboard() {
 
       {/* ---------------- MAIN ---------------- */}
       <main className="pt-[90px] relative z-10">
-        {/* HERO CONTENT */}
+        {/* HERO */}
         <section className="text-center px-6 max-w-4xl mx-auto">
           <span className="inline-block px-4 py-1 text-xs rounded-full bg-[#fae382]/30 font-bold text-[#7f1a2b]">
             EST. 1995
@@ -103,8 +112,8 @@ export default function Dashboard() {
           </h2>
 
           <p className="mt-4 text-lg md:text-xl opacity-75">
-            Discover handcrafted gold, silver and precious stone
-            jewellery designed to last generations.
+            Discover handcrafted gold, silver and precious stone jewellery
+            designed to last generations.
           </p>
 
           <div className="mt-8">
@@ -124,40 +133,30 @@ export default function Dashboard() {
 
         {/* ================= SLIDER ================= */}
         <section className="mt-16">
-          {/* Desktop */}
-          <div className="hidden md:block max-w-6xl mx-auto aspect-[16/9] relative overflow-hidden rounded-3xl shadow-lg">
+          <div className="hidden md:block max-w-6xl mx-auto aspect-[16/9] relative overflow-hidden rounded-3xl shadow-lg cursor-pointer">
             {SLIDER_IMAGES.map((img, i) => (
               <div
                 key={i}
                 className={`absolute inset-0 transition-opacity duration-1000 ${
                   i === currentSlide ? "opacity-100" : "opacity-0"
                 }`}
+                onClick={() => setPopupImage(img)}
               >
-                <img
-                  src={img}
-                  alt=""
-                  draggable={false}
-                  className="w-full h-full object-cover pointer-events-none select-none"
-                />
+                <img src={img} alt="" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
 
-          {/* Mobile */}
-          <div className="md:hidden mx-4 aspect-[4/3] relative overflow-hidden rounded-2xl shadow-lg">
+          <div className="md:hidden mx-4 aspect-[4/3] relative overflow-hidden rounded-2xl shadow-lg cursor-pointer">
             {SLIDER_IMAGES.map((img, i) => (
               <div
                 key={i}
                 className={`absolute inset-0 transition-opacity duration-700 ${
                   i === currentSlide ? "opacity-100" : "opacity-0"
                 }`}
+                onClick={() => setPopupImage(img)}
               >
-                <img
-                  src={img}
-                  alt=""
-                  draggable={false}
-                  className="w-full h-full object-cover pointer-events-none select-none"
-                />
+                <img src={img} alt="" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
@@ -171,22 +170,40 @@ export default function Dashboard() {
                 <h3 className="font-bold text-[#7f1a2b] mb-3">
                   📍 Visit Our Store
                 </h3>
-                <p>
+                <a
+                  href={MAP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[#7f1a2b] transition-colors"
+                >
                   Vimaleshwara Jewellers <br />
                   Main Road, Koppa <br />
                   Chikkamagaluru, Karnataka – 577126
-                </p>
+                </a>
               </div>
 
               <div className="flex-1 text-center md:text-left">
                 <h3 className="font-bold text-[#7f1a2b] mb-3">
                   📞 Contact
                 </h3>
-                <p>+91 8265 221143</p>
-                <p>+91 94482 03199</p>
-                <p className="text-sm opacity-70 mt-2">
+                <a
+                  href="tel:+918265221143"
+                  className="block hover:text-[#7f1a2b]"
+                >
+                  +91 8265 221143
+                </a>
+                <a
+                  href="tel:+919448203199"
+                  className="block hover:text-[#7f1a2b]"
+                >
+                  +91 94482 03199
+                </a>
+                <a
+                  href="mailto:vimaleshwarajewellers@gmail.com"
+                  className="block text-sm opacity-70 hover:text-[#7f1a2b] mt-2"
+                >
                   vimaleshwarajewellers@gmail.com
-                </p>
+                </a>
               </div>
             </div>
 
@@ -196,6 +213,31 @@ export default function Dashboard() {
           </div>
         </footer>
       </main>
+
+      {/* ================= IMAGE POPUP ================= */}
+      {popupImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4"
+          onClick={() => setPopupImage(null)}
+        >
+          <div
+            className="relative max-w-4xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setPopupImage(null)}
+              className="absolute -top-10 right-0 text-white text-3xl font-bold"
+            >
+              ×
+            </button>
+            <img
+              src={popupImage}
+              alt=""
+              className="w-full max-h-[80vh] object-contain rounded-xl bg-white"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
