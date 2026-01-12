@@ -44,10 +44,10 @@ export default function Dashboard() {
       {/* Background */}
       <div className="fixed inset-0 -z-10">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-30"
+          className="absolute inset-0 bg-cover bg-center opacity-40"
           style={{ backgroundImage: `url(${BG_IMAGE})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#fff8e6]/70 via-[#fff8e6]/60 to-[#fff8e6]/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#fff8e6]/55 via-[#fff8e6]/60 to-[#fff8e6]/95" />
       </div>
 
       {/* ---------------- HEADER ---------------- */}
@@ -55,7 +55,7 @@ export default function Dashboard() {
         className={`fixed top-0 left-0 w-full z-50 transition-all ${
           scrolled
             ? "bg-white/95 shadow-md backdrop-blur-md"
-            : "bg-white/80"
+            : "bg-white/85"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-2 flex items-center justify-between">
@@ -70,10 +70,10 @@ export default function Dashboard() {
                 className="text-lg md:text-2xl font-bold text-[#7f1a2b]"
                 style={{ fontFamily: "Playfair Display, serif" }}
               >
-                VIMALESHWARA
+                VIMALESHWARA JEWELLERS
               </h1>
               <span className="text-[10px] md:text-xs tracking-[0.25em] uppercase">
-                Jewellers
+                Premium Jewellery Collection
               </span>
             </div>
           </div>
@@ -89,7 +89,7 @@ export default function Dashboard() {
 
       {/* ---------------- MAIN ---------------- */}
       <main className="pt-[90px] relative z-10">
-        {/* ================= HERO CONTENT ================= */}
+        {/* HERO CONTENT */}
         <section className="text-center px-6 max-w-4xl mx-auto">
           <span className="inline-block px-4 py-1 text-xs rounded-full bg-[#fae382]/30 font-bold text-[#7f1a2b]">
             EST. 1995
@@ -107,7 +107,6 @@ export default function Dashboard() {
             jewellery designed to last generations.
           </p>
 
-          {/* CTA — NORMAL FLOW (NO OVERLAP POSSIBLE) */}
           <div className="mt-8">
             <button
               onClick={() => navigate("/user")}
@@ -137,7 +136,8 @@ export default function Dashboard() {
                 <img
                   src={img}
                   alt=""
-                  className="w-full h-full object-cover"
+                  draggable={false}
+                  className="w-full h-full object-cover pointer-events-none select-none"
                 />
               </div>
             ))}
@@ -155,7 +155,8 @@ export default function Dashboard() {
                 <img
                   src={img}
                   alt=""
-                  className="w-full h-full object-cover"
+                  draggable={false}
+                  className="w-full h-full object-cover pointer-events-none select-none"
                 />
               </div>
             ))}
