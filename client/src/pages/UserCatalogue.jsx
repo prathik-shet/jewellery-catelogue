@@ -1060,34 +1060,34 @@ const enquireOnWhatsApp = () => {
 
       {selectedItem && (
   <div
-    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2"
+    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-3"
     onTouchStart={onTouchStart}
     onTouchMove={onTouchMove}
     onTouchEnd={onTouchEnd}
   >
-    <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col fade-in">
+    <div className="bg-white rounded-3xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.35)] flex flex-col animate-fadeIn">
 
       {/* HEADER */}
-      <div className="gradient-gold p-4 flex items-center justify-between border-b border-amber-300">
-        <div className="flex items-center gap-3">
+      <div className="gradient-gold px-5 py-4 flex items-center justify-between border-b border-amber-300">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => navigateToItem('prev')}
-            className="p-2 rounded-lg hover:bg-white/30 transition"
+            className="p-2 rounded-full hover:bg-white/40 transition"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
 
-          <h2 className="text-lg font-black truncate max-w-md text-[#2e2e2e]">
+          <h2 className="text-lg font-extrabold tracking-tight truncate max-w-md text-[#2e2e2e]">
             {selectedItem.name}
           </h2>
 
           <button
             onClick={() => navigateToItem('next')}
-            className="p-2 rounded-lg hover:bg-white/30 transition"
+            className="p-2 rounded-full hover:bg-white/40 transition"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </button>
@@ -1098,7 +1098,7 @@ const enquireOnWhatsApp = () => {
             setSelectedItem(null);
             setSelectedItemIndex(-1);
           }}
-          className="p-2 rounded-lg hover:bg-white/30 transition"
+          className="p-2 rounded-full hover:bg-white/40 transition"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1106,11 +1106,11 @@ const enquireOnWhatsApp = () => {
         </button>
       </div>
 
-      {/* CONTENT */}
+      {/* BODY */}
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
-        {/* IMAGE SECTION */}
-        <div className="lg:w-3/5 p-5 bg-gray-50 flex flex-col">
+        {/* IMAGE AREA */}
+        <div className="lg:w-3/5 bg-gray-50 px-6 py-5 flex flex-col">
           {(() => {
             const itemMedia = getItemMedia(selectedItem);
             const mainImage = getMainImage(selectedItem);
@@ -1118,23 +1118,25 @@ const enquireOnWhatsApp = () => {
 
             return (
               <>
-                <div className="flex-1 flex items-center justify-center mb-4">
+                {/* MAIN IMAGE */}
+                <div className="flex-1 flex items-center justify-center">
                   <img
                     src={mainImage}
                     alt={selectedItem.name}
                     onClick={() => openMediaModal(itemMedia, 0)}
-                    className="max-h-80 object-contain rounded-xl cursor-pointer border shadow-md hover:opacity-90 transition"
+                    className="max-h-[300px] object-contain rounded-2xl cursor-zoom-in border shadow-lg hover:scale-[1.02] transition-all"
                     style={{ borderColor: '#efb20c' }}
                   />
                 </div>
 
+                {/* THUMBNAILS */}
                 {itemMedia.length > 1 && (
-                  <div className="flex justify-center gap-2 flex-wrap">
-                    {itemMedia.slice(1, 5).map((media, index) => (
+                  <div className="mt-4 flex justify-center gap-3 flex-wrap">
+                    {itemMedia.slice(1, 6).map((media, index) => (
                       <div
                         key={index}
                         onClick={() => openMediaModal(itemMedia, index + 1)}
-                        className="w-14 h-14 rounded-lg border cursor-pointer overflow-hidden shadow-sm hover:opacity-80 transition"
+                        className="w-14 h-14 rounded-xl border overflow-hidden cursor-pointer shadow-sm hover:scale-105 transition"
                         style={{ borderColor: '#efb20c' }}
                       >
                         {media.type === 'image' ? (
@@ -1156,8 +1158,8 @@ const enquireOnWhatsApp = () => {
         </div>
 
         {/* DETAILS */}
-        <div className="lg:w-2/5 p-5 overflow-y-auto bg-[#fff8e6]">
-          <div className="grid grid-cols-2 gap-3 text-sm">
+        <div className="lg:w-2/5 px-6 py-5 overflow-y-auto bg-[#fff8e6]">
+          <div className="grid grid-cols-2 gap-4 text-sm">
             {[
               ['ID', selectedItem.id],
               ['Category', `${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}`],
@@ -1168,21 +1170,28 @@ const enquireOnWhatsApp = () => {
               ['Stone Weight', `${selectedItem.stoneWeight || 'N/A'}g`],
               ['Design', selectedItem.isOurDesign === false ? 'Others' : 'In House'],
             ].map(([label, value], i) => (
-              <div key={i} className="bg-white p-3 rounded-xl border shadow-sm" style={{ borderColor: '#efb20c' }}>
-                <span className="text-xs font-semibold text-gray-600">{label}</span>
-                <div className="font-bold mt-1 text-[#7f1a2b]">{value}</div>
+              <div
+                key={i}
+                className="bg-white rounded-2xl px-4 py-3 shadow-sm border hover:shadow-md transition"
+                style={{ borderColor: '#efb20c' }}
+              >
+                <span className="text-[11px] font-semibold tracking-wide text-gray-500 uppercase">
+                  {label}
+                </span>
+                <div className="mt-1 text-[15px] font-bold text-[#7f1a2b]">
+                  {value}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* BOTTOM ACTION BAR */}
-      <div className="border-t bg-white px-6 py-4 flex justify-end gap-4 sticky bottom-0">
-
+      {/* ACTION BAR */}
+      <div className="border-t bg-white px-6 py-4 flex justify-end gap-4">
         <button
           onClick={enquireOnWhatsApp}
-          className="px-6 py-3 rounded-xl text-white font-bold flex items-center gap-2 shadow-md hover:opacity-90 transition"
+          className="px-6 py-3 rounded-2xl font-bold text-white shadow-lg hover:scale-[1.02] transition"
           style={{ backgroundColor: '#128C7E' }}
         >
           💬 Enquire
@@ -1190,12 +1199,11 @@ const enquireOnWhatsApp = () => {
 
         <button
           onClick={shareOnWhatsApp}
-          className="px-6 py-3 rounded-xl text-white font-bold flex items-center gap-2 shadow-md hover:opacity-90 transition"
+          className="px-6 py-3 rounded-2xl font-bold text-white shadow-lg hover:scale-[1.02] transition"
           style={{ backgroundColor: '#25D366' }}
         >
           🔗 Share
         </button>
-
       </div>
     </div>
   </div>
