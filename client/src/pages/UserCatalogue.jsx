@@ -560,7 +560,7 @@ const enquireOnWhatsApp = () => {
         }
       `}</style>
 
-      <div className="fixed top-0 left-0 w-full z-[90] p-4">
+     <div className="fixed top-0 left-0 w-full z-[90] bg-white p-4">
   <div className="flex items-center gap-4 justify-center sm:justify-start max-w-7xl mx-auto">
     
     <div className="relative">
