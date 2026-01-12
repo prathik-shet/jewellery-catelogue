@@ -1065,7 +1065,7 @@ const enquireOnWhatsApp = () => {
     onTouchMove={onTouchMove}
     onTouchEnd={onTouchEnd}
   >
-    <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[88vh] overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.25)] flex flex-col">
+    <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[88vh] overflow-hidden shadow-[0_12px_35px_rgba(0,0,0,0.22)] flex flex-col">
 
       {/* HEADER */}
       <div className="gradient-gold px-4 py-3 flex items-center justify-between border-b border-amber-300">
@@ -1074,12 +1074,10 @@ const enquireOnWhatsApp = () => {
             onClick={() => navigateToItem('prev')}
             className="p-1.5 rounded-full hover:bg-white/30 transition"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            ◀
           </button>
 
-          <h2 className="text-base font-bold truncate max-w-md text-[#2e2e2e]">
+          <h2 className="text-base font-semibold truncate max-w-md text-[#2e2e2e]">
             {selectedItem.name}
           </h2>
 
@@ -1087,9 +1085,7 @@ const enquireOnWhatsApp = () => {
             onClick={() => navigateToItem('next')}
             className="p-1.5 rounded-full hover:bg-white/30 transition"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
+            ▶
           </button>
         </div>
 
@@ -1100,9 +1096,7 @@ const enquireOnWhatsApp = () => {
           }}
           className="p-1.5 rounded-full hover:bg-white/30 transition"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          ✕
         </button>
       </div>
 
@@ -1110,7 +1104,8 @@ const enquireOnWhatsApp = () => {
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
         {/* IMAGE SECTION */}
-        <div className="lg:w-3/5 bg-gray-50 px-4 py-4 flex flex-col">
+        <div className="lg:w-3/5 bg-gray-50 px-4 py-4 flex flex-col items-center justify-center">
+
           {(() => {
             const itemMedia = getItemMedia(selectedItem);
             const mainImage = getMainImage(selectedItem);
@@ -1118,32 +1113,34 @@ const enquireOnWhatsApp = () => {
 
             return (
               <>
-                {/* MAIN IMAGE (CLICK → FULL SCREEN) */}
-                <div
-                  className="flex-1 flex items-center justify-center relative cursor-pointer"
-                  onClick={() => openMediaModal(itemMedia, 0)}
-                >
+                {/* IMAGE CARD */}
+                <div className="relative group">
                   <img
                     src={mainImage}
                     alt={selectedItem.name}
-                    className="max-h-[260px] object-contain rounded-xl border shadow-sm"
+                    className="max-h-[260px] object-contain rounded-xl border bg-white"
                     style={{ borderColor: '#efb20c' }}
                   />
 
-                  {/* VIEW INDICATOR */}
-                  <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded-md">
-                    View
-                  </div>
+                  {/* EXPLICIT VIEW BUTTON */}
+                  <button
+                    onClick={() => openMediaModal(itemMedia, 0)}
+                    className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/35 transition rounded-xl"
+                  >
+                    <div className="opacity-0 group-hover:opacity-100 transition bg-white text-black px-4 py-2 rounded-full text-sm font-semibold shadow">
+                      👁 View Full Image
+                    </div>
+                  </button>
                 </div>
 
                 {/* THUMBNAILS */}
                 {itemMedia.length > 1 && (
-                  <div className="mt-3 flex justify-center gap-2 flex-wrap">
+                  <div className="mt-4 flex gap-2 flex-wrap justify-center">
                     {itemMedia.slice(1, 6).map((media, index) => (
-                      <div
+                      <button
                         key={index}
                         onClick={() => openMediaModal(itemMedia, index + 1)}
-                        className="w-12 h-12 rounded-lg border overflow-hidden cursor-pointer hover:opacity-80 transition"
+                        className="w-12 h-12 rounded-lg border overflow-hidden hover:ring-2 hover:ring-amber-400 transition"
                         style={{ borderColor: '#efb20c' }}
                       >
                         {media.type === 'image' ? (
@@ -1153,7 +1150,7 @@ const enquireOnWhatsApp = () => {
                             ▶
                           </div>
                         )}
-                      </div>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -1180,10 +1177,10 @@ const enquireOnWhatsApp = () => {
                 className="bg-white rounded-xl px-3 py-2 border"
                 style={{ borderColor: '#efb20c' }}
               >
-                <span className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
+                <div className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
                   {label}
-                </span>
-                <div className="text-sm font-bold text-[#7f1a2b] mt-0.5">
+                </div>
+                <div className="text-sm font-bold text-[#7f1a2b]">
                   {value}
                 </div>
               </div>
@@ -1196,7 +1193,7 @@ const enquireOnWhatsApp = () => {
       <div className="border-t bg-white px-4 py-3 flex justify-end gap-3">
         <button
           onClick={enquireOnWhatsApp}
-          className="px-5 py-2.5 rounded-xl font-semibold text-white hover:opacity-90 transition"
+          className="px-5 py-2 rounded-xl text-white font-semibold"
           style={{ backgroundColor: '#128C7E' }}
         >
           💬 Enquire
@@ -1204,7 +1201,7 @@ const enquireOnWhatsApp = () => {
 
         <button
           onClick={shareOnWhatsApp}
-          className="px-5 py-2.5 rounded-xl font-semibold text-white hover:opacity-90 transition"
+          className="px-5 py-2 rounded-xl text-white font-semibold"
           style={{ backgroundColor: '#25D366' }}
         >
           🔗 Share
@@ -1213,6 +1210,7 @@ const enquireOnWhatsApp = () => {
     </div>
   </div>
 )}
+
 
 
     </div>
