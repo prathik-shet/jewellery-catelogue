@@ -986,20 +986,21 @@ const enquireOnWhatsApp = () => {
 >
 
                   {mainImage && (
-  <div className="relative mb-3 overflow-hidden">
-    <img
-  src={mainImage}
-  alt={item.name}
-  loading="lazy"
-  className={`w-full object-cover rounded-lg group-hover:scale-110 smooth-transition ${getImageHeightClasses()}`}
- />
-
+  <div className="relative mb-3">
+    <div className="w-full h-[220px] sm:h-[240px] overflow-hidden rounded-lg">
+      <img
+        src={mainImage}
+        alt={item.name}
+        loading="lazy"
+        className="w-full h-full object-cover smooth-transition group-hover:scale-105"
+      />
+    </div>
 
     {/* Minimal flat overlay label */}
     <span
       className="absolute bottom-2 left-2 text-xs font-semibold tracking-wide text-white"
       style={{
-        background: "rgba(0,0,0,0.55)",
+        background: "ffffff",
         padding: "4px 8px"
       }}
     >
@@ -1007,6 +1008,7 @@ const enquireOnWhatsApp = () => {
     </span>
   </div>
 )}
+
 
 
                   <div className="space-y-1.5">
