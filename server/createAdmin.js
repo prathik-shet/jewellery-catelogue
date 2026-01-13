@@ -15,8 +15,8 @@ async function createAdmin() {
 
   await mongoose.connect(process.env.MONGO_URI);
 
-  const email = 'admin@example.com';
-  const plainPassword = 'admin123';
+  const email = 'vimaleshwarajewellers@gmail.com';
+  const plainPassword = 'Vimalesh@2001';
   const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
   const existing = await User.findOne({ email });
