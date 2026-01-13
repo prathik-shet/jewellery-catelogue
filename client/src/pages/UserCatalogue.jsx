@@ -560,36 +560,24 @@ const enquireOnWhatsApp = () => {
         }
       `}</style>
 
-     <div className="fixed top-0 left-0 w-full z-[90] bg-white p-4">
-  <div className="flex items-center gap-4 justify-center sm:justify-start max-w-7xl mx-auto">
-    
-    <div className="relative">
-      <img
-        src="https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/desings/logo.png"
-        alt="Logo"
-        loading="lazy"
-        className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full smooth-transition hover-scale"
-      />
-    </div>
-
-    <div className="text-center sm:text-left">
-      <h1
-        style={{ color: "#2e2e2e" }}
-        className="text-xl sm:text-2xl lg:text-3xl font-black tracking-wide brand-font"
-      >
-        VIMALESHWARA JEWELLERS
-      </h1>
-      <p
-        style={{ color: "#7f1a2b" }}
-        className="text-xs sm:text-sm font-semibold tracking-wider"
-      >
-        Premium Jewellery Collection
-      </p>
-    </div>
-
-  </div>
-</div>
-
+      <div className="gradient-gold fixed top-0 left-0 w-full z-[90] shadow-xl p-4 border-b-2 border-amber-400">
+        <div className="flex items-center gap-4 justify-center sm:justify-start max-w-7xl mx-auto">
+          <div className="relative">
+            <img
+              src="https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/desings/logo.png"
+              alt="Logo"
+              loading="lazy"
+              className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-full border-4 border-white shadow-2xl smooth-transition hover-scale"
+            />
+          </div>
+          <div className="text-center sm:text-left">
+            <h1 style={{ color: '#2e2e2e' }} className="text-xl sm:text-2xl lg:text-3xl font-black tracking-wide brand-font drop-shadow-sm">
+              VIMALESHWARA JEWELLERS
+            </h1>
+            <p style={{ color: '#7f1a2b' }} className="text-xs sm:text-sm font-semibold tracking-wider">Premium Jewellery Collection</p>
+          </div>
+        </div>
+      </div>
 
       <div className="glass-effect fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-4 border-b-2" style={{ borderColor: '#efb20c' }}>
         <div className="w-full max-w-7xl mx-auto">
