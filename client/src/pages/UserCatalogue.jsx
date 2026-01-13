@@ -603,7 +603,7 @@ const enquireOnWhatsApp = () => {
 >
   <div className="w-full max-w-7xl mx-auto">
 
-    {/* ================= CATEGORY SLIDER (TOP) ================= */}
+    {/* ================= CATEGORY SLIDER ================= */}
     <div className="overflow-x-auto sm:overflow-x-hidden no-scrollbar mb-3">
       <div className="flex gap-4 px-1 sm:justify-center">
         {categories.map((cat) => {
@@ -644,89 +644,34 @@ const enquireOnWhatsApp = () => {
 
     {/* ================= CONTROL STRIP ================= */}
     <div className="flex items-center justify-center gap-2 mb-2
-                    border rounded-xl px-3 py-2 bg-white shadow-sm">
+                    border rounded-xl px-3 py-2 bg-white shadow-sm relative">
 
       {/* FILTER */}
-      <button
-        onClick={() => {
-          setShowFilterPanel(!showFilterPanel);
-          setShowSortPanel(false);
-          setShowSearch(false);
-        }}
-        className="px-4 py-1.5 rounded-full border text-sm
-                   border-[#7f1a2b] text-[#7f1a2b] hover:bg-[#7f1a2b]/10"
-      >
-        Filter
-      </button>
+      <div className="relative">
+        <button
+          onClick={() => {
+            setShowFilterPanel(!showFilterPanel);
+            setShowSortPanel(false);
+            setShowSearch(false);
+          }}
+          className="px-4 py-1.5 rounded-full border text-sm
+                     border-[#7f1a2b] text-[#7f1a2b] hover:bg-[#7f1a2b]/10"
+        >
+          Filter
+        </button>
 
-      {/* SORT */}
-      <button
-        onClick={() => {
-          setShowSortPanel(!showSortPanel);
-          setShowFilterPanel(false);
-        }}
-        className="px-4 py-1.5 rounded-full border text-sm
-                   border-amber-500 text-amber-600 hover:bg-amber-100"
-      >
-        Sort
-      </button>
-
-      {/* SEARCH */}
-      <button
-        onClick={() => {
-          setShowSearch(!showSearch);
-          setShowFilterPanel(false);
-          setShowSortPanel(false);
-        }}
-        className="px-3 py-1.5 rounded-full border text-sm"
-      >
-        🔍
-      </button>
-
-      {/* GRID */}
-      <button
-        onClick={cycleGrid}
-        className="px-3 py-1.5 rounded-full bg-amber-500 text-white text-sm"
-        title={`Grid: ${gridCols} column${gridCols > 1 ? "s" : ""}`}
-      >
-        {getGridIcon()}
-        <span className="text-xs font-bold hidden sm:inline ml-1">
-          {gridCols}
-        </span>
-      </button>
-    </div>
-
-    {/* ================= SEARCH BAR ================= */}
-    {showSearch && (
-      <div className="mb-3 fade-in relative">
-        <input
-          type="text"
-          placeholder="Search jewellery by name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-10 py-2 border rounded-xl"
-        />
-        <span className="absolute left-3 top-1/2 -translate-y-1/2">🔍</span>
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2"
+        {showFilterPanel && (
+          <div
+            className="
+              fixed inset-0 z-[100] flex items-center justify-center
+              sm:absolute sm:inset-auto sm:top-full sm:left-0
+            "
           >
-            ✕
-          </button>
-        )}
-      </div>
-    )}
-  </div>
-</div>
-
-{/* ================= FILTER PANEL ================= */}
-{showFilterPanel && (
-  <div className="fixed inset-0 z-[90] flex items-center justify-center
-                  sm:items-start sm:justify-start">
-    <div className="bg-white w-[90%] sm:w-96 rounded-2xl p-6 shadow-2xl
-                    sm:absolute sm:top-36 sm:left-4 max-h-[80vh] overflow-y-auto">
-       {showFilterPanel && (
+            <div
+              className="bg-white w-[90%] sm:w-96 rounded-2xl p-6 shadow-2xl
+                         max-h-[80vh] overflow-y-auto"
+            >
+              {showFilterPanel && (
           <div
             className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90] fade-in"
             style={{ borderColor: "#7f1a2b" }}
@@ -820,18 +765,37 @@ const enquireOnWhatsApp = () => {
             </div>
           </div>
         )}
-    </div>
-  </div>
-)}
+            </div>
+          </div>
+        )}
+      </div>
 
+      {/* SORT */}
+      <div className="relative">
+        <button
+          onClick={() => {
+            setShowSortPanel(!showSortPanel);
+            setShowFilterPanel(false);
+            setShowSearch(false);
+          }}
+          className="px-4 py-1.5 rounded-full border text-sm
+                     border-amber-500 text-amber-600 hover:bg-amber-100"
+        >
+          Sort
+        </button>
 
-{/* ================= SORT PANEL ================= */}
-{showSortPanel && (
-  <div className="fixed inset-0 z-[90] flex items-center justify-center
-                  sm:items-start sm:justify-end">
-    <div className="bg-white w-[90%] sm:w-96 rounded-2xl p-6 shadow-2xl
-                    sm:absolute sm:top-36 sm:right-4">
-      {showSortPanel && (
+        {showSortPanel && (
+          <div
+            className="
+              fixed inset-0 z-[100] flex items-center justify-center
+              sm:absolute sm:inset-auto sm:top-full sm:right-0
+            "
+          >
+            <div
+              className="bg-white w-[90%] sm:w-96 rounded-2xl p-6 shadow-2xl
+                         max-h-[80vh] overflow-y-auto"
+            >
+              {showSortPanel && (
                 <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 z-[90] fade-in" style={{ borderColor: '#efb20c' }}>
                   <div className="space-y-5">
                     <div className="p-4 rounded-xl border-2 shadow-sm" style={{ backgroundColor: '#fff8e6', borderColor: '#efb20c' }}>
@@ -911,6 +875,66 @@ const enquireOnWhatsApp = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* SEARCH */}
+      <button
+        onClick={() => {
+          setShowSearch(!showSearch);
+          setShowFilterPanel(false);
+          setShowSortPanel(false);
+        }}
+        className="px-3 py-1.5 rounded-full border text-sm"
+      >
+        🔍
+      </button>
+
+      {/* GRID */}
+      <button
+        onClick={cycleGrid}
+        className="px-2.5 py-1 rounded-full bg-amber-500 text-white
+                   text-xs sm:text-[11px]"
+        title={`Grid: ${gridCols}`}
+      >
+        {getGridIcon()}
+        <span className="hidden sm:inline ml-1 font-semibold">
+          {gridCols}
+        </span>
+      </button>
+    </div>
+  </div>
+</div>
+
+{/* ================= SEARCH DROPDOWN ================= */}
+{showSearch && (
+  <div
+    className="
+      fixed inset-0 z-[100] flex items-center justify-center
+      sm:items-start sm:justify-center sm:top-[140px] sm:inset-auto
+    "
+  >
+    <div className="bg-white w-[90%] sm:w-[600px] p-4 rounded-2xl shadow-2xl">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search jewellery by name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-10 py-3 border rounded-xl"
+        />
+        <span className="absolute left-3 top-1/2 -translate-y-1/2">🔍</span>
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2"
+          >
+            ✕
+          </button>
+        )}
+      </div>
     </div>
   </div>
 )}
@@ -926,6 +950,8 @@ const enquireOnWhatsApp = () => {
     }}
   />
 )}
+
+
 
 
 
