@@ -755,6 +755,56 @@ const enquireOnWhatsApp = () => {
                   <option value="Others">Others</option>
                 </select>
               </div>
+              
+                    <div>
+                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>
+                        Weight Range (grams)
+                      </label>
+                      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-xl border-2 border-amber-200">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Min Weight</label>
+                            <input
+                              type="number"
+                              min="0"
+                              max={weightMax - 1}
+                              value={weightMin}
+                              onChange={(e) => setWeightMin(Math.max(0, Math.min(Number(e.target.value), weightMax - 1)))}
+                              className="w-full p-2.5 border-2 border-gray-300 rounded-lg text-center font-bold smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                              style={{ color: '#7f1a2b' }}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Max Weight</label>
+                            <input
+                              type="number"
+                              min={weightMin + 1}
+                              max="200"
+                              value={weightMax}
+                              onChange={(e) => setWeightMax(Math.max(weightMin + 1, Math.min(200, Number(e.target.value))))}
+                              className="w-full p-2.5 border-2 border-gray-300 rounded-lg text-center font-bold smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                              style={{ color: '#7f1a2b' }}
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-3 text-center">
+                          <span className="inline-block px-4 py-1.5 bg-white rounded-full text-sm font-bold shadow-sm" style={{ color: '#efb20c' }}>
+                            {weightMin}g - {weightMax}g
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Search by ID</label>
+                      <input
+                        type="text"
+                        placeholder="Enter exact ID"
+                        value={searchId}
+                        onChange={(e) => setSearchId(e.target.value)}
+                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
+                      />
+                    </div>
 
               <button
                 onClick={clearAllFilters}
@@ -908,22 +958,15 @@ const enquireOnWhatsApp = () => {
   </div>
 </div>
 
-{/* ================= SEARCH DROPDOWN ================= */}
-{showSearch && (
-  <div
-    className="
-      fixed inset-0 z-[100] flex items-center justify-center
-      sm:items-start sm:justify-center sm:top-[140px] sm:inset-auto
-    "
-  >
-    <div className="bg-white w-[90%] sm:w-[600px] p-4 rounded-2xl shadow-2xl">
-      <div className="relative">
+{/* ================= SEARCH BAR ================= */}
+    {showSearch && (
+      <div className="mb-3 fade-in relative">
         <input
           type="text"
           placeholder="Search jewellery by name..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-10 py-3 border rounded-xl"
+          className="w-full pl-10 pr-10 py-2 border rounded-xl"
         />
         <span className="absolute left-3 top-1/2 -translate-y-1/2">🔍</span>
         {searchQuery && (
@@ -935,9 +978,7 @@ const enquireOnWhatsApp = () => {
           </button>
         )}
       </div>
-    </div>
-  </div>
-)}
+    )}
 
 {/* ================= BACKDROP ================= */}
 {(showFilterPanel || showSortPanel || showSearch) && (
