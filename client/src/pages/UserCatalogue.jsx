@@ -24,6 +24,9 @@ function UserCatalogue() {
   const [loading, setLoading] = useState(false);
   const [isDataFetched, setIsDataFetched] = useState(false);
 
+  const [showSearch, setShowSearch] = useState(false);
+
+
   const [modalMedia, setModalMedia] = useState([]);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
@@ -311,6 +314,20 @@ function UserCatalogue() {
     });
     return media;
   };
+  const CATEGORY_IMAGES = {
+  Rings: "https://picsum.photos/seed/rings/300/300",
+  Necklaces: "https://picsum.photos/seed/necklaces/300/300",
+  Mangalsutra: "https://picsum.photos/seed/mangalsutra/300/300",
+  Earrings: "https://picsum.photos/seed/earrings/300/300",
+  Bracelets: "https://picsum.photos/seed/bracelets/300/300",
+  Bangles: "https://picsum.photos/seed/bangles/300/300",
+  Chains: "https://picsum.photos/seed/chains/300/300",
+  Pendants: "https://picsum.photos/seed/pendants/300/300",
+  "Finger Rings": "https://picsum.photos/seed/finger-rings/300/300",
+  "Necklace Set": "https://picsum.photos/seed/necklace-set/300/300",
+  "Nose Pin": "https://picsum.photos/seed/nose-pin/300/300",
+  Antique: "https://picsum.photos/seed/antique/300/300",
+};
 
   const goToPage = (page) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
@@ -580,340 +597,256 @@ const enquireOnWhatsApp = () => {
         </div>
       </div>
 
-      <div className="glass-effect fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-4 border-b-2" style={{ borderColor: '#efb20c' }}>
-        <div className="w-full max-w-7xl mx-auto">
-          <div className="relative mb-3">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search jewellery by name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-16 py-3.5 bg-white border-2 border-gray-200 rounded-2xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-4 focus:ring-amber-200 focus:border-amber-400 smooth-transition text-sm sm:text-base font-medium shadow-sm"
-              />
-              <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+      <div
+  className="glass-effect fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-4 border-b-2"
+  style={{ borderColor: "#efb20c" }}
+>
+  <div className="w-full max-w-7xl mx-auto">
+
+    {/* ================= FILTER | SORT | SEARCH ICON ================= */}
+    <div className="flex items-center justify-center gap-3 mb-3">
+
+      {/* FILTER */}
+      <div className="relative">
+        <button
+          onClick={() => {
+            setShowFilterPanel(!showFilterPanel);
+            setShowSortPanel(false);
+            setShowSearch(false);
+          }}
+          className="gradient-maroon text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl font-bold shadow-lg flex items-center gap-2"
+        >
+          Filter
+        </button>
+
+        {showFilterPanel && (
+          <div
+            className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90] fade-in"
+            style={{ borderColor: "#7f1a2b" }}
+          >
+            <div className="space-y-5">
+
+              {/* ❌ CATEGORY REMOVED FROM HERE */}
+
+              <div>
+                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
+                  Sub-Category
+                </label>
+                <select
+                  value={selectedSubCategory}
+                  onChange={(e) => setSelectedSubCategory(e.target.value)}
+                  className="w-full p-3 border-2 rounded-xl"
+                >
+                  <option value="">All Sub-Categories</option>
+                  {getFilteredSubcatagories().map((sub) => (
+                    <option key={sub}>{sub}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
+                  Occasion
+                </label>
+                <select
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value)}
+                  className="w-full p-3 border-2 rounded-xl"
+                >
+                  {types.map((t) => (
+                    <option key={t} value={t === "All" ? "" : t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
+                  Gender
+                </label>
+                <select
+                  value={selectedGender}
+                  onChange={(e) => setSelectedGender(e.target.value)}
+                  className="w-full p-3 border-2 rounded-xl"
+                >
+                  {genders.map((g) => (
+                    <option key={g} value={g === "All" ? "" : g}>{g}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
+                  Metal
+                </label>
+                <select
+                  value={metalFilter}
+                  onChange={(e) => setMetalFilter(e.target.value)}
+                  className="w-full p-3 border-2 rounded-xl"
+                >
+                  {metals.map((m) => (
+                    <option key={m} value={m === "All" ? "" : m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
+                  Design Ownership
+                </label>
+                <select
+                  value={designFilter}
+                  onChange={(e) => setDesignFilter(e.target.value)}
+                  className="w-full p-3 border-2 rounded-xl"
+                >
+                  <option value="">All</option>
+                  <option value="our">In House</option>
+                  <option value="Others">Others</option>
+                </select>
               </div>
 
               <button
-                onClick={cycleGrid}
-                style={{ backgroundColor: '#efb20c' }}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white p-2.5 rounded-xl hover:opacity-90 smooth-transition hover-scale flex items-center gap-1.5 shadow-md"
-                title={`Grid: ${gridCols} column${gridCols > 1 ? 's' : ''}`}
+                onClick={clearAllFilters}
+                className="gradient-maroon w-full py-3 text-white font-bold rounded-xl"
               >
-                {getGridIcon()}
-                <span className="text-xs font-bold hidden sm:inline">{gridCols}</span>
+                Clear All Filters
               </button>
-
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-16 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-700 smooth-transition"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
             </div>
           </div>
-
-          <div className="flex items-center justify-center gap-3">
-            <div className="relative">
-              <button
-                onClick={() => {
-                  setShowFilterPanel(!showFilterPanel);
-                  setShowSortPanel(false);
-                }}
-                className="gradient-maroon text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl font-bold shadow-lg hover:shadow-xl smooth-transition hover-lift flex items-center gap-2"
-              >
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                <span className="text-sm sm:text-base">Filter</span>
-              </button>
-
-              {showFilterPanel && (
-                <div className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90] fade-in" style={{ borderColor: '#7f1a2b' }}> 
-                <div className="space-y-5">
-
-
-                    <div>
-                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Categories</label>
-                      <div className="flex flex-wrap gap-2">
-                        {categories.map((cat) => (
-                          <button
-                            key={cat}
-                            onClick={() => toggleCategory(cat)}
-                            className={`px-3.5 py-2 rounded-lg text-sm font-semibold smooth-transition hover-scale ${
-                              selectedCategory.includes(cat)
-                                ? 'text-white shadow-md'
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                            }`}
-                            style={selectedCategory.includes(cat) ? { backgroundColor: '#efb20c' } : {}}
-                          >
-                            {cat}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Sub-Category</label>
-                      <select
-                        value={selectedSubCategory}
-                        onChange={(e) => setSelectedSubCategory(e.target.value)}
-                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                      >
-                        <option value="">All Sub-Categories</option>
-                        {getFilteredSubcatagories().map((subCat) => (
-                          <option key={subCat} value={subCat}>{subCat}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}> Occation</label>
-                      <select
-                        value={selectedType}
-                        onChange={(e) => setSelectedType(e.target.value)}
-                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                      >
-                        {types.map((typeOpt) => (
-                          <option key={typeOpt} value={typeOpt === 'All' ? '' : typeOpt}>
-                            {typeOpt}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Gender</label>
-                      <select
-                        value={selectedGender}
-                        onChange={(e) => setSelectedGender(e.target.value)}
-                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                      >
-                        {genders.map((gender) => (
-                          <option key={gender} value={gender === 'All' ? '' : gender}>
-                            {gender}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Metal</label>
-                      <select
-                        value={metalFilter}
-                        onChange={(e) => setMetalFilter(e.target.value)}
-                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                      >
-                        {metals.map((metal) => (
-                          <option key={metal} value={metal === 'All' ? '' : metal}>
-                            {metal}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Stone</label>
-                      <select
-                        value={stoneFilter}
-                        onChange={(e) => setStoneFilter(e.target.value)}
-                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                      >
-                        <option value="">With & Without</option>
-                        <option value="with">With Stone</option>
-                        <option value="without">Without Stone</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Design Ownership</label>
-                      <select
-                        value={designFilter}
-                        onChange={(e) => setDesignFilter(e.target.value)}
-                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                      >
-                        <option value="">All Designs</option>
-                        <option value="our">In House</option>
-                        <option value="Others">Others</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>
-                        Weight Range (grams)
-                      </label>
-                      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-xl border-2 border-amber-200">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Min Weight</label>
-                            <input
-                              type="number"
-                              min="0"
-                              max={weightMax - 1}
-                              value={weightMin}
-                              onChange={(e) => setWeightMin(Math.max(0, Math.min(Number(e.target.value), weightMax - 1)))}
-                              className="w-full p-2.5 border-2 border-gray-300 rounded-lg text-center font-bold smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                              style={{ color: '#7f1a2b' }}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Max Weight</label>
-                            <input
-                              type="number"
-                              min={weightMin + 1}
-                              max="200"
-                              value={weightMax}
-                              onChange={(e) => setWeightMax(Math.max(weightMin + 1, Math.min(200, Number(e.target.value))))}
-                              className="w-full p-2.5 border-2 border-gray-300 rounded-lg text-center font-bold smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                              style={{ color: '#7f1a2b' }}
-                            />
-                          </div>
-                        </div>
-                        <div className="mt-3 text-center">
-                          <span className="inline-block px-4 py-1.5 bg-white rounded-full text-sm font-bold shadow-sm" style={{ color: '#efb20c' }}>
-                            {weightMin}g - {weightMax}g
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Search by ID</label>
-                      <input
-                        type="text"
-                        placeholder="Enter exact ID"
-                        value={searchId}
-                        onChange={(e) => setSearchId(e.target.value)}
-                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                      />
-                    </div>
-
-                    <button
-                      onClick={clearAllFilters}
-                      className="gradient-maroon w-full px-4 py-3 text-white font-bold rounded-xl hover:shadow-lg smooth-transition hover-lift"
-                    >
-                      Clear All Filters
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="relative">
-              <button
-                onClick={() => {
-                  setShowSortPanel(!showSortPanel);
-                  setShowFilterPanel(false);
-                }}
-                className="gradient-gold text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl font-bold shadow-lg hover:shadow-xl smooth-transition hover-lift flex items-center gap-2"
-              >
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                </svg>
-                <span className="text-sm sm:text-base">Sort</span>
-              </button>
-
-              {showSortPanel && (
-                <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 z-[90] fade-in" style={{ borderColor: '#efb20c' }}>
-                  <div className="space-y-5">
-                    <div className="p-4 rounded-xl border-2 shadow-sm" style={{ backgroundColor: '#fff8e6', borderColor: '#efb20c' }}>
-                      <p className="font-bold text-center text-base" style={{ color: '#7f1a2b' }}>
-                        {getActiveSortDescription()}
-                      </p>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Sort by Date</label>
-                      <div className="space-y-3">
-                        <button
-                          onClick={() => {
-                            setSortByDate('newest');
-                            setSortField('');
-                          }}
-                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
-                            sortByDate === 'newest' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
-                          }`}
-                          style={sortByDate === 'newest' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
-                        >
-                          Newest First
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSortByDate('oldest');
-                            setSortField('');
-                          }}
-                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
-                            sortByDate === 'oldest' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
-                          }`}
-                          style={sortByDate === 'oldest' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
-                        >
-                          Oldest First
-                        </button>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Sort by Weight</label>
-                      <div className="space-y-3">
-                        <button
-                          onClick={() => {
-                            setSortField('weight');
-                            setSortOrder('desc');
-                            setSortByDate('');
-                          }}
-                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
-                            sortField === 'weight' && sortOrder === 'desc' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
-                          }`}
-                          style={sortField === 'weight' && sortOrder === 'desc' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
-                        >
-                          High to Low
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSortField('weight');
-                            setSortOrder('asc');
-                            setSortByDate('');
-                          }}
-                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
-                            sortField === 'weight' && sortOrder === 'asc' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
-                          }`}
-                          style={sortField === 'weight' && sortOrder === 'asc' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
-                        >
-                          Low to High
-                        </button>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={clearAllSorts}
-                      className="gradient-maroon w-full px-4 py-3 text-white font-bold rounded-xl hover:shadow-lg smooth-transition hover-lift"
-                    >
-                      Reset Sort
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
-      {(showFilterPanel || showSortPanel) && (
-        <div
-          className="fixed inset-0 z-[70] bg-black/20 backdrop-blur-sm"
+      {/* SORT */}
+      <div className="relative">
+        <button
           onClick={() => {
+            setShowSortPanel(!showSortPanel);
             setShowFilterPanel(false);
-            setShowSortPanel(false);
+            setShowSearch(false);
           }}
+          className="gradient-gold text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl font-bold shadow-lg"
+        >
+          Sort
+        </button>
+
+        {showSortPanel && (
+          <div
+            className="absolute top-full mt-2 right-0 w-80 bg-white border-2 rounded-2xl shadow-2xl p-6 z-[90]"
+            style={{ borderColor: "#efb20c" }}
+          >
+            <button onClick={clearAllSorts} className="w-full py-3 gradient-maroon text-white rounded-xl">
+              Reset Sort
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* SEARCH ICON */}
+      <button
+        onClick={() => {
+          setShowSearch(!showSearch);
+          setShowFilterPanel(false);
+          setShowSortPanel(false);
+        }}
+        className="bg-white border-2 border-gray-300 p-3 rounded-xl shadow-md"
+      >
+        🔍
+      </button>
+    </div>
+
+    {/* ================= SEARCH DROPDOWN ================= */}
+    {showSearch && (
+      <div className="mb-3 fade-in relative">
+        <input
+          type="text"
+          placeholder="Search jewellery by name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-12 pr-12 py-3 border-2 rounded-2xl"
         />
-      )}
+        <span className="absolute left-4 top-1/2 -translate-y-1/2">🔍</span>
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute right-4 top-1/2 -translate-y-1/2"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+    )}
+
+    {/* ================= CATEGORY SLIDER ================= */}
+<div className="overflow-x-auto no-scrollbar">
+  <div className="flex gap-5 px-1">
+
+    {categories.map((cat) => {
+      const imageSrc =
+        CATEGORY_IMAGES[cat] ||
+        "https://picsum.photos/seed/default/300/300";
+
+      const isActive = selectedCategory.includes(cat);
+
+      return (
+        <button
+          key={cat}
+          onClick={() => toggleCategory(cat)}
+          aria-pressed={isActive}
+          className="flex flex-col items-center min-w-[90px] transition active:scale-95"
+        >
+          {/* IMAGE */}
+          <div
+            className={`w-20 h-20 rounded-full border-2 overflow-hidden transition-all duration-300
+              ${isActive
+                ? "border-amber-400 scale-105 shadow-lg"
+                : "border-gray-200"
+              }`}
+          >
+            <img
+              src={imageSrc}
+              alt={cat}
+              loading="lazy"
+              className="w-full h-full object-cover bg-gray-100"
+              onError={(e) => {
+                e.currentTarget.src =
+                  "https://picsum.photos/seed/fallback/300/300";
+              }}
+            />
+          </div>
+
+          {/* TEXT */}
+          <span
+            className={`mt-2 text-sm font-semibold text-center
+              ${isActive ? "text-amber-600" : "text-gray-700"}`}
+          >
+            {cat}
+          </span>
+        </button>
+      );
+    })}
+
+  
+
+
+  
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{/* ================= BACKDROP ================= */}
+{(showFilterPanel || showSortPanel || showSearch) && (
+  <div
+    className="fixed inset-0 z-[70] bg-black/20"
+    onClick={() => {
+      setShowFilterPanel(false);
+      setShowSortPanel(false);
+      setShowSearch(false);
+    }}
+  />
+)}
+
 
       <div className="pt-60 sm:pt-64">
         {loading && (
