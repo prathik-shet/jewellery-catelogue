@@ -970,44 +970,43 @@ const enquireOnWhatsApp = () => {
               const textSizes = getTextSizeClasses();
 
               return (
-  <div
-    key={item._id}
-    onClick={() => handleItemClick(item, index)}
-    className="
-      bg-white
-      p-2.5 sm:p-3
-      rounded-lg
-      shadow-[0_4px_14px_rgba(0,0,0,0.06)]
-      hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)]
-      smooth-transition
-      cursor-pointer
-      group
-      overflow-hidden
-    "
-  >
-    {mainImage && (
-      <div className="relative overflow-hidden">
-        <img
-          src={mainImage}
-          alt={item.name}
-          loading="lazy"
-          className={`w-full h-full object-cover group-hover:scale-110 smooth-transition ${getImageHeightClasses()}`}
-        />
+                <div
+  key={item._id}
+  onClick={() => handleItemClick(item, index)}
+  className="
+    bg-white
+    p-2.5 sm:p-3
+    shadow-[0_4px_14px_rgba(0,0,0,0.06)]
+    hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)]
+    smooth-transition
+    cursor-pointer
+    group
+    overflow-hidden
+  "
+>
 
-        {/* Minimal flat overlay label */}
-        <span
-          className="absolute bottom-2 left-2 text-xs font-semibold tracking-wide text-white"
-          style={{
-            background: "rgba(0,0,0,0.55)",
-            padding: "4px 8px"
-          }}
-        >
-          {item.isOurDesign === false ? "OTHERS" : "IN HOUSE"}
-        </span>
-      </div>
-    )}
-  
+                  {mainImage && (
+  <div className="relative mb-3 overflow-hidden">
+    <img
+  src={mainImage}
+  alt={item.name}
+  loading="lazy"
+  className={`w-full object-cover rounded-lg group-hover:scale-110 smooth-transition ${getImageHeightClasses()}`}
+ />
 
+
+    {/* Minimal flat overlay label */}
+    <span
+      className="absolute bottom-2 left-2 text-xs font-semibold tracking-wide text-white"
+      style={{
+        background: "rgba(0,0,0,0.55)",
+        padding: "4px 8px"
+      }}
+    >
+      {item.isOurDesign === false ? "OTHERS" : "IN HOUSE"}
+    </span>
+  </div>
+)}
 
 
                   <div className="space-y-1.5">
