@@ -848,8 +848,8 @@ const enquireOnWhatsApp = () => {
     )}
 
     {/* ================= CATEGORY SLIDER ================= */}
-<div className="overflow-x-auto no-scrollbar">
-  <div className="flex gap-6 px-1">
+<div className="overflow-x-auto sm:overflow-x-hidden no-scrollbar">
+  <div className="flex gap-4 px-1 sm:justify-center">
 
     {categories.map((cat) => {
       const imageSrc =
@@ -863,15 +863,16 @@ const enquireOnWhatsApp = () => {
           key={cat}
           onClick={() => toggleCategory(cat)}
           aria-pressed={isActive}
-          className="flex flex-col items-center min-w-[90px]"
+          className="flex flex-col items-center min-w-[70px]"
         >
           {/* IMAGE */}
           <div
-            className={`w-20 h-20 rounded-full overflow-hidden border-2 transition-colors
-              ${isActive
-                ? "border-amber-400"
-                : "border-gray-300"
-              }`}
+            className={`
+              w-14 h-14 sm:w-16 sm:h-16
+              rounded-full overflow-hidden
+              border transition-colors
+              ${isActive ? "border-amber-400" : "border-gray-300"}
+            `}
           >
             <img
               src={imageSrc}
@@ -887,7 +888,12 @@ const enquireOnWhatsApp = () => {
 
           {/* TEXT */}
           <span
-            className={`mt-2 text-sm font-medium text-center
+            className={`
+              mt-1.5
+              text-xs sm:text-sm
+              font-medium
+              text-center
+              tracking-wide
               ${isActive ? "text-amber-600" : "text-gray-700"}
             `}
           >
