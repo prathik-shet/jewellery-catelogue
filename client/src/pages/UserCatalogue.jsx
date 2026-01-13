@@ -560,7 +560,8 @@ const enquireOnWhatsApp = () => {
         }
       `}</style>
 
-      <div className="gradient-gold fixed top-0 left-0 w-full z-[90] shadow-xl p-4 border-b-2 border-amber-400">
+      <div className="fixed top-0 left-0 w-full z-[90] shadow-xl p-4 bg-[#f9faf7] text-[#2e2e2e]">
+
         <div className="flex items-center gap-4 justify-center sm:justify-start max-w-7xl mx-auto">
           <div className="relative">
             <img
@@ -924,26 +925,31 @@ const enquireOnWhatsApp = () => {
         )}
 
         {isDataFetched && totalItems > 0 && (
-          <div className="px-4 sm:px-6 mb-6 fade-in">
-            <div className="bg-white/95 rounded-2xl p-5 border-2 shadow-lg max-w-7xl mx-auto" style={{ borderColor: '#efb20c' }}>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                  <p className="text-lg font-bold" style={{ color: '#7f1a2b' }}>
-                    Showing {jewellery.length} of {totalItems} items
-                  </p>
-                  {totalPages > 1 && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      Page {currentPage} of {totalPages}
-                    </p>
-                  )}
-                </div>
-                <div className="text-sm font-semibold text-gray-700 bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-2.5 rounded-xl border-2 shadow-sm" style={{ borderColor: '#efb20c' }}>
-                  {getActiveSortDescription()}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+  <div className="px-4 sm:px-6 mb-6 fade-in">
+    <div className="bg-[#f9faf7] rounded-2xl p-5 shadow-[0_6px_24px_rgba(0,0,0,0.08)] max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        
+        <div>
+          <p className="text-lg font-bold text-[#7f1a2b]">
+            Showing {jewellery.length} of {totalItems} items
+          </p>
+
+          {totalPages > 1 && (
+            <p className="text-sm text-gray-600 mt-1">
+              Page {currentPage} of {totalPages}
+            </p>
+          )}
+        </div>
+
+        <div className="text-sm font-semibold text-gray-700 bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-2.5 rounded-xl shadow-sm">
+          {getActiveSortDescription()}
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
+
 
         <div className={`gap-4 sm:gap-5 lg:gap-6 px-4 sm:px-6 pb-8 max-w-7xl mx-auto ${getGridClasses()}`}>
           {!loading && jewellery.length === 0 ? (
@@ -970,23 +976,27 @@ const enquireOnWhatsApp = () => {
                   style={{ borderColor: '#efb20c' }}
                 >
                   {mainImage && (
-                    <div className="relative mb-3 overflow-hidden rounded-xl">
-                      <img
-                        src={mainImage}
-                        alt={item.name}
-                        loading="lazy"
-                        className={`w-full object-cover border-2 group-hover:scale-110 smooth-transition ${getImageHeightClasses()}`}
-                        style={{ borderColor: '#efb20c' }}
-                      />
-                      <div className={`absolute bottom-2 left-2 px-3 py-1.5 rounded-full text-xs font-bold shadow-lg smooth-transition ${
-                        item.isOurDesign === false ? 'text-white' : 'text-white'
-                      }`}
-                      style={{ backgroundColor: item.isOurDesign === false ? '#7f1a2b' : '#efb20c' }}
-                      >
-                        {item.isOurDesign === false ? 'Others' : 'In House'}
-                      </div>
-                    </div>
-                  )}
+  <div className="relative mb-3 overflow-hidden">
+    <img
+      src={mainImage}
+      alt={item.name}
+      loading="lazy"
+      className={`w-full object-cover group-hover:scale-110 smooth-transition ${getImageHeightClasses()}`}
+    />
+
+    {/* Minimal flat overlay label */}
+    <span
+      className="absolute bottom-2 left-2 text-xs font-semibold tracking-wide text-white"
+      style={{
+        background: "rgba(0,0,0,0.55)",
+        padding: "4px 8px"
+      }}
+    >
+      {item.isOurDesign === false ? "OTHERS" : "IN HOUSE"}
+    </span>
+  </div>
+)}
+
 
                   <div className="space-y-1.5">
                     <h2 className={`font-bold truncate ${textSizes.title}`} style={{ color: '#2e2e2e' }}>
