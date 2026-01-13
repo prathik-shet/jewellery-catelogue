@@ -813,25 +813,29 @@ const enquireOnWhatsApp = () => {
               </div>
 
       {/* SEARCH ICON */}
-      <button
-        onClick={() => {
-          setShowSearch(!showSearch);
-          setShowFilterPanel(false);
-          setShowSortPanel(false);
-        }}
-        className="bg-white border-2 border-gray-300 p-3 rounded-xl shadow-md"
-      >
-        🔍
-      </button>
-      <button
-                onClick={cycleGrid}
-                style={{ backgroundColor: '#efb20c' }}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white p-2.5 rounded-xl hover:opacity-90 smooth-transition hover-scale flex items-center gap-1.5 shadow-md"
-                title={`Grid: ${gridCols} column${gridCols > 1 ? 's' : ''}`}
-              >
-                {getGridIcon()}
-                <span className="text-xs font-bold hidden sm:inline">{gridCols}</span>
-              </button>
+  <button
+    onClick={() => {
+      setShowSearch(!showSearch);
+      setShowFilterPanel(false);
+      setShowSortPanel(false);
+    }}
+    className="bg-white border-2 border-gray-300 p-3 rounded-xl shadow-md hover:opacity-90 transition"
+  >
+    🔍
+  </button>
+
+  {/* GRID ICON */}
+  <button
+    onClick={cycleGrid}
+    style={{ backgroundColor: "#efb20c" }}
+    className="text-white p-3 rounded-xl hover:opacity-90 transition flex items-center gap-1 shadow-md"
+    title={`Grid: ${gridCols} column${gridCols > 1 ? "s" : ""}`}
+  >
+    {getGridIcon()}
+    <span className="text-xs font-bold hidden sm:inline">
+      {gridCols}
+    </span>
+  </button>
     </div>
 
     {/* ================= SEARCH DROPDOWN ================= */}
