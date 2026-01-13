@@ -515,7 +515,7 @@ const enquireOnWhatsApp = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#ffffff' }} className="min-h-screen">
+    <div style={{ backgroundColor: '#fff8e6' }} className="min-h-screen">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
         .brand-font { font-family: 'Playfair Display', serif; }
@@ -970,37 +970,34 @@ const enquireOnWhatsApp = () => {
               const textSizes = getTextSizeClasses();
 
               return (
-                <div
-  key={item._id}
-  onClick={() => handleItemClick(item, index)}
-  className="
-    bg-white
-    p-2.5 sm:p-3
-    shadow-[0_4px_14px_rgba(0,0,0,0.06)]
-    hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)]
-    smooth-transition
-    cursor-pointer
-    group
-    overflow-hidden
-  "
->
-
-                  {mainImage && (
-  <div className="relative mb-3">
-    <div className="w-full h-[220px] sm:h-[240px] overflow-hidden rounded-lg">
-      <img
-        src={mainImage}
-        alt={item.name}
-        loading="lazy"
-        className="w-full h-full object-cover smooth-transition group-hover:scale-105"
-      />
-    </div>
+  <div
+    key={item._id}
+    onClick={() => handleItemClick(item, index)}
+    className="
+      bg-white
+      p-2.5 sm:p-3
+      smooth-transition
+      cursor-pointer
+      group
+    "
+  >
+    {mainImage && (
+      <div className="mb-3">
+        {/* Fixed-size image container */}
+        <div className="w-full h-[220px] sm:h-[240px] overflow-hidden rounded-lg bg-white">
+          <img
+            src={mainImage}
+            alt={item.name}
+            loading="lazy"
+            className="w-full h-full object-cover smooth-transition group-hover:scale-105"
+          />
+          </div>
 
     {/* Minimal flat overlay label */}
     <span
       className="absolute bottom-2 left-2 text-xs font-semibold tracking-wide text-white"
       style={{
-        background: "ffffff",
+        background: "rgba(0,0,0,0.55)",
         padding: "4px 8px"
       }}
     >
