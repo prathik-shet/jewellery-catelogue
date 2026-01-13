@@ -804,7 +804,7 @@ const enquireOnWhatsApp = () => {
 
   {/* GRID TOGGLE */}
   <button
-    onClick={toggleGridView}
+    onClick={getGridIcon}
     className="border-b border-gray-300 pb-1"
   >
     Grid
