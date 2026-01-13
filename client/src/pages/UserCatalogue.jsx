@@ -819,128 +819,85 @@ const enquireOnWhatsApp = () => {
         </button>
 
         {showSortPanel && (
-  <div
-    className="
-      fixed inset-0 z-[100] flex items-center justify-center
-      sm:absolute sm:inset-auto sm:top-full sm:right-0
-    "
-  >
-    <div
-      className="bg-white w-[90%] sm:w-96 rounded-2xl p-6 shadow-2xl
-                 max-h-[80vh] overflow-y-auto fade-in"
-      style={{ borderColor: '#efb20c' }}
-    >
-      <div className="space-y-5">
+                <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 z-[90] fade-in" style={{ borderColor: '#efb20c' }}>
+                  <div className="space-y-5">
+                    <div className="p-4 rounded-xl border-2 shadow-sm" style={{ backgroundColor: '#fff8e6', borderColor: '#efb20c' }}>
+                      <p className="font-bold text-center text-base" style={{ color: '#7f1a2b' }}>
+                        {getActiveSortDescription()}
+                      </p>
+                    </div>
 
-        {/* ACTIVE SORT INFO */}
-        <div
-          className="p-4 rounded-xl border-2 shadow-sm"
-          style={{ backgroundColor: '#fff8e6', borderColor: '#efb20c' }}
-        >
-          <p className="font-bold text-center text-base" style={{ color: '#7f1a2b' }}>
-            {getActiveSortDescription()}
-          </p>
-        </div>
+                    <div>
+                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Sort by Date</label>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => {
+                            setSortByDate('newest');
+                            setSortField('');
+                          }}
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortByDate === 'newest' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
+                          }`}
+                          style={sortByDate === 'newest' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
+                        >
+                          Newest First
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortByDate('oldest');
+                            setSortField('');
+                          }}
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortByDate === 'oldest' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
+                          }`}
+                          style={sortByDate === 'oldest' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
+                        >
+                          Oldest First
+                        </button>
+                      </div>
+                    </div>
 
-        {/* SORT BY DATE */}
-        <div>
-          <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>
-            Sort by Date
-          </label>
-          <div className="space-y-3">
-            <button
-              onClick={() => {
-                setSortByDate('newest');
-                setSortField('');
-              }}
-              className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition ${
-                sortByDate === 'newest'
-                  ? 'text-white shadow-md'
-                  : 'bg-white text-gray-700 border-gray-300'
-              }`}
-              style={sortByDate === 'newest'
-                ? { backgroundColor: '#efb20c', borderColor: '#efb20c' }
-                : {}}
-            >
-              Newest First
-            </button>
+                    <div>
+                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Sort by Weight</label>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => {
+                            setSortField('weight');
+                            setSortOrder('desc');
+                            setSortByDate('');
+                          }}
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortField === 'weight' && sortOrder === 'desc' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
+                          }`}
+                          style={sortField === 'weight' && sortOrder === 'desc' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
+                        >
+                          High to Low
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortField('weight');
+                            setSortOrder('asc');
+                            setSortByDate('');
+                          }}
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortField === 'weight' && sortOrder === 'asc' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
+                          }`}
+                          style={sortField === 'weight' && sortOrder === 'asc' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
+                        >
+                          Low to High
+                        </button>
+                      </div>
+                    </div>
 
-            <button
-              onClick={() => {
-                setSortByDate('oldest');
-                setSortField('');
-              }}
-              className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition ${
-                sortByDate === 'oldest'
-                  ? 'text-white shadow-md'
-                  : 'bg-white text-gray-700 border-gray-300'
-              }`}
-              style={sortByDate === 'oldest'
-                ? { backgroundColor: '#efb20c', borderColor: '#efb20c' }
-                : {}}
-            >
-              Oldest First
-            </button>
-          </div>
-        </div>
-
-        {/* SORT BY WEIGHT */}
-        <div>
-          <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>
-            Sort by Weight
-          </label>
-          <div className="space-y-3">
-            <button
-              onClick={() => {
-                setSortField('weight');
-                setSortOrder('desc');
-                setSortByDate('');
-              }}
-              className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition ${
-                sortField === 'weight' && sortOrder === 'desc'
-                  ? 'text-white shadow-md'
-                  : 'bg-white text-gray-700 border-gray-300'
-              }`}
-              style={sortField === 'weight' && sortOrder === 'desc'
-                ? { backgroundColor: '#efb20c', borderColor: '#efb20c' }
-                : {}}
-            >
-              High to Low
-            </button>
-
-            <button
-              onClick={() => {
-                setSortField('weight');
-                setSortOrder('asc');
-                setSortByDate('');
-              }}
-              className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition ${
-                sortField === 'weight' && sortOrder === 'asc'
-                  ? 'text-white shadow-md'
-                  : 'bg-white text-gray-700 border-gray-300'
-              }`}
-              style={sortField === 'weight' && sortOrder === 'asc'
-                ? { backgroundColor: '#efb20c', borderColor: '#efb20c' }
-                : {}}
-            >
-              Low to High
-            </button>
-          </div>
-        </div>
-
-        {/* RESET */}
-        <button
-          onClick={clearAllSorts}
-          className="gradient-maroon w-full px-4 py-3 text-white font-bold rounded-xl hover:shadow-lg smooth-transition"
-        >
-          Reset Sort
-        </button>
-
-      </div>
-    </div>
-  </div>
-)}
-
+                    <button
+                      onClick={clearAllSorts}
+                      className="gradient-maroon w-full px-4 py-3 text-white font-bold rounded-xl hover:shadow-lg smooth-transition hover-lift"
+                    >
+                      Reset Sort
+                    </button>
+                  </div>
+                </div>
+              )}
       </div>
 
       {/* SEARCH */}
