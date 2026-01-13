@@ -515,7 +515,7 @@ const enquireOnWhatsApp = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#fff8e6' }} className="min-h-screen">
+    <div style={{ backgroundColor: '#f9faf7' }} className="min-h-screen">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
         .brand-font { font-family: 'Playfair Display', serif; }
@@ -636,8 +636,25 @@ const enquireOnWhatsApp = () => {
               </button>
 
               {showFilterPanel && (
-                <div className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90] fade-in" style={{ borderColor: '#7f1a2b' }}>
-                  <div className="space-y-5">
+                <div className="
+  absolute
+  top-full
+  mt-2
+  left-1/2
+  -translate-x-1/2
+  w-[90vw]
+  sm:w-96
+  bg-white
+  rounded-2xl
+  shadow-2xl
+  p-6
+  max-h-[70vh]
+  overflow-y-auto
+  z-[90]
+  fade-in
+">
+  <div className="space-y-5">
+
 
                     <div>
                       <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Categories</label>
@@ -987,11 +1004,12 @@ const enquireOnWhatsApp = () => {
                   {mainImage && (
   <div className="relative mb-3 overflow-hidden">
     <img
-      src={mainImage}
-      alt={item.name}
-      loading="lazy"
-      className={`w-full object-cover group-hover:scale-110 smooth-transition ${getImageHeightClasses()}`}
-    />
+  src={mainImage}
+  alt={item.name}
+  loading="lazy"
+  className={`w-full object-cover rounded-lg group-hover:scale-110 smooth-transition ${getImageHeightClasses()}`}
+ />
+
 
     {/* Minimal flat overlay label */}
     <span
