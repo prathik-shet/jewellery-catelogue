@@ -596,13 +596,13 @@ const enquireOnWhatsApp = () => {
           </div>
         </div>
       </div>
-
+      
       <div
   className="glass-effect fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-4 border-b-2"
   style={{ borderColor: "#efb20c" }}
 >
   <div className="w-full max-w-7xl mx-auto">
-
+     
     {/* ================= FILTER | SORT | SEARCH ICON ================= */}
     <div className="flex items-center justify-center gap-3 mb-3">
 
@@ -823,6 +823,15 @@ const enquireOnWhatsApp = () => {
       >
         🔍
       </button>
+      <button
+                onClick={cycleGrid}
+                style={{ backgroundColor: '#efb20c' }}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-white p-2.5 rounded-xl hover:opacity-90 smooth-transition hover-scale flex items-center gap-1.5 shadow-md"
+                title={`Grid: ${gridCols} column${gridCols > 1 ? 's' : ''}`}
+              >
+                {getGridIcon()}
+                <span className="text-xs font-bold hidden sm:inline">{gridCols}</span>
+              </button>
     </div>
 
     {/* ================= SEARCH DROPDOWN ================= */}
