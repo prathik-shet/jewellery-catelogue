@@ -6,9 +6,9 @@ const LOGO_URL =
   "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/desings/logo.png";
 
 const SLIDER_IMAGES = [
-  "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768213592580.png",
-  "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768213806379.png",
-  "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768213902482.png",
+  "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768284560143.png",
+  "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768284606919.png",
+  "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768284638281.png",
 ];
 
 const BG_IMAGE =
