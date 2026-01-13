@@ -597,11 +597,12 @@ const enquireOnWhatsApp = () => {
         </div>
       </div>
       
-      <div
+      {/* ================= FIXED HEADER ================= */}
+<div
   className="glass-effect fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-3 border-b"
   style={{ borderColor: "#efb20c" }}
 >
-  <div className="w-full max-w-7xl mx-auto">
+  <div className="w-full max-w-7xl mx-auto relative">
 
     {/* ================= CATEGORY SLIDER ================= */}
     <div className="overflow-x-auto sm:overflow-x-hidden no-scrollbar mb-3">
@@ -643,10 +644,9 @@ const enquireOnWhatsApp = () => {
     </div>
 
     {/* ================= CONTROL STRIP ================= */}
-    <div className="flex items-center justify-center gap-2 mb-2
-                    border rounded-xl px-3 py-2 bg-white shadow-sm relative">
+    <div className="flex items-center justify-center gap-2 mb-2 border rounded-xl px-3 py-2 bg-white shadow-sm">
 
-      {/* FILTER */}
+      {/* ================= FILTER ================= */}
       <div className="relative">
         <button
           onClick={() => {
@@ -654,24 +654,12 @@ const enquireOnWhatsApp = () => {
             setShowSortPanel(false);
             setShowSearch(false);
           }}
-          className="px-4 py-1.5 rounded-full border text-sm
-                     border-[#7f1a2b] text-[#7f1a2b] hover:bg-[#7f1a2b]/10"
+          className="px-4 py-1.5 rounded-full border text-sm border-[#7f1a2b] text-[#7f1a2b]"
         >
           Filter
         </button>
 
         {showFilterPanel && (
-          <div
-            className="
-              fixed inset-0 z-[100] flex items-center justify-center
-              sm:absolute sm:inset-auto sm:top-full sm:left-0
-            "
-          >
-            <div
-              className="bg-white w-[90%] sm:w-96 rounded-2xl p-6 shadow-2xl
-                         max-h-[80vh] overflow-y-auto"
-            >
-              {showFilterPanel && (
           <div
             className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90] fade-in"
             style={{ borderColor: "#7f1a2b" }}
@@ -815,12 +803,9 @@ const enquireOnWhatsApp = () => {
             </div>
           </div>
         )}
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* SORT */}
+      {/* ================= SORT ================= */}
       <div className="relative">
         <button
           onClick={() => {
@@ -828,8 +813,7 @@ const enquireOnWhatsApp = () => {
             setShowFilterPanel(false);
             setShowSearch(false);
           }}
-          className="px-4 py-1.5 rounded-full border text-sm
-                     border-amber-500 text-amber-600 hover:bg-amber-100"
+          className="px-4 py-1.5 rounded-full border text-sm border-amber-500 text-amber-600"
         >
           Sort
         </button>
@@ -841,10 +825,8 @@ const enquireOnWhatsApp = () => {
               sm:absolute sm:inset-auto sm:top-full sm:right-0
             "
           >
-            <div
-              className="bg-white w-[90%] sm:w-96 rounded-2xl p-6 shadow-2xl
-                         max-h-[80vh] overflow-y-auto"
-            >
+            <div className="bg-white w-[90%] sm:w-96 rounded-2xl p-6 shadow-2xl max-h-[80vh] overflow-y-auto space-y-5">
+
               {showSortPanel && (
                 <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 z-[90] fade-in" style={{ borderColor: '#efb20c' }}>
                   <div className="space-y-5">
@@ -925,6 +907,12 @@ const enquireOnWhatsApp = () => {
                   </div>
                 </div>
               )}
+              <button
+                onClick={clearAllSorts}
+                className="gradient-maroon w-full py-3 text-white font-bold rounded-xl"
+              >
+                Reset Sort
+              </button>
             </div>
           </div>
         )}
@@ -945,40 +933,32 @@ const enquireOnWhatsApp = () => {
       {/* GRID */}
       <button
         onClick={cycleGrid}
-        className="px-2.5 py-1 rounded-full bg-amber-500 text-white
-                   text-xs sm:text-[11px]"
-        title={`Grid: ${gridCols}`}
+        className="px-2.5 py-1 rounded-full bg-amber-500 text-white text-xs sm:text-[11px]"
       >
         {getGridIcon()}
-        <span className="hidden sm:inline ml-1 font-semibold">
-          {gridCols}
-        </span>
+        <span className="hidden sm:inline ml-1 font-semibold">{gridCols}</span>
       </button>
     </div>
-  </div>
-</div>
 
-{/* ================= SEARCH BAR ================= */}
+    {/* ================= SEARCH DROPDOWN (OLD STYLE) ================= */}
     {showSearch && (
-      <div className="mb-3 fade-in relative">
-        <input
-          type="text"
-          placeholder="Search jewellery by name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-10 py-2 border rounded-xl"
-        />
-        <span className="absolute left-3 top-1/2 -translate-y-1/2">🔍</span>
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2"
-          >
-            ✕
-          </button>
-        )}
+      <div className="absolute left-0 right-0 top-full mt-3 z-[90] fade-in">
+        <div className="w-full max-w-3xl mx-auto px-3">
+          <div className="relative bg-white rounded-2xl shadow-xl border">
+            <input
+              type="text"
+              placeholder="Search jewellery by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-12 py-3 border-0 rounded-2xl focus:outline-none"
+            />
+            <span className="absolute left-4 top-1/2 -translate-y-1/2">🔍</span>
+          </div>
+        </div>
       </div>
     )}
+  </div>
+</div>
 
 {/* ================= BACKDROP ================= */}
 {(showFilterPanel || showSortPanel || showSearch) && (
@@ -991,6 +971,7 @@ const enquireOnWhatsApp = () => {
     }}
   />
 )}
+
 
 
 
@@ -1058,7 +1039,7 @@ const enquireOnWhatsApp = () => {
         padding: "4px 8px"
       }}
     >
-      {item.isOurDesign === false ? "OTHERS" : "IN HOUSE"}
+      
     </span>
   </div>
 )}
