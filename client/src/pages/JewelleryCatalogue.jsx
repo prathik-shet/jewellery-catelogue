@@ -68,15 +68,15 @@ function JewelleryCatalogue() {
     'All Jewellery',
     'Earrings',
     'Pendants',
-    'Finger Rings',
+    'Rings',
     'Mangalsutra',
     'Chains',
-    'Nose Pin',
-    'Necklaces',
-    'Necklace Set',
-    'Bangles',
     'Bracelets',
-    'Antique',
+    'Necklace',
+    'Hara',
+    'Bangles',
+    'Silver',
+    'Diamond',
     'Custom',
   ];
   
@@ -84,15 +84,15 @@ function JewelleryCatalogue() {
   const categoryCodeMap = {
     'Earrings': 'EAR',
     'Pendants': 'PEN',
-    'Finger Rings': 'RIN',
+    'Rings': 'RIN',
     'Mangalsutra': 'MAN',
     'Chains': 'CHA',
-    'Nose Pin': 'NOS',
-    'Necklaces': 'NEC',
-    'Necklace Set': 'SET',
+    'Bracelets': 'NOS',
+    'Necklace': 'NEC',
+    'Hara': 'SET',
     'Bangles': 'BAN',
-    'Bracelets': 'BRA',
-    'Antique': 'ANT',
+    'Silver': 'BRA',
+    'Diamond': 'ANT',
     'Custom': 'CUS'
   };
 

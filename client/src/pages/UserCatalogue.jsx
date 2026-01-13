@@ -43,9 +43,9 @@ function UserCatalogue() {
   const [touchEnd, setTouchEnd] = useState(null);
 
   const categories = [
-    'Earrings', 'Pendants', 'Finger Rings', 'Mangalsutra', 'Chains',
-    'Nose Pin', 'Necklaces', 'Necklace Set', 'Bangles', 'Bracelets',
-    'Antique', 'Custom',
+    'Earrings', 'Pendants', 'Rings', 'Mangalsutra', 'Chains',
+    'Bracelets', 'Necklace', 'Hara', 'Bangles', 'Silver',
+    'Diamond', 'Custom',
   ];
   const genders = ['All', 'Unisex', 'Women', 'Men'];
   const types = ['All', 'Festival', 'Lightweight', 'Daily Wear', 'Fancy', 'Normal'];
@@ -316,17 +316,17 @@ function UserCatalogue() {
   };
   const CATEGORY_IMAGES = {
   Rings: "https://picsum.photos/seed/rings/300/300",
-  Necklaces: "https://picsum.photos/seed/necklaces/300/300",
+  Necklace: "https://picsum.photos/seed/Necklace/300/300",
   Mangalsutra: "https://picsum.photos/seed/mangalsutra/300/300",
   Earrings: "https://picsum.photos/seed/earrings/300/300",
-  Bracelets: "https://picsum.photos/seed/bracelets/300/300",
+  Silver: "https://picsum.photos/seed/Slivers/300/300",
   Bangles: "https://picsum.photos/seed/bangles/300/300",
   Chains: "https://picsum.photos/seed/chains/300/300",
   Pendants: "https://picsum.photos/seed/pendants/300/300",
-  "Finger Rings": "https://picsum.photos/seed/finger-rings/300/300",
-  "Necklace Set": "https://picsum.photos/seed/necklace-set/300/300",
-  "Nose Pin": "https://picsum.photos/seed/nose-pin/300/300",
-  Antique: "https://picsum.photos/seed/antique/300/300",
+  "Rings": "https://picsum.photos/seed/finger-rings/300/300",
+  "Hara": "https://picsum.photos/seed/necklace-set/300/300",
+  "Bracelets": "https://picsum.photos/seed/nose-pin/300/300",
+  Diamond: "https://picsum.photos/seed/Diamond/300/300",
 };
 
   const goToPage = (page) => {
@@ -717,28 +717,100 @@ const enquireOnWhatsApp = () => {
 
       {/* SORT */}
       <div className="relative">
-        <button
-          onClick={() => {
-            setShowSortPanel(!showSortPanel);
-            setShowFilterPanel(false);
-            setShowSearch(false);
-          }}
-          className="gradient-gold text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl font-bold shadow-lg"
-        >
-          Sort
-        </button>
+              <button
+                onClick={() => {
+                  setShowSortPanel(!showSortPanel);
+                  setShowFilterPanel(false);
+                }}
+                className="gradient-gold text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl font-bold shadow-lg hover:shadow-xl smooth-transition hover-lift flex items-center gap-2"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+                <span className="text-sm sm:text-base">Sort</span>
+              </button>
 
-        {showSortPanel && (
-          <div
-            className="absolute top-full mt-2 right-0 w-80 bg-white border-2 rounded-2xl shadow-2xl p-6 z-[90]"
-            style={{ borderColor: "#efb20c" }}
-          >
-            <button onClick={clearAllSorts} className="w-full py-3 gradient-maroon text-white rounded-xl">
-              Reset Sort
-            </button>
-          </div>
-        )}
-      </div>
+              {showSortPanel && (
+                <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 z-[90] fade-in" style={{ borderColor: '#efb20c' }}>
+                  <div className="space-y-5">
+                    <div className="p-4 rounded-xl border-2 shadow-sm" style={{ backgroundColor: '#fff8e6', borderColor: '#efb20c' }}>
+                      <p className="font-bold text-center text-base" style={{ color: '#7f1a2b' }}>
+                        {getActiveSortDescription()}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Sort by Date</label>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => {
+                            setSortByDate('newest');
+                            setSortField('');
+                          }}
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortByDate === 'newest' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
+                          }`}
+                          style={sortByDate === 'newest' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
+                        >
+                          Newest First
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortByDate('oldest');
+                            setSortField('');
+                          }}
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortByDate === 'oldest' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
+                          }`}
+                          style={sortByDate === 'oldest' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
+                        >
+                          Oldest First
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Sort by Weight</label>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => {
+                            setSortField('weight');
+                            setSortOrder('desc');
+                            setSortByDate('');
+                          }}
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortField === 'weight' && sortOrder === 'desc' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
+                          }`}
+                          style={sortField === 'weight' && sortOrder === 'desc' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
+                        >
+                          High to Low
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortField('weight');
+                            setSortOrder('asc');
+                            setSortByDate('');
+                          }}
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortField === 'weight' && sortOrder === 'asc' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
+                          }`}
+                          style={sortField === 'weight' && sortOrder === 'asc' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
+                        >
+                          Low to High
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={clearAllSorts}
+                      className="gradient-maroon w-full px-4 py-3 text-white font-bold rounded-xl hover:shadow-lg smooth-transition hover-lift"
+                    >
+                      Reset Sort
+                    </button>
+                  </div>
+                </div>
+              )}
+              </div>
 
       {/* SEARCH ICON */}
       <button
@@ -777,7 +849,7 @@ const enquireOnWhatsApp = () => {
 
     {/* ================= CATEGORY SLIDER ================= */}
 <div className="overflow-x-auto no-scrollbar">
-  <div className="flex gap-5 px-1">
+  <div className="flex gap-6 px-1">
 
     {categories.map((cat) => {
       const imageSrc =
@@ -791,14 +863,14 @@ const enquireOnWhatsApp = () => {
           key={cat}
           onClick={() => toggleCategory(cat)}
           aria-pressed={isActive}
-          className="flex flex-col items-center min-w-[90px] transition active:scale-95"
+          className="flex flex-col items-center min-w-[90px]"
         >
           {/* IMAGE */}
           <div
-            className={`w-20 h-20 rounded-full border-2 overflow-hidden transition-all duration-300
+            className={`w-20 h-20 rounded-full overflow-hidden border-2 transition-colors
               ${isActive
-                ? "border-amber-400 scale-105 shadow-lg"
-                : "border-gray-200"
+                ? "border-amber-400"
+                : "border-gray-300"
               }`}
           >
             <img
@@ -815,8 +887,9 @@ const enquireOnWhatsApp = () => {
 
           {/* TEXT */}
           <span
-            className={`mt-2 text-sm font-semibold text-center
-              ${isActive ? "text-amber-600" : "text-gray-700"}`}
+            className={`mt-2 text-sm font-medium text-center
+              ${isActive ? "text-amber-600" : "text-gray-700"}
+            `}
           >
             {cat}
           </span>
@@ -824,10 +897,6 @@ const enquireOnWhatsApp = () => {
       );
     })}
 
-  
-
-
-  
 
       </div>
     </div>
@@ -858,31 +927,7 @@ const enquireOnWhatsApp = () => {
           </div>
         )}
 
-        {isDataFetched && totalItems > 0 && (
-  <div className="px-4 sm:px-6 mb-6 fade-in">
-    <div className="bg-[#f9faf7] rounded-2xl p-5 shadow-[0_6px_24px_rgba(0,0,0,0.08)] max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         
-        <div>
-          <p className="text-lg font-bold text-[#7f1a2b]">
-            Showing {jewellery.length} of {totalItems} items
-          </p>
-
-          {totalPages > 1 && (
-            <p className="text-sm text-gray-600 mt-1">
-              Page {currentPage} of {totalPages}
-            </p>
-          )}
-        </div>
-
-        <div className="text-sm font-semibold text-gray-700 bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-2.5 rounded-xl shadow-sm">
-          {getActiveSortDescription()}
-        </div>
-
-      </div>
-    </div>
-  </div>
-)}
 
 
         <div className={`gap-4 sm:gap-5 lg:gap-6 px-4 sm:px-6 pb-8 max-w-7xl mx-auto ${getGridClasses()}`}>
@@ -955,7 +1000,31 @@ const enquireOnWhatsApp = () => {
             })
           )}
         </div>
+        {isDataFetched && totalItems > 0 && (
+  <div className="px-4 sm:px-6 mb-6 fade-in">
+    <div className="bg-[#f9faf7] rounded-2xl p-5 shadow-[0_6px_24px_rgba(0,0,0,0.08)] max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        
+        <div>
+          <p className="text-lg font-bold text-[#7f1a2b]">
+            Showing {jewellery.length} of {totalItems} items
+          </p>
 
+          {totalPages > 1 && (
+            <p className="text-sm text-gray-600 mt-1">
+              Page {currentPage} of {totalPages}
+            </p>
+          )}
+        </div>
+
+        <div className="text-sm font-semibold text-gray-700 bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-2.5 rounded-xl shadow-sm">
+          {getActiveSortDescription()}
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
         {isDataFetched && totalPages > 1 && jewellery.length > 0 && (
           <div className="px-4 sm:px-6 pb-8 mt-8 max-w-7xl mx-auto">
             <div className="bg-white/95 rounded-2xl p-6 border-2 shadow-2xl" style={{ borderColor: '#efb20c' }}>
