@@ -970,11 +970,20 @@ const enquireOnWhatsApp = () => {
 
               return (
                 <div
-                  key={item._id}
-                  onClick={() => handleItemClick(item, index)}
-                  className="bg-white border-2 rounded-2xl p-3 sm:p-4 shadow-soft hover:shadow-hover smooth-transition hover-lift cursor-pointer group overflow-hidden"
-                  style={{ borderColor: '#efb20c' }}
-                >
+  key={item._id}
+  onClick={() => handleItemClick(item, index)}
+  className="
+    bg-white
+    p-2.5 sm:p-3
+    shadow-[0_4px_14px_rgba(0,0,0,0.06)]
+    hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)]
+    smooth-transition
+    cursor-pointer
+    group
+    overflow-hidden
+  "
+>
+
                   {mainImage && (
   <div className="relative mb-3 overflow-hidden">
     <img
