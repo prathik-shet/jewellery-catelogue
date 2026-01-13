@@ -515,7 +515,7 @@ const enquireOnWhatsApp = () => {
   };
 
   return (
-    <div style={{ backgroundColor: '#f9faf7' }} className="min-h-screen">
+    <div style={{ backgroundColor: '#ffffff' }} className="min-h-screen">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
         .brand-font { font-family: 'Playfair Display', serif; }
@@ -636,24 +636,8 @@ const enquireOnWhatsApp = () => {
               </button>
 
               {showFilterPanel && (
-                <div className="
-  absolute
-  top-full
-  mt-2
-  left-1/2
-  -translate-x-1/2
-  w-[90vw]
-  sm:w-96
-  bg-white
-  rounded-2xl
-  shadow-2xl
-  p-6
-  max-h-[70vh]
-  overflow-y-auto
-  z-[90]
-  fade-in
-">
-  <div className="space-y-5">
+                <div className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90] fade-in" style={{ borderColor: '#7f1a2b' }}> 
+                <div className="space-y-5">
 
 
                     <div>
@@ -986,43 +970,44 @@ const enquireOnWhatsApp = () => {
               const textSizes = getTextSizeClasses();
 
               return (
-                <div
-  key={item._id}
-  onClick={() => handleItemClick(item, index)}
-  className="
-    bg-white
-    p-2.5 sm:p-3
-    shadow-[0_4px_14px_rgba(0,0,0,0.06)]
-    hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)]
-    smooth-transition
-    cursor-pointer
-    group
-    overflow-hidden
-  "
->
+  <div
+    key={item._id}
+    onClick={() => handleItemClick(item, index)}
+    className="
+      bg-white
+      p-2.5 sm:p-3
+      rounded-lg
+      shadow-[0_4px_14px_rgba(0,0,0,0.06)]
+      hover:shadow-[0_6px_20px_rgba(0,0,0,0.08)]
+      smooth-transition
+      cursor-pointer
+      group
+      overflow-hidden
+    "
+  >
+    {mainImage && (
+      <div className="relative overflow-hidden">
+        <img
+          src={mainImage}
+          alt={item.name}
+          loading="lazy"
+          className={`w-full h-full object-cover group-hover:scale-110 smooth-transition ${getImageHeightClasses()}`}
+        />
 
-                  {mainImage && (
-  <div className="relative mb-3 overflow-hidden">
-    <img
-  src={mainImage}
-  alt={item.name}
-  loading="lazy"
-  className={`w-full object-cover rounded-lg group-hover:scale-110 smooth-transition ${getImageHeightClasses()}`}
- />
+        {/* Minimal flat overlay label */}
+        <span
+          className="absolute bottom-2 left-2 text-xs font-semibold tracking-wide text-white"
+          style={{
+            background: "rgba(0,0,0,0.55)",
+            padding: "4px 8px"
+          }}
+        >
+          {item.isOurDesign === false ? "OTHERS" : "IN HOUSE"}
+        </span>
+      </div>
+    )}
+  
 
-
-    {/* Minimal flat overlay label */}
-    <span
-      className="absolute bottom-2 left-2 text-xs font-semibold tracking-wide text-white"
-      style={{
-        background: "rgba(0,0,0,0.55)",
-        padding: "4px 8px"
-      }}
-    >
-      {item.isOurDesign === false ? "OTHERS" : "IN HOUSE"}
-    </span>
-  </div>
-)}
 
 
                   <div className="space-y-1.5">
