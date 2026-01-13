@@ -603,9 +603,254 @@ const enquireOnWhatsApp = () => {
 >
   <div className="w-full max-w-7xl mx-auto">
 
+    {/* ================= FILTER | SORT | SEARCH ICON ================= */}
+    <div className="flex items-center justify-center gap-3 mb-3">
+
+      {/* FILTER */}
+      <div className="relative">
+        <button
+          onClick={() => {
+            setShowFilterPanel(!showFilterPanel);
+            setShowSortPanel(false);
+            setShowSearch(false);
+          }}
+          className="gradient-maroon text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl font-bold shadow-lg flex items-center gap-2"
+        >
+          Filter
+        </button>
+
+        {showFilterPanel && (
+          <div
+            className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90] fade-in"
+            style={{ borderColor: "#7f1a2b" }}
+          >
+            <div className="space-y-5">
+
+              {/* ❌ CATEGORY REMOVED FROM HERE */}
+
+              <div>
+                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
+                  Sub-Category
+                </label>
+                <select
+                  value={selectedSubCategory}
+                  onChange={(e) => setSelectedSubCategory(e.target.value)}
+                  className="w-full p-3 border-2 rounded-xl"
+                >
+                  <option value="">All Sub-Categories</option>
+                  {getFilteredSubcatagories().map((sub) => (
+                    <option key={sub}>{sub}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
+                  Occasion
+                </label>
+                <select
+                  value={selectedType}
+                  onChange={(e) => setSelectedType(e.target.value)}
+                  className="w-full p-3 border-2 rounded-xl"
+                >
+                  {types.map((t) => (
+                    <option key={t} value={t === "All" ? "" : t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
+                  Gender
+                </label>
+                <select
+                  value={selectedGender}
+                  onChange={(e) => setSelectedGender(e.target.value)}
+                  className="w-full p-3 border-2 rounded-xl"
+                >
+                  {genders.map((g) => (
+                    <option key={g} value={g === "All" ? "" : g}>{g}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
+                  Metal
+                </label>
+                <select
+                  value={metalFilter}
+                  onChange={(e) => setMetalFilter(e.target.value)}
+                  className="w-full p-3 border-2 rounded-xl"
+                >
+                  {metals.map((m) => (
+                    <option key={m} value={m === "All" ? "" : m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
+                  Design Ownership
+                </label>
+                <select
+                  value={designFilter}
+                  onChange={(e) => setDesignFilter(e.target.value)}
+                  className="w-full p-3 border-2 rounded-xl"
+                >
+                  <option value="">All</option>
+                  <option value="our">In House</option>
+                  <option value="Others">Others</option>
+                </select>
+              </div>
+
+              <button
+                onClick={clearAllFilters}
+                className="gradient-maroon w-full py-3 text-white font-bold rounded-xl"
+              >
+                Clear All Filters
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* SORT */}
+      <div className="relative">
+              <button
+                onClick={() => {
+                  setShowSortPanel(!showSortPanel);
+                  setShowFilterPanel(false);
+                }}
+                className="gradient-gold text-white px-5 sm:px-7 py-2.5 sm:py-3 rounded-xl font-bold shadow-lg hover:shadow-xl smooth-transition hover-lift flex items-center gap-2"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+                <span className="text-sm sm:text-base">Sort</span>
+              </button>
+
+              {showSortPanel && (
+                <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 z-[90] fade-in" style={{ borderColor: '#efb20c' }}>
+                  <div className="space-y-5">
+                    <div className="p-4 rounded-xl border-2 shadow-sm" style={{ backgroundColor: '#fff8e6', borderColor: '#efb20c' }}>
+                      <p className="font-bold text-center text-base" style={{ color: '#7f1a2b' }}>
+                        {getActiveSortDescription()}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Sort by Date</label>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => {
+                            setSortByDate('newest');
+                            setSortField('');
+                          }}
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortByDate === 'newest' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
+                          }`}
+                          style={sortByDate === 'newest' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
+                        >
+                          Newest First
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortByDate('oldest');
+                            setSortField('');
+                          }}
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortByDate === 'oldest' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
+                          }`}
+                          style={sortByDate === 'oldest' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
+                        >
+                          Oldest First
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Sort by Weight</label>
+                      <div className="space-y-3">
+                        <button
+                          onClick={() => {
+                            setSortField('weight');
+                            setSortOrder('desc');
+                            setSortByDate('');
+                          }}
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortField === 'weight' && sortOrder === 'desc' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
+                          }`}
+                          style={sortField === 'weight' && sortOrder === 'desc' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
+                        >
+                          High to Low
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSortField('weight');
+                            setSortOrder('asc');
+                            setSortByDate('');
+                          }}
+                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
+                            sortField === 'weight' && sortOrder === 'asc' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
+                          }`}
+                          style={sortField === 'weight' && sortOrder === 'asc' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
+                        >
+                          Low to High
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={clearAllSorts}
+                      className="gradient-maroon w-full px-4 py-3 text-white font-bold rounded-xl hover:shadow-lg smooth-transition hover-lift"
+                    >
+                      Reset Sort
+                    </button>
+                  </div>
+                </div>
+              )}
+              </div>
+
+      {/* SEARCH ICON */}
+      <button
+        onClick={() => {
+          setShowSearch(!showSearch);
+          setShowFilterPanel(false);
+          setShowSortPanel(false);
+        }}
+        className="bg-white border-2 border-gray-300 p-3 rounded-xl shadow-md"
+      >
+        🔍
+      </button>
+    </div>
+
+    {/* ================= SEARCH DROPDOWN ================= */}
+    {showSearch && (
+      <div className="mb-3 fade-in relative">
+        <input
+          type="text"
+          placeholder="Search jewellery by name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-12 pr-12 py-3 border-2 rounded-2xl"
+        />
+        <span className="absolute left-4 top-1/2 -translate-y-1/2">🔍</span>
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="absolute right-4 top-1/2 -translate-y-1/2"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+    )}
+
     {/* ================= CATEGORY SLIDER ================= */}
-<div className="overflow-x-auto sm:overflow-x-hidden no-scrollbar mb-3">
+<div className="overflow-x-auto sm:overflow-x-hidden no-scrollbar">
   <div className="flex gap-4 px-1 sm:justify-center">
+
     {categories.map((cat) => {
       const imageSrc =
         CATEGORY_IMAGES[cat] ||
@@ -620,11 +865,12 @@ const enquireOnWhatsApp = () => {
           aria-pressed={isActive}
           className="flex flex-col items-center min-w-[70px]"
         >
+          {/* IMAGE */}
           <div
             className={`
               w-14 h-14 sm:w-16 sm:h-16
               rounded-full overflow-hidden
-              border
+              border transition-colors
               ${isActive ? "border-amber-400" : "border-gray-300"}
             `}
           >
@@ -633,11 +879,21 @@ const enquireOnWhatsApp = () => {
               alt={cat}
               loading="lazy"
               className="w-full h-full object-cover bg-gray-100"
+              onError={(e) => {
+                e.currentTarget.src =
+                  "https://picsum.photos/seed/fallback/300/300";
+              }}
             />
           </div>
 
+          {/* TEXT */}
           <span
-            className={`mt-1.5 text-xs sm:text-sm tracking-wide
+            className={`
+              mt-1.5
+              text-xs sm:text-sm
+              font-medium
+              text-center
+              tracking-wide
               ${isActive ? "text-amber-600" : "text-gray-700"}
             `}
           >
@@ -646,183 +902,6 @@ const enquireOnWhatsApp = () => {
         </button>
       );
     })}
-      {/* ================= THIN CONTROL ROW ================= */}
-<div className="flex items-center justify-between gap-4 mb-3 px-1 text-sm text-gray-800">
-
-  {/* SEARCH */}
-  <button
-    onClick={() => {
-      setShowSearch(!showSearch);
-      setShowFilterPanel(false);
-      setShowSortPanel(false);
-    }}
-    className="border-b border-gray-300 pb-1"
-  >
-    Search
-  </button>
-
-  {/* FILTER */}
-  <div className="relative">
-    <button
-      onClick={() => {
-        setShowFilterPanel(!showFilterPanel);
-        setShowSortPanel(false);
-        setShowSearch(false);
-      }}
-      className="flex items-center gap-1 border-b border-gray-300 pb-1"
-    >
-      Filters
-      <span>⌄</span>
-    </button>
-
-    {showFilterPanel && (
-      <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-[90vw] sm:w-96 bg-white rounded-xl shadow-xl p-5 z-[90]">
-        <div className="space-y-4">
-
-          <div>
-            <label className="block font-semibold mb-1">Sub-Category</label>
-            <select
-              value={selectedSubCategory}
-              onChange={(e) => setSelectedSubCategory(e.target.value)}
-              className="w-full p-2 border rounded-md"
-            >
-              <option value="">All</option>
-              {getFilteredSubcatagories().map((sub) => (
-                <option key={sub}>{sub}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block font-semibold mb-1">Occasion</label>
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full p-2 border rounded-md"
-            >
-              {types.map((t) => (
-                <option key={t} value={t === "All" ? "" : t}>{t}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block font-semibold mb-1">Gender</label>
-            <select
-              value={selectedGender}
-              onChange={(e) => setSelectedGender(e.target.value)}
-              className="w-full p-2 border rounded-md"
-            >
-              {genders.map((g) => (
-                <option key={g} value={g === "All" ? "" : g}>{g}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block font-semibold mb-1">Metal</label>
-            <select
-              value={metalFilter}
-              onChange={(e) => setMetalFilter(e.target.value)}
-              className="w-full p-2 border rounded-md"
-            >
-              {metals.map((m) => (
-                <option key={m} value={m === "All" ? "" : m}>{m}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block font-semibold mb-1">Design Ownership</label>
-            <select
-              value={designFilter}
-              onChange={(e) => setDesignFilter(e.target.value)}
-              className="w-full p-2 border rounded-md"
-            >
-              <option value="">All</option>
-              <option value="our">In House</option>
-              <option value="Others">Others</option>
-            </select>
-          </div>
-
-          <button
-            onClick={clearAllFilters}
-            className="w-full py-2 text-sm font-semibold border rounded-md"
-          >
-            Clear Filters
-          </button>
-        </div>
-      </div>
-    )}
-  </div>
-
-  {/* SORT */}
-  <div className="relative">
-    <button
-      onClick={() => {
-        setShowSortPanel(!showSortPanel);
-        setShowFilterPanel(false);
-        setShowSearch(false);
-      }}
-      className="flex items-center gap-1 border-b border-gray-300 pb-1"
-    >
-      Sort by
-      <span>⌄</span>
-    </button>
-
-    {showSortPanel && (
-      <div className="absolute top-full mt-2 right-0 w-72 bg-white rounded-xl shadow-xl p-4 z-[90]">
-        <div className="space-y-3 text-sm">
-          <button onClick={() => setSortByDate("newest")} className="w-full text-left">
-            Newest First
-          </button>
-          <button onClick={() => setSortByDate("oldest")} className="w-full text-left">
-            Oldest First
-          </button>
-          <button
-            onClick={() => {
-              setSortField("weight");
-              setSortOrder("asc");
-            }}
-            className="w-full text-left"
-          >
-            Weight: Low → High
-          </button>
-          <button
-            onClick={() => {
-              setSortField("weight");
-              setSortOrder("desc");
-            }}
-            className="w-full text-left"
-          >
-            Weight: High → Low
-          </button>
-        </div>
-      </div>
-    )}
-  </div>
-
-  {/* GRID TOGGLE */}
-  <button
-    onClick={getGridIcon}
-    className="border-b border-gray-300 pb-1"
-  >
-    Grid
-  </button>
-</div>
-{showSearch && (
-  <div className="mb-3">
-    <input
-      type="text"
-      placeholder="Search jewellery by name..."
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      className="w-full p-3 border rounded-lg"
-    />
-  </div>
-)}
-
-
 
 
       </div>
