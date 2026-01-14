@@ -425,56 +425,53 @@ function UserCatalogue() {
   if (!selectedItem) return;
 
   const mainImage = getMainImage(selectedItem);
-  const imageUrl = mainImage || "";
+  const imageUrl = mainImage || '';
 
-  const websiteUrl = "https://vimaleshwarajewellers.in";
+  const websiteUrl = 'https://jewellery-catelogue.onrender.com/';
 
   const message =
-    `${selectedItem.name}\n\n` +
-    `Product ID: ${selectedItem.id}\n` +
-    `Category: ${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ""}\n` +
-    `Type: ${selectedItem.type}\n` +
-    `Gender: ${selectedItem.gender}\n` +
-    `Purity: ${selectedItem.carat || "N/A"}\n` +
-    `Weight: ${selectedItem.weight} g\n` +
-    `Stone Weight: ${selectedItem.stoneWeight || "N/A"} g\n` +
-    `Design: ${selectedItem.isOurDesign === false ? "Others" : "In House"}\n\n` +
-    (imageUrl ? `Image: ${imageUrl}\n\n` : "") +
-    `More designs available:\n${websiteUrl}`;
+    `*${selectedItem.name}*\n\n` +
+    `*ID:* ${selectedItem.id}\n` +
+    `*Category:* ${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}\n` +
+    `*Type:* ${selectedItem.type}\n` +
+    `*Gender:* ${selectedItem.gender}\n` +
+    `*Purity:* ${selectedItem.carat || 'N/A'}\n` +
+    `*Weight:* ${selectedItem.weight}g\n` +
+    `*Stone Weight:* ${selectedItem.stoneWeight || 'N/A'}g\n` +
+    `*Design:* ${selectedItem.isOurDesign === false ? 'Others' : 'In House'}\n\n` +
+    (imageUrl ? `📸 Image: ${imageUrl}\n\n` : '') +
+    `✨ *More designs available*\n` +
+    `👉 ${websiteUrl}`;
 
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-  window.open(whatsappUrl, "_blank");
+  window.open(whatsappUrl, '_blank');
 };
-
 const enquireOnWhatsApp = () => {
   if (!selectedItem) return;
 
   const mainImage = getMainImage(selectedItem);
-  const imageUrl = mainImage || "";
+  const imageUrl = mainImage || '';
 
-  const businessNumber = "918088305913";
-  const websiteUrl = "https://vimaleshwara jewellers.in";
+  const businessNumber = '918088305913'; // country code added
+  const websiteUrl = 'https://jewellery-catelogue.onrender.com/';
 
   const message =
-    `Enquiry for Jewellery\n\n` +
-    `${selectedItem.name}\n\n` +
-    `Product ID: ${selectedItem.id}\n` +
-    `Category: ${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ""}\n` +
-    `Type: ${selectedItem.type}\n` +
-    `Gender: ${selectedItem.gender}\n` +
-    `Purity: ${selectedItem.carat || "N/A"}\n` +
-    `Weight: ${selectedItem.weight} g\n` +
-    `Stone Weight: ${selectedItem.stoneWeight || "N/A"} g\n` +
-    `Design: ${selectedItem.isOurDesign === false ? "Others" : "In House"}\n\n` +
-    (imageUrl ? `Image: ${imageUrl}\n\n` : "") +
-    `Catalogue: ${websiteUrl}\n\n` +
+    `👋 *Enquiry for Jewellery*\n\n` +
+    `*${selectedItem.name}*\n\n` +
+    `*ID:* ${selectedItem.id}\n` +
+    `*Category:* ${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}\n` +
+    `*Type:* ${selectedItem.type}\n` +
+    `*Gender:* ${selectedItem.gender}\n` +
+    `*Purity:* ${selectedItem.carat || 'N/A'}\n` +
+    `*Weight:* ${selectedItem.weight}g\n` +
+    `*Stone Weight:* ${selectedItem.stoneWeight || 'N/A'}g\n` +
+    `*Design:* ${selectedItem.isOurDesign === false ? 'Others' : 'In House'}\n\n` +
+    (imageUrl ? `📸 Image: ${imageUrl}\n\n` : '') +
+    `🔗 Catalogue: ${websiteUrl}\n\n` +
     `Please share price and availability.`;
 
-  const whatsappUrl = `https://wa.me/${businessNumber}?text=${encodeURIComponent(
-    message
-  )}`;
-
-  window.open(whatsappUrl, "_blank");
+  const whatsappUrl = `https://wa.me/${businessNumber}?text=${encodeURIComponent(message)}`;
+  window.open(whatsappUrl, '_blank');
 };
 
 
@@ -1288,25 +1285,24 @@ const enquireOnWhatsApp = () => {
     onTouchMove={onTouchMove}
     onTouchEnd={onTouchEnd}
   >
-    {/* MODAL CONTAINER */}
-    <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[88vh] shadow-[0_12px_35px_rgba(0,0,0,0.22)] flex flex-col relative overflow-y-auto md:overflow-hidden">
+    <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[88vh] overflow-hidden shadow-[0_12px_35px_rgba(0,0,0,0.22)] flex flex-col relative">
 
-      {/* HEADER */}
-      <div className="bg-white px-4 py-3 flex items-center justify-between shrink-0 border-b">
-        <div className="flex items-center gap-2 min-w-0">
+      {/* HEADER – CLEAN WHITE */}
+      <div className="bg-white px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => navigateToItem("prev")}
+            onClick={() => navigateToItem('prev')}
             className="px-2 py-1 rounded hover:bg-gray-100 transition"
           >
             ◀
           </button>
 
-          <h2 className="text-base font-semibold truncate max-w-[60vw] text-[#2e2e2e]">
+          <h2 className="text-base font-semibold truncate max-w-md text-[#2e2e2e]">
             {selectedItem.name}
           </h2>
 
           <button
-            onClick={() => navigateToItem("next")}
+            onClick={() => navigateToItem('next')}
             className="px-2 py-1 rounded hover:bg-gray-100 transition"
           >
             ▶
@@ -1325,10 +1321,10 @@ const enquireOnWhatsApp = () => {
       </div>
 
       {/* BODY */}
-      <div className="flex flex-col lg:flex-row flex-1 min-h-0">
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
         {/* LEFT – IMAGE */}
-        <div className="lg:w-3/5 bg-gray-50 px-4 py-6 flex flex-col items-center justify-center shrink-0">
+        <div className="lg:w-3/5 bg-gray-50 px-4 py-6 flex flex-col items-center justify-center">
           {(() => {
             const itemMedia = getItemMedia(selectedItem);
             const mainImage = getMainImage(selectedItem);
@@ -1341,8 +1337,12 @@ const enquireOnWhatsApp = () => {
                     src={mainImage}
                     alt={selectedItem.name}
                     onClick={() => openMediaModal(itemMedia, 0)}
-                    className="max-h-[280px] sm:max-h-[350px] w-auto object-contain rounded-xl bg-white shadow-sm cursor-zoom-in hover:opacity-95 transition"
+                    className="max-h-[350px] w-auto object-contain rounded-xl bg-white shadow-sm cursor-zoom-in hover:opacity-95 transition-all duration-300"
                   />
+
+                  <div className="absolute bottom-4 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    Tap to expand 🔍
+                  </div>
                 </div>
 
                 {/* THUMBNAILS */}
@@ -1352,13 +1352,13 @@ const enquireOnWhatsApp = () => {
                       <div
                         key={index}
                         onClick={() => openMediaModal(itemMedia, index + 1)}
-                        className="w-14 h-14 rounded-lg overflow-hidden cursor-pointer hover:scale-105 transition shadow-sm bg-white"
+                        className="w-14 h-14 rounded-lg overflow-hidden cursor-pointer hover:scale-105 transition-all shadow-sm bg-white"
                       >
-                        {media.type === "image" ? (
+                        {media.type === 'image' ? (
                           <img
                             src={media.src}
-                            alt="thumbnail"
                             className="w-full h-full object-cover"
+                            alt="thumbnail"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-black text-white text-xs">
@@ -1375,7 +1375,7 @@ const enquireOnWhatsApp = () => {
         </div>
 
         {/* RIGHT – DETAILS */}
-        <div className="lg:w-2/5 px-6 py-6 bg-[#fff8e6] overflow-y-auto max-h-full">
+        <div className="lg:w-2/5 px-6 py-6 overflow-y-auto bg-[#fff8e6]">
           <div className="grid grid-cols-2 gap-4 text-sm">
 
             {/* PRODUCT ID */}
@@ -1389,23 +1389,17 @@ const enquireOnWhatsApp = () => {
             </div>
 
             {[
-              [
-                "Category",
-                `${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ""}`,
-              ],
-              ["Type", selectedItem.type],
-              ["Gender", selectedItem.gender],
-              ["Purity", selectedItem.carat || "N/A"],
-              ["Weight", `${selectedItem.weight}g`],
-              ["Stone Weight", `${selectedItem.stoneWeight || "N/A"}g`],
-              [
-                "Design",
-                selectedItem.isOurDesign === false ? "Others" : "In House",
-              ],
+              ['Category', `${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}`],
+              ['Type', selectedItem.type],
+              ['Gender', selectedItem.gender],
+              ['Purity', selectedItem.carat || 'N/A'],
+              ['Weight', `${selectedItem.weight}g`],
+              ['Stone Weight', `${selectedItem.stoneWeight || 'N/A'}g`],
+              ['Design', selectedItem.isOurDesign === false ? 'Others' : 'In House'],
             ].map(([label, value], i) => (
               <div
                 key={i}
-                className="bg-white rounded-xl px-3 py-2 shadow-sm hover:shadow-md transition"
+                className="bg-white rounded-xl px-3 py-2 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
                   {label}
@@ -1420,27 +1414,26 @@ const enquireOnWhatsApp = () => {
       </div>
 
       {/* FOOTER */}
-      <div className="bg-white px-4 py-3 flex justify-end gap-3 shrink-0 border-t">
+      <div className="bg-white px-4 py-3 flex justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)]">
         <button
           onClick={enquireOnWhatsApp}
-          className="px-6 py-2.5 rounded-xl text-white font-semibold hover:opacity-90 transition active:scale-95"
-          style={{ backgroundColor: "#128C7E" }}
+          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 hover:opacity-90 transition active:scale-95"
+          style={{ backgroundColor: '#128C7E' }}
         >
-          Enquire
+          💬 Enquire
         </button>
 
         <button
           onClick={shareOnWhatsApp}
-          className="px-6 py-2.5 rounded-xl text-white font-semibold hover:opacity-90 transition active:scale-95"
-          style={{ backgroundColor: "#25D366" }}
+          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 hover:opacity-90 transition active:scale-95"
+          style={{ backgroundColor: '#25D366' }}
         >
-          Share
+          🔗 Share
         </button>
       </div>
     </div>
   </div>
 )}
-
 
 {/* LIGHTBOX MEDIA VIEWER – BORDERLESS */}
 {modalMedia.length > 0 && (
