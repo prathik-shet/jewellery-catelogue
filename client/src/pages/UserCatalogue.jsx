@@ -622,7 +622,8 @@ const enquireOnWhatsApp = () => {
     glass-effect
     fixed left-0 w-full z-[85]
     shadow-lg p-3 border-b
-    top-[96px] sm:top-[104px]
+    top-[96px]            /* ✅ ALL mobiles (small + big) */
+    lg:top-[104px]        /* ✅ desktop only */
   "
   style={{ borderColor: "#efb20c" }}
 >
@@ -678,6 +679,7 @@ const enquireOnWhatsApp = () => {
           );
         })}
       
+
 
   </div>
 </div>
