@@ -617,75 +617,59 @@ const enquireOnWhatsApp = () => {
       </div>
       
       {/* ================= FIXED HEADER ================= */}
-<div
-  className="
-    glass-effect
-    fixed left-0 w-full z-[85]
-    shadow-lg p-3 border-b
-    top-[96px]            /* ✅ ALL mobiles (small + big) */
-    lg:top-[104px]        /* ✅ desktop only */
-  "
-  style={{ borderColor: "#efb20c" }}
->
+
   <div className="w-full max-w-7xl mx-auto">
 
-  {/* ================= CATEGORY SLIDER ================= */}
+  {/* CATEGORY SLIDER */}
 <div
   className="
-    glass-effect
     sticky
-    top-[96px]        /* height of main header */
+    top-[96px]
     z-[85]
-    shadow-lg p-3 border-b
-    bg-white/95 backdrop-blur
+    glass-effect
+    border-b
+    shadow-md
+    p-3
   "
   style={{ borderColor: "#efb20c" }}
 >
-  <div className="w-full max-w-7xl mx-auto">
-    <div className="overflow-x-auto no-scrollbar pb-1">
-      <div className="flex gap-4 px-1 justify-start sm:justify-center min-w-max">
-        {categories.map((cat) => {
-          const imageSrc =
-            CATEGORY_IMAGES[cat] ||
-            "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/categories/default.jpg";
+  <div className="max-w-7xl mx-auto overflow-x-auto no-scrollbar">
+    <div className="flex gap-4 min-w-max justify-start sm:justify-center">
+      {categories.map((cat) => {
+        const isActive =
+          selectedCategory.length === 1 && selectedCategory[0] === cat;
 
-          const isActive =
-            selectedCategory.length === 1 && selectedCategory[0] === cat;
-
-          return (
-            <button
-              key={cat}
-              onClick={() => toggleCategory(cat)}
-              className="flex flex-col items-center min-w-[70px]"
+        return (
+          <button
+            key={cat}
+            onClick={() => toggleCategory(cat)}
+            className="flex flex-col items-center min-w-[70px]"
+          >
+            <div
+              className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden
+                ${isActive
+                  ? "border-4 border-amber-500 scale-105"
+                  : "border-2 border-gray-300"}
+              `}
             >
-              <div
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden
-                  transition-all duration-200
-                  ${
-                    isActive
-                      ? "border-4 border-amber-500 shadow-lg scale-105"
-                      : "border-2 border-gray-300"
-                  }`}
-              >
-                <img
-                  src={imageSrc}
-                  alt={cat}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              <span
-                className={`mt-1.5 text-xs sm:text-sm font-semibold
-                  ${isActive ? "text-amber-600" : "text-gray-700"}`}
-              >
-                {cat}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+              <img
+                src={CATEGORY_IMAGES[cat]}
+                alt={cat}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <span className={`mt-1.5 text-xs sm:text-sm font-semibold ${
+              isActive ? "text-amber-600" : "text-gray-700"
+            }`}>
+              {cat}
+            </span>
+          </button>
+        );
+      })}
     </div>
   
+
+
 
   
 
@@ -1114,7 +1098,7 @@ const enquireOnWhatsApp = () => {
       </div>
     )}
   </div>
-</div>
+
 
 {/* ================= BACKDROP ================= */}
 {(showFilterPanel || showSortPanel || showSearch) && (
@@ -1133,7 +1117,8 @@ const enquireOnWhatsApp = () => {
 
 
 
-      <div className="pt-[180px]">
+      <div className="pt-[calc(96px+96px)]">
+
 
 
         {loading && (
