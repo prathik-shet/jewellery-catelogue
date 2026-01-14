@@ -315,7 +315,7 @@ function UserCatalogue() {
     return media;
   };
   const CATEGORY_IMAGES = {
-  custom: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768385032093.jpeg",
+  Custom: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768385032093.jpeg",
   Necklace: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383126443.jpeg",
   Mangalsutra: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383647096.jpeg",
   Earrings: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768381667017.jpeg",
@@ -693,173 +693,187 @@ const enquireOnWhatsApp = () => {
         {showFilterPanel && (
   <div
     className="
-      absolute top-full mt-2
+      fixed sm:absolute
+      top-16 sm:top-full
       left-1/2 -translate-x-1/2
       sm:left-0 sm:translate-x-0
-      w-[90vw] sm:w-96
+      w-[92vw] sm:w-96
       bg-white border border-gray-300
       rounded-xl shadow-lg
-      p-4 max-h-[70vh] overflow-y-auto
       z-[90]
     "
   >
-    <div className="space-y-4">
+    {/* SCROLL CONTAINER */}
+    <div
+      className="
+        max-h-[75vh]
+        overflow-y-auto
+        p-4
+        pb-20
+      "
+    >
 
-      {/* SUB CATEGORY */}
-      <div>
-        <label className="block text-sm font-semibold mb-1 text-gray-700">
-          Sub-Category
-        </label>
-        <select
-          value={selectedSubCategory}
-          onChange={(e) => setSelectedSubCategory(e.target.value)}
-          className="w-full p-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400"
+      {/* CLEAR FILTER (TOP + STICKY) */}
+      <div className="sticky top-0 bg-white z-10 pb-3">
+        <button
+          onClick={clearAllFilters}
+          className="
+            w-full py-2 text-sm
+            border border-gray-300
+            rounded-lg text-gray-600
+            hover:border-gray-400
+            smooth-transition
+          "
         >
-          <option value="">All Sub-Categories</option>
-          {getFilteredSubcatagories().map((sub) => (
-            <option key={sub}>{sub}</option>
-          ))}
-        </select>
+          Clear Filters
+        </button>
       </div>
 
-      {/* OCCASION */}
-      <div>
-        <label className="block text-sm font-semibold mb-1 text-gray-700">
-          Occasion
-        </label>
-        <select
-          value={selectedType}
-          onChange={(e) => setSelectedType(e.target.value)}
-          className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
-        >
-          {types.map((t) => (
-            <option key={t} value={t === "All" ? "" : t}>
-              {t}
-            </option>
-          ))}
-        </select>
-      </div>
+      <div className="space-y-4 mt-4">
 
-      {/* GENDER */}
-      <div>
-        <label className="block text-sm font-semibold mb-1 text-gray-700">
-          Gender
-        </label>
-        <select
-          value={selectedGender}
-          onChange={(e) => setSelectedGender(e.target.value)}
-          className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
-        >
-          {genders.map((g) => (
-            <option key={g} value={g === "All" ? "" : g}>
-              {g}
-            </option>
-          ))}
-        </select>
-      </div>
+        {/* SUB CATEGORY */}
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-gray-700">
+            Sub-Category
+          </label>
+          <select
+            value={selectedSubCategory}
+            onChange={(e) => setSelectedSubCategory(e.target.value)}
+            className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
+          >
+            <option value="">All Sub-Categories</option>
+            {getFilteredSubcatagories().map((sub) => (
+              <option key={sub}>{sub}</option>
+            ))}
+          </select>
+        </div>
 
-      {/* METAL */}
-      <div>
-        <label className="block text-sm font-semibold mb-1 text-gray-700">
-          Metal
-        </label>
-        <select
-          value={metalFilter}
-          onChange={(e) => setMetalFilter(e.target.value)}
-          className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
-        >
-          {metals.map((m) => (
-            <option key={m} value={m === "All" ? "" : m}>
-              {m}
-            </option>
-          ))}
-        </select>
-      </div>
+        {/* OCCASION */}
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-gray-700">
+            Occasion
+          </label>
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
+            className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
+          >
+            {types.map((t) => (
+              <option key={t} value={t === "All" ? "" : t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {/* DESIGN OWNERSHIP */}
-      <div>
-        <label className="block text-sm font-semibold mb-1 text-gray-700">
-          Design Ownership
-        </label>
-        <select
-          value={designFilter}
-          onChange={(e) => setDesignFilter(e.target.value)}
-          className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
-        >
-          <option value="">All</option>
-          <option value="our">In House</option>
-          <option value="Others">Others</option>
-        </select>
-      </div>
+        {/* GENDER */}
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-gray-700">
+            Gender
+          </label>
+          <select
+            value={selectedGender}
+            onChange={(e) => setSelectedGender(e.target.value)}
+            className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
+          >
+            {genders.map((g) => (
+              <option key={g} value={g === "All" ? "" : g}>
+                {g}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {/* WEIGHT RANGE */}
-      <div>
-        <label className="block text-sm font-semibold mb-2 text-gray-700">
-          Weight (grams)
-        </label>
+        {/* METAL */}
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-gray-700">
+            Metal
+          </label>
+          <select
+            value={metalFilter}
+            onChange={(e) => setMetalFilter(e.target.value)}
+            className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
+          >
+            {metals.map((m) => (
+              <option key={m} value={m === "All" ? "" : m}>
+                {m}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        {/* DESIGN OWNERSHIP */}
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-gray-700">
+            Design Ownership
+          </label>
+          <select
+            value={designFilter}
+            onChange={(e) => setDesignFilter(e.target.value)}
+            className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
+          >
+            <option value="">All</option>
+            <option value="our">In House</option>
+            <option value="Others">Others</option>
+          </select>
+        </div>
+
+        {/* WEIGHT RANGE */}
+        <div>
+          <label className="block text-sm font-semibold mb-2 text-gray-700">
+            Weight (grams)
+          </label>
+
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="number"
+              min="0"
+              max={weightMax - 1}
+              value={weightMin}
+              onChange={(e) =>
+                setWeightMin(Math.max(0, Math.min(Number(e.target.value), weightMax - 1)))
+              }
+              className="p-2 text-sm border border-gray-300 rounded-lg text-center"
+              placeholder="Min"
+            />
+
+            <input
+              type="number"
+              min={weightMin + 1}
+              max="200"
+              value={weightMax}
+              onChange={(e) =>
+                setWeightMax(Math.max(weightMin + 1, Math.min(200, Number(e.target.value))))
+              }
+              className="p-2 text-sm border border-gray-300 rounded-lg text-center"
+              placeholder="Max"
+            />
+          </div>
+
+          <p className="mt-2 text-xs text-center text-gray-500">
+            {weightMin}g – {weightMax}g
+          </p>
+        </div>
+
+        {/* SEARCH BY ID */}
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-gray-700">
+            Search by ID
+          </label>
           <input
-            type="number"
-            min="0"
-            max={weightMax - 1}
-            value={weightMin}
-            onChange={(e) =>
-              setWeightMin(Math.max(0, Math.min(Number(e.target.value), weightMax - 1)))
-            }
-            className="p-2 text-sm border border-gray-300 rounded-lg text-center"
-            placeholder="Min"
-          />
-
-          <input
-            type="number"
-            min={weightMin + 1}
-            max="200"
-            value={weightMax}
-            onChange={(e) =>
-              setWeightMax(Math.max(weightMin + 1, Math.min(200, Number(e.target.value))))
-            }
-            className="p-2 text-sm border border-gray-300 rounded-lg text-center"
-            placeholder="Max"
+            type="text"
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+            placeholder="Exact ID"
+            className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
           />
         </div>
 
-        <p className="mt-2 text-xs text-center text-gray-500">
-          {weightMin}g – {weightMax}g
-        </p>
       </div>
-
-      {/* SEARCH BY ID */}
-      <div>
-        <label className="block text-sm font-semibold mb-1 text-gray-700">
-          Search by ID
-        </label>
-        <input
-          type="text"
-          value={searchId}
-          onChange={(e) => setSearchId(e.target.value)}
-          placeholder="Exact ID"
-          className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
-        />
-      </div>
-
-      {/* CLEAR FILTER */}
-      <button
-        onClick={clearAllFilters}
-        className="
-          w-full py-2 text-sm
-          border border-gray-300
-          rounded-lg text-gray-600
-          hover:border-gray-400
-          smooth-transition
-        "
-      >
-        Clear Filters
-      </button>
-
     </div>
   </div>
 )}
+
 
       </div>
 
