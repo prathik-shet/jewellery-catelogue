@@ -1283,7 +1283,7 @@ const enquireOnWhatsApp = () => {
   >
     <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[88vh] overflow-hidden shadow-[0_12px_35px_rgba(0,0,0,0.22)] flex flex-col relative">
 
-      {/* HEADER – CLEAN WHITE */}
+      {/* ================= HEADER ================= */}
       <div className="bg-white px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
@@ -1316,10 +1316,10 @@ const enquireOnWhatsApp = () => {
         </button>
       </div>
 
-      {/* BODY */}
+      {/* ================= BODY ================= */}
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
-        {/* LEFT – IMAGE */}
+        {/* ========== LEFT : IMAGE ========== */}
         <div className="lg:w-3/5 bg-gray-50 px-4 py-6 flex flex-col items-center justify-center">
           {(() => {
             const itemMedia = getItemMedia(selectedItem);
@@ -1353,8 +1353,8 @@ const enquireOnWhatsApp = () => {
                         {media.type === 'image' ? (
                           <img
                             src={media.src}
-                            className="w-full h-full object-cover"
                             alt="thumbnail"
+                            className="w-full h-full object-cover"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-black text-white text-xs">
@@ -1370,11 +1370,10 @@ const enquireOnWhatsApp = () => {
           })()}
         </div>
 
-        {/* RIGHT – DETAILS */}
-        <div className="lg:w-2/5 px-6 py-6 overflow-y-auto bg-[#fff8e6]">
-          <div className="grid grid-cols-2 gap-4 text-sm">
+        {/* ========== RIGHT : DETAILS ========== */}
+        <div className="lg:w-2/5 px-6 py-6 overflow-y-auto bg-[#fff8e6] flex flex-col">
 
-            {/* PRODUCT ID */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="col-span-2 bg-white rounded-xl px-4 py-3 shadow-sm">
               <div className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
                 Product ID
@@ -1406,14 +1405,33 @@ const enquireOnWhatsApp = () => {
               </div>
             ))}
           </div>
+
+          {/* ===== MOBILE ACTIONS (NO FOOTER) ===== */}
+          <div className="mt-6 flex gap-3 lg:hidden">
+            <button
+              onClick={enquireOnWhatsApp}
+              className="flex-1 px-4 py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-95"
+              style={{ backgroundColor: '#128C7E' }}
+            >
+              💬 Enquire
+            </button>
+
+            <button
+              onClick={shareOnWhatsApp}
+              className="flex-1 px-4 py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-95"
+              style={{ backgroundColor: '#25D366' }}
+            >
+              🔗 Share
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* FOOTER */}
-      <div className="bg-white px-4 py-3 flex justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)]">
+      {/* ================= DESKTOP FOOTER ONLY ================= */}
+      <div className="hidden lg:flex bg-white px-4 py-3 justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)]">
         <button
           onClick={enquireOnWhatsApp}
-          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 hover:opacity-90 transition active:scale-95"
+          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 active:scale-95"
           style={{ backgroundColor: '#128C7E' }}
         >
           💬 Enquire
@@ -1421,15 +1439,17 @@ const enquireOnWhatsApp = () => {
 
         <button
           onClick={shareOnWhatsApp}
-          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 hover:opacity-90 transition active:scale-95"
+          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 active:scale-95"
           style={{ backgroundColor: '#25D366' }}
         >
           🔗 Share
         </button>
       </div>
+
     </div>
   </div>
 )}
+
 
 {/* LIGHTBOX MEDIA VIEWER – BORDERLESS */}
 {modalMedia.length > 0 && (
