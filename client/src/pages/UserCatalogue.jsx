@@ -318,7 +318,7 @@ function UserCatalogue() {
   Rings: "https://picsum.photos/seed/rings/300/300",
   Necklace: "https://picsum.photos/seed/Necklace/300/300",
   Mangalsutra: "https://picsum.photos/seed/mangalsutra/300/300",
-  Earrings: "https://picsum.photos/seed/earrings/300/300",
+  Earrings: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768381667017.jpeg",
   Silver: "https://picsum.photos/seed/Slivers/300/300",
   Bangles: "https://picsum.photos/seed/bangles/300/300",
   Chains: "https://picsum.photos/seed/chains/300/300",
@@ -525,11 +525,11 @@ const enquireOnWhatsApp = () => {
   };
 
   const toggleCategory = (cat) => {
-    setSelectedCategory(prev =>
-      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
-    );
-    setSelectedSubCategory('');
-  };
+  setSelectedCategory(prev =>
+    prev.length === 1 && prev[0] === cat ? [] : [cat]
+  );
+  setSelectedSubCategory('');
+};
 
   return (
     <div style={{ backgroundColor: '#fff8e6' }} className="min-h-screen">
@@ -605,26 +605,29 @@ const enquireOnWhatsApp = () => {
   <div className="w-full max-w-7xl mx-auto relative">
 
     {/* ================= CATEGORY SLIDER ================= */}
-    <div className="overflow-x-auto sm:overflow-x-hidden no-scrollbar mb-3">
+<div className="overflow-x-auto sm:overflow-x-hidden no-scrollbar mb-3">
   <div className="flex gap-4 px-1 sm:justify-center">
     {categories.map((cat) => {
       const imageSrc =
         CATEGORY_IMAGES[cat] ||
-        "https://picsum.photos/seed/default/300/300";
+        "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/categories/default.jpg";
 
-      const isActive = selectedCategory.includes(cat);
+      const isActive =
+        selectedCategory.length === 1 && selectedCategory[0] === cat;
 
       return (
         <button
           key={cat}
           onClick={() => toggleCategory(cat)}
-          className="flex flex-col items-center min-w-[70px]"
+          className="flex flex-col items-center min-w-[70px] focus:outline-none"
         >
           <div
             className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden transition-all duration-200
-              ${isActive 
-                ? "border-4 border-amber-500 shadow-md scale-105" 
-                : "border-2 border-gray-300"}`}
+              ${
+                isActive
+                  ? "border-4 border-amber-500 shadow-lg scale-105"
+                  : "border-2 border-gray-300"
+              }`}
           >
             <img
               src={imageSrc}
@@ -635,8 +638,12 @@ const enquireOnWhatsApp = () => {
           </div>
 
           <span
-            className={`mt-1.5 text-xs sm:text-sm font-medium transition-colors
-              ${isActive ? "text-amber-600" : "text-gray-700"}`}
+            className={`mt-1.5 text-xs sm:text-sm font-semibold transition-colors
+              ${
+                isActive
+                  ? "text-amber-600"
+                  : "text-gray-700"
+              }`}
           >
             {cat}
           </span>
@@ -645,6 +652,7 @@ const enquireOnWhatsApp = () => {
     })}
   </div>
 </div>
+
 
 
     {/* ================= CONTROL STRIP ================= */}
@@ -822,86 +830,127 @@ const enquireOnWhatsApp = () => {
           Sort
         </button>
 
-        {showSortPanel && (
-                <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 z-[90] fade-in" style={{ borderColor: '#efb20c' }}>
-                  <div className="space-y-5">
-                    <div className="p-4 rounded-xl border-2 shadow-sm" style={{ backgroundColor: '#fff8e6', borderColor: '#efb20c' }}>
-                      <p className="font-bold text-center text-base" style={{ color: '#7f1a2b' }}>
-                        {getActiveSortDescription()}
-                      </p>
-                    </div>
+       {showSortPanel && (
+  <div
+    className="
+      absolute top-full mt-2
+      left-1/2 -translate-x-1/2
+      sm:left-auto sm:right-0 sm:translate-x-0
+      w-[90vw] sm:w-80
+      bg-white border border-gray-300
+      rounded-xl shadow-lg
+      p-4 z-[90]
+    "
+  >
+    <div className="space-y-4">
 
-                    <div>
-                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Sort by Date</label>
-                      <div className="space-y-3">
-                        <button
-                          onClick={() => {
-                            setSortByDate('newest');
-                            setSortField('');
-                          }}
-                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
-                            sortByDate === 'newest' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
-                          }`}
-                          style={sortByDate === 'newest' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
-                        >
-                          Newest First
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSortByDate('oldest');
-                            setSortField('');
-                          }}
-                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
-                            sortByDate === 'oldest' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
-                          }`}
-                          style={sortByDate === 'oldest' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
-                        >
-                          Oldest First
-                        </button>
-                      </div>
-                    </div>
+      {/* ACTIVE SORT INFO */}
+      <p className="text-center text-sm font-semibold text-gray-700">
+        {getActiveSortDescription()}
+      </p>
 
-                    <div>
-                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>Sort by Weight</label>
-                      <div className="space-y-3">
-                        <button
-                          onClick={() => {
-                            setSortField('weight');
-                            setSortOrder('desc');
-                            setSortByDate('');
-                          }}
-                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
-                            sortField === 'weight' && sortOrder === 'desc' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
-                          }`}
-                          style={sortField === 'weight' && sortOrder === 'desc' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
-                        >
-                          High to Low
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSortField('weight');
-                            setSortOrder('asc');
-                            setSortByDate('');
-                          }}
-                          className={`w-full p-3.5 rounded-xl border-2 font-bold smooth-transition hover-scale ${
-                            sortField === 'weight' && sortOrder === 'asc' ? 'text-white shadow-md' : 'bg-white text-gray-700 border-gray-300 hover:border-amber-300'
-                          }`}
-                          style={sortField === 'weight' && sortOrder === 'asc' ? { backgroundColor: '#efb20c', borderColor: '#efb20c' } : {}}
-                        >
-                          Low to High
-                        </button>
-                      </div>
-                    </div>
+      {/* SORT BY DATE */}
+      <div>
+        <p className="text-sm font-semibold mb-2 text-gray-700">
+          Sort by Date
+        </p>
 
-                    <button
-                      onClick={clearAllSorts}
-                      className="gradient-maroon w-full px-4 py-3 text-white font-bold rounded-xl hover:shadow-lg smooth-transition hover-lift"
-                    >
-                      Reset Sort
-                    </button>
-                  </div>
-                </div>
-              )}
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              setSortByDate('newest');
+              setSortField('');
+            }}
+            className={`flex-1 text-sm px-3 py-2 rounded-lg border smooth-transition
+              ${
+                sortByDate === 'newest'
+                  ? 'border-amber-500 text-amber-600 font-semibold'
+                  : 'border-gray-300 text-gray-600 hover:border-gray-400'
+              }
+            `}
+          >
+            Newest
+          </button>
+
+          <button
+            onClick={() => {
+              setSortByDate('oldest');
+              setSortField('');
+            }}
+            className={`flex-1 text-sm px-3 py-2 rounded-lg border smooth-transition
+              ${
+                sortByDate === 'oldest'
+                  ? 'border-amber-500 text-amber-600 font-semibold'
+                  : 'border-gray-300 text-gray-600 hover:border-gray-400'
+              }
+            `}
+          >
+            Oldest
+          </button>
+        </div>
+      </div>
+
+      {/* SORT BY WEIGHT */}
+      <div>
+        <p className="text-sm font-semibold mb-2 text-gray-700">
+          Sort by Weight
+        </p>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              setSortField('weight');
+              setSortOrder('desc');
+              setSortByDate('');
+            }}
+            className={`flex-1 text-sm px-3 py-2 rounded-lg border smooth-transition
+              ${
+                sortField === 'weight' && sortOrder === 'desc'
+                  ? 'border-amber-500 text-amber-600 font-semibold'
+                  : 'border-gray-300 text-gray-600 hover:border-gray-400'
+              }
+            `}
+          >
+            High → Low
+          </button>
+
+          <button
+            onClick={() => {
+              setSortField('weight');
+              setSortOrder('asc');
+              setSortByDate('');
+            }}
+            className={`flex-1 text-sm px-3 py-2 rounded-lg border smooth-transition
+              ${
+                sortField === 'weight' && sortOrder === 'asc'
+                  ? 'border-amber-500 text-amber-600 font-semibold'
+                  : 'border-gray-300 text-gray-600 hover:border-gray-400'
+              }
+            `}
+          >
+            Low → High
+          </button>
+        </div>
+      </div>
+
+      {/* RESET */}
+      <button
+        onClick={clearAllSorts}
+        className="
+          w-full text-sm py-2 rounded-lg
+          border border-gray-300
+          text-gray-600
+          hover:border-gray-400
+          smooth-transition
+        "
+      >
+        Reset Sort
+      </button>
+
+    </div>
+  </div>
+)}
+
       </div>
 
       {/* SEARCH */}
@@ -1007,29 +1056,32 @@ const enquireOnWhatsApp = () => {
     "
   >
     {mainImage && (
-      <div className="relative mb-3">
-        {/* Fixed-size image container */}
-        <div className="w-full h-[220px] sm:h-[240px] overflow-hidden rounded-lg bg-white">
-          <img
-            src={mainImage}
-            alt={item.name}
-            loading="lazy"
-            className="w-full h-full object-cover smooth-transition group-hover:scale-105"
-          />
-          </div>
+  <div className="relative mb-3">
+    {/* Fixed-size image container */}
+    <div className="w-full h-[220px] sm:h-[240px] overflow-hidden rounded-lg bg-white">
+      <img
+        src={mainImage}
+        alt={item.name}
+        loading="lazy"
+        className="w-full h-full object-cover smooth-transition group-hover:scale-105"
+      />
+    </div>
 
-    {/* Minimal flat overlay label */}
+    {/* Design ownership label */}
     <span
-      className="absolute bottom-2 left-2 text-xs font-semibold tracking-wide text-white"
+      className="absolute bottom-2 left-2 text-xs font-semibold tracking-wide text-white rounded"
       style={{
-        background: "rgba(0,0,0,0.55)",
-        padding: "4px 8px"
+        background: item.isOurDesign === false
+          ? "rgba(127, 26, 43, 0.85)"   // maroon for Others
+          : "rgba(0, 0, 0, 0.6)",      // black for In House
+        padding: "4px 8px",
       }}
     >
-      
+      {item.isOurDesign === false ? "Others" : "In House"}
     </span>
   </div>
 )}
+
 
 
 
