@@ -706,14 +706,39 @@ const enquireOnWhatsApp = () => {
     {/* SCROLL CONTAINER */}
     <div
       className="
-        max-h-[75vh] sm:max-h-none
+        max-h-[75vh] sm:max-h-[70vh]
         overflow-y-auto
         p-4
-        pb-24 sm:pb-4
+        pb-28
       "
     >
 
-      {/* CLEAR FILTER (NORMAL FLOW – NO STICKY) */}
+      {/* HEADER ROW */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-sm font-semibold text-gray-700">
+          Filters
+        </span>
+
+        {/* CLOSE BUTTON */}
+        <button
+          onClick={() => setShowFilterPanel(false)}
+          className="
+            w-7 h-7
+            flex items-center justify-center
+            rounded-full
+            border border-gray-300
+            text-gray-600
+            hover:border-gray-400
+            hover:text-gray-800
+            smooth-transition
+          "
+          aria-label="Close filters"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* CLEAR FILTER */}
       <button
         onClick={clearAllFilters}
         className="
@@ -871,6 +896,7 @@ const enquireOnWhatsApp = () => {
     </div>
   </div>
 )}
+
 
 
 
