@@ -6,16 +6,16 @@ const LOGO_URL =
   "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/desings/logo.png";
 
 const SLIDER_IMAGES = [
-  "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768284560143.png",
-  "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768284606919.png",
-  "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768284638281.png",
+  "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768389279741.jpeg",
+  "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768389321721.jpeg",
+  "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768389347033.jpeg",
 ];
 
 const BG_IMAGE =
   "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768214198230.jpeg";
 
 const MAP_URL =
-  "https://www.google.com/maps/place/Vimaleshwara+Jewellers/@13.5364782,75.3646316,17z/data=!3m1!4b1!4m6!3m5!1s0x3bbb14e87902c949:0x9909b22e6458feda!8m2!3d13.5364782!4d75.3672065!16s%2Fg%2F11dy7dxygr?entry=ttu&g_ep=EgoyMDI2MDEwNy4wIKXMDSoASAFQAw%3D%3D";
+  "https://www.google.com/maps/place/Vimaleshwara+Jewellers/@13.5364782,75.3646316,17z/data=!3m1!4b1!4m6!3m5!1s0x3bbb14e87902c949:0x9909b22e6458feda!8m2!3d13.5364782!4d75.3672065!16s%2Fg%2F11dy7dxygr";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -67,7 +67,7 @@ export default function Dashboard() {
             : "bg-white/85"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-2 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-2 flex items-center">
           <div className="flex items-center gap-3">
             <img
               src={LOGO_URL}
@@ -86,13 +86,6 @@ export default function Dashboard() {
               </span>
             </div>
           </div>
-
-          <button
-            onClick={() => navigate("/admin")}
-            className="text-sm font-semibold text-[#7f1a2b]"
-          >
-            Admin Login
-          </button>
         </div>
       </header>
 
@@ -100,38 +93,47 @@ export default function Dashboard() {
       <main className="pt-[90px] relative z-10">
         {/* HERO */}
         <section className="text-center px-6 max-w-4xl mx-auto">
-          <span className="inline-block px-4 py-1 text-xs rounded-full bg-[#fae382]/30 font-bold text-[#7f1a2b]">
-            EST. 1995
+          {/* EST */}
+          <span className="inline-block px-5 py-2 text-sm md:text-base rounded-full bg-[#fae382]/40 font-bold text-[#7f1a2b]">
+            EST. 1996
           </span>
 
-          <h2
-            className="text-4xl md:text-6xl font-black mt-6"
-            style={{ fontFamily: "Playfair Display, serif" }}
-          >
-            Timeless Elegance
-          </h2>
-
-          <p className="mt-4 text-lg md:text-xl opacity-75">
-            Discover handcrafted gold, silver and precious stone jewellery
-            designed to last generations.
+          {/* ABOUT */}
+          <p className="mt-8 text-base md:text-lg leading-relaxed opacity-80">
+            Vimaleshwara Jewellers in Koppa has been creating beautiful gold,
+            silver, and gemstone jewellery. From classic designs to modern
+            styles, every piece is crafted with care to add elegance to your
+            special moments.
           </p>
 
-          <div className="mt-10">
-  <button
-    onClick={() => navigate("/user")}
-    className="px-14 py-6 rounded-full text-xl font-bold shadow-2xl hover:scale-105 transition-transform duration-300"
-    style={{
-      background: "#fae382",
-      color: "#2e2e2e",
-    }}
-  >
-    View Catalogue
-  </button>
-</div>
+          <p className="mt-4 text-base md:text-lg opacity-80">
+            Explore our collection and find jewellery that perfectly complements
+            your style.
+          </p>
 
+          {/* CTA */}
+          <div className="mt-10">
+            <button
+              onClick={() => navigate("/user")}
+              className="
+                px-8 py-4
+                md:px-14 md:py-6
+                rounded-full
+                text-base md:text-xl
+                font-bold
+                shadow-2xl
+                hover:scale-105
+                transition-transform
+                duration-300
+              "
+              style={{ background: "#fae382", color: "#2e2e2e" }}
+            >
+              View Catalogue
+            </button>
+          </div>
         </section>
 
-        {/* ================= SLIDER ================= */}
+        {/* ---------------- SLIDER ---------------- */}
         <section className="mt-16">
           <div className="hidden md:block max-w-6xl mx-auto aspect-[16/9] relative overflow-hidden rounded-3xl shadow-lg cursor-pointer">
             {SLIDER_IMAGES.map((img, i) => (
@@ -162,59 +164,71 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* ================= FOOTER ================= */}
+        {/* ---------------- FOOTER ---------------- */}
         <footer className="mt-24 mx-4 md:mx-auto max-w-5xl">
-          <div className="bg-white/70 backdrop-blur-xl border rounded-3xl p-10">
-            <div className="flex flex-col md:flex-row gap-10">
-              <div className="flex-1 text-center md:text-left">
-                <h3 className="font-bold text-[#7f1a2b] mb-3">
-                  📍 Visit Our Store
-                </h3>
-                <a
-                  href={MAP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[#7f1a2b] transition-colors"
-                >
-                  Vimaleshwara Jewellers <br />
-                  Main Road, Koppa <br />
-                  Chikkamagaluru, Karnataka – 577126
-                </a>
-              </div>
+  <div className="bg-white/70 backdrop-blur-xl border rounded-3xl p-10">
+    <div className="flex flex-col md:flex-row gap-10">
+      
+      {/* ADDRESS */}
+      <div className="flex-1 text-center md:text-left">
+        <h3 className="font-bold text-[#7f1a2b] mb-3">
+          📍 Visit Our Store
+        </h3>
+        <a
+          href={MAP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-[#7f1a2b]"
+        >
+          Vimaleshwara Jewellers <br />
+          Main Road, Koppa <br />
+          Chikkamagaluru, Karnataka – 577126
+        </a>
+      </div>
 
-              <div className="flex-1 text-center md:text-left">
-                <h3 className="font-bold text-[#7f1a2b] mb-3">
-                  📞 Contact
-                </h3>
-                <a
-                  href="tel:+918265221143"
-                  className="block hover:text-[#7f1a2b]"
-                >
-                  +91 8265 221143
-                </a>
-                <a
-                  href="tel:+919448203199"
-                  className="block hover:text-[#7f1a2b]"
-                >
-                  +91 94482 03199
-                </a>
-                <a
-                  href="mailto:vimaleshwarajewellers@gmail.com"
-                  className="block text-sm opacity-70 hover:text-[#7f1a2b] mt-2"
-                >
-                  vimaleshwarajewellers@gmail.com
-                </a>
-              </div>
-            </div>
+      {/* CONTACT */}
+      <div className="flex-1 text-center md:text-left">
+        <h3 className="font-bold text-[#7f1a2b] mb-3">
+          📞 Contact
+        </h3>
 
-            <p className="text-center text-xs opacity-50 mt-10">
-              © {new Date().getFullYear()} VIMALESHWARA JEWELLERS
-            </p>
-          </div>
-        </footer>
+        <a href="tel:+918265221143" className="block hover:text-[#7f1a2b]">
+          +91 8265 221143
+        </a>
+
+        <a href="tel:+919448203199" className="block hover:text-[#7f1a2b]">
+          +91 94482 03199
+        </a>
+
+        {/* WHATSAPP */}
+        <a
+          href="https://wa.me/918088305913"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block mt-2 font-semibold text-green-600 hover:text-green-700"
+        >
+          💬 WhatsApp: +91 80883 05913
+        </a>
+
+        <a
+          href="mailto:vimaleshwarajewellers@gmail.com"
+          className="block text-sm opacity-70 hover:text-[#7f1a2b] mt-3"
+        >
+          vimaleshwarajewellers@gmail.com
+        </a>
+      </div>
+
+    </div>
+
+    <p className="text-center text-xs opacity-50 mt-10">
+      © {new Date().getFullYear()} VIMALESHWARA JEWELLERS
+    </p>
+  </div>
+</footer>
+
       </main>
 
-      {/* ================= IMAGE POPUP ================= */}
+      {/* ---------------- IMAGE POPUP ---------------- */}
       {popupImage && (
         <div
           className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4"
