@@ -618,14 +618,18 @@ const enquireOnWhatsApp = () => {
       
       {/* ================= FIXED HEADER ================= */}
 <div
-  className="glass-effect fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-3 border-b"
-  style={{ borderColor: "#efb20c" }}
+  className="glass-effect fixed left-0 w-full z-[85] shadow-lg p-3 border-b"
+  style={{
+    top: "calc(env(safe-area-inset-top, 0px) + 96px)",
+    borderColor: "#efb20c"
+  }}
 >
-  <div className="w-full max-w-7xl mx-auto relative">
+  <div className="w-full max-w-7xl mx-auto">
+
 
     {/* ================= CATEGORY SLIDER ================= */}
-<div className="overflow-x-auto sm:overflow-x-hidden no-scrollbar mb-3">
-  <div className="flex gap-4 px-1 sm:justify-center">
+<div className="overflow-x-auto no-scrollbar pb-1">
+  <div className="flex gap-4 px-1 justify-start sm:justify-center min-w-max">
     {categories.map((cat) => {
       const imageSrc =
         CATEGORY_IMAGES[cat] ||
@@ -657,12 +661,8 @@ const enquireOnWhatsApp = () => {
           </div>
 
           <span
-            className={`mt-1.5 text-xs sm:text-sm font-semibold transition-colors
-              ${
-                isActive
-                  ? "text-amber-600"
-                  : "text-gray-700"
-              }`}
+            className={`mt-1.5 text-xs sm:text-sm font-semibold
+              ${isActive ? "text-amber-600" : "text-gray-700"}`}
           >
             {cat}
           </span>
@@ -1453,7 +1453,6 @@ const enquireOnWhatsApp = () => {
     </div>
   </div>
 )}
-
 
 {/* LIGHTBOX MEDIA VIEWER – BORDERLESS */}
 {modalMedia.length > 0 && (
