@@ -618,57 +618,67 @@ const enquireOnWhatsApp = () => {
       
       {/* ================= FIXED HEADER ================= */}
 <div
-  className="glass-effect fixed left-0 w-full z-[85] shadow-lg p-3 border-b"
-  style={{
-    top: "calc(env(safe-area-inset-top, 0px) + 96px)",
-    borderColor: "#efb20c"
-  }}
+  className="
+    glass-effect
+    fixed left-0 w-full z-[85]
+    shadow-lg p-3 border-b
+    top-[96px] sm:top-[104px]
+  "
+  style={{ borderColor: "#efb20c" }}
 >
   <div className="w-full max-w-7xl mx-auto">
 
-
     {/* ================= CATEGORY SLIDER ================= */}
-<div className="overflow-x-auto no-scrollbar pb-1">
-  <div className="flex gap-4 px-1 justify-start sm:justify-center min-w-max">
-    {categories.map((cat) => {
-      const imageSrc =
-        CATEGORY_IMAGES[cat] ||
-        "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/categories/default.jpg";
+    <div className="overflow-x-auto no-scrollbar pb-1">
+      <div className="flex gap-4 px-1 justify-start sm:justify-center min-w-max">
+        {categories.map((cat) => {
+          const imageSrc =
+            CATEGORY_IMAGES[cat] ||
+            "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/categories/default.jpg";
 
-      const isActive =
-        selectedCategory.length === 1 && selectedCategory[0] === cat;
+          const isActive =
+            selectedCategory.length === 1 && selectedCategory[0] === cat;
 
-      return (
-        <button
-          key={cat}
-          onClick={() => toggleCategory(cat)}
-          className="flex flex-col items-center min-w-[70px] focus:outline-none"
-        >
-          <div
-            className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden transition-all duration-200
-              ${
-                isActive
-                  ? "border-4 border-amber-500 shadow-lg scale-105"
-                  : "border-2 border-gray-300"
-              }`}
-          >
-            <img
-              src={imageSrc}
-              alt={cat}
-              loading="lazy"
-              className="w-full h-full object-cover bg-gray-100"
-            />
-          </div>
+          return (
+            <button
+              key={cat}
+              onClick={() => toggleCategory(cat)}
+              className="flex flex-col items-center min-w-[70px] focus:outline-none"
+            >
+              {/* CATEGORY IMAGE */}
+              <div
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden
+                  transition-all duration-200
+                  ${
+                    isActive
+                      ? "border-4 border-amber-500 shadow-lg scale-105"
+                      : "border-2 border-gray-300"
+                  }`}
+              >
+                <img
+                  src={imageSrc}
+                  alt={cat}
+                  loading="lazy"
+                  className="w-full h-full object-cover bg-gray-100"
+                />
+              </div>
 
-          <span
-            className={`mt-1.5 text-xs sm:text-sm font-semibold
-              ${isActive ? "text-amber-600" : "text-gray-700"}`}
-          >
-            {cat}
-          </span>
-        </button>
-      );
-    })}
+              {/* CATEGORY LABEL */}
+              <span
+                className={`mt-1.5 text-xs sm:text-sm font-semibold
+                  ${
+                    isActive
+                      ? "text-amber-600"
+                      : "text-gray-700"
+                  }`}
+              >
+                {cat}
+              </span>
+            </button>
+          );
+        })}
+      
+
   </div>
 </div>
 
