@@ -706,30 +706,28 @@ const enquireOnWhatsApp = () => {
     {/* SCROLL CONTAINER */}
     <div
       className="
-        max-h-[75vh]
+        max-h-[75vh] sm:max-h-none
         overflow-y-auto
         p-4
-        pb-20
+        pb-24 sm:pb-4
       "
     >
 
-      {/* CLEAR FILTER (TOP + STICKY) */}
-      <div className="sticky top-0 bg-white z-10 pb-3">
-        <button
-          onClick={clearAllFilters}
-          className="
-            w-full py-2 text-sm
-            border border-gray-300
-            rounded-lg text-gray-600
-            hover:border-gray-400
-            smooth-transition
-          "
-        >
-          Clear Filters
-        </button>
-      </div>
+      {/* CLEAR FILTER (NORMAL FLOW – NO STICKY) */}
+      <button
+        onClick={clearAllFilters}
+        className="
+          w-full mb-4 py-2 text-sm
+          border border-gray-300
+          rounded-lg text-gray-600
+          hover:border-gray-400
+          smooth-transition
+        "
+      >
+        Clear Filters
+      </button>
 
-      <div className="space-y-4 mt-4">
+      <div className="space-y-4">
 
         {/* SUB CATEGORY */}
         <div>
@@ -873,6 +871,7 @@ const enquireOnWhatsApp = () => {
     </div>
   </div>
 )}
+
 
 
       </div>
