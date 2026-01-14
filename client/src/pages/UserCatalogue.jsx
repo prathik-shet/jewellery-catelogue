@@ -629,7 +629,19 @@ const enquireOnWhatsApp = () => {
 >
   <div className="w-full max-w-7xl mx-auto">
 
-    {/* ================= CATEGORY SLIDER ================= */}
+  {/* ================= CATEGORY SLIDER ================= */}
+<div
+  className="
+    glass-effect
+    sticky
+    top-[96px]        /* height of main header */
+    z-[85]
+    shadow-lg p-3 border-b
+    bg-white/95 backdrop-blur
+  "
+  style={{ borderColor: "#efb20c" }}
+>
+  <div className="w-full max-w-7xl mx-auto">
     <div className="overflow-x-auto no-scrollbar pb-1">
       <div className="flex gap-4 px-1 justify-start sm:justify-center min-w-max">
         {categories.map((cat) => {
@@ -644,9 +656,8 @@ const enquireOnWhatsApp = () => {
             <button
               key={cat}
               onClick={() => toggleCategory(cat)}
-              className="flex flex-col items-center min-w-[70px] focus:outline-none"
+              className="flex flex-col items-center min-w-[70px]"
             >
-              {/* CATEGORY IMAGE */}
               <div
                 className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden
                   transition-all duration-200
@@ -659,25 +670,25 @@ const enquireOnWhatsApp = () => {
                 <img
                   src={imageSrc}
                   alt={cat}
-                  loading="lazy"
-                  className="w-full h-full object-cover bg-gray-100"
+                  className="w-full h-full object-cover"
                 />
               </div>
 
-              {/* CATEGORY LABEL */}
               <span
                 className={`mt-1.5 text-xs sm:text-sm font-semibold
-                  ${
-                    isActive
-                      ? "text-amber-600"
-                      : "text-gray-700"
-                  }`}
+                  ${isActive ? "text-amber-600" : "text-gray-700"}`}
               >
                 {cat}
               </span>
             </button>
           );
         })}
+      </div>
+    </div>
+  
+
+  
+
       
 
 
@@ -687,7 +698,7 @@ const enquireOnWhatsApp = () => {
 
 
     {/* ================= CONTROL STRIP ================= */}
-    <div className="flex items-center justify-center gap-2 mb-2 border rounded-xl px-3 py-2 bg-white shadow-sm">
+    <div className="mt-3 flex items-center justify-center gap-2">
 
       {/* ================= FILTER ================= */}
       <div className="relative">
@@ -1122,7 +1133,8 @@ const enquireOnWhatsApp = () => {
 
 
 
-      <div className="pt-72 sm:pt-80">
+      <div className="pt-[180px]">
+
 
         {loading && (
           <div className="flex items-center justify-center py-20">
