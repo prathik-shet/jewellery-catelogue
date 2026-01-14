@@ -94,7 +94,7 @@ export default function Dashboard() {
         {/* HERO */}
         <section className="text-center px-6 max-w-4xl mx-auto">
           <span className="inline-block px-5 py-2 text-sm md:text-base rounded-full bg-[#fae382]/40 font-bold text-[#7f1a2b]">
-            Crafting jewellery since 1995
+            Crafting Jewellery Since 1995
           </span>
 
           <p className="mt-8 text-base md:text-lg leading-relaxed opacity-80">
