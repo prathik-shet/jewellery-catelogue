@@ -315,18 +315,18 @@ function UserCatalogue() {
     return media;
   };
   const CATEGORY_IMAGES = {
-  Rings: "https://picsum.photos/seed/rings/300/300",
-  Necklace: "https://picsum.photos/seed/Necklace/300/300",
-  Mangalsutra: "https://picsum.photos/seed/mangalsutra/300/300",
+  custom: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768385032093.jpeg",
+  Necklace: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383126443.jpeg",
+  Mangalsutra: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383647096.jpeg",
   Earrings: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768381667017.jpeg",
-  Silver: "https://picsum.photos/seed/Slivers/300/300",
-  Bangles: "https://picsum.photos/seed/bangles/300/300",
-  Chains: "https://picsum.photos/seed/chains/300/300",
-  Pendants: "https://picsum.photos/seed/pendants/300/300",
-  "Rings": "https://picsum.photos/seed/finger-rings/300/300",
-  "Hara": "https://picsum.photos/seed/necklace-set/300/300",
-  "Bracelets": "https://picsum.photos/seed/nose-pin/300/300",
-  Diamond: "https://picsum.photos/seed/Diamond/300/300",
+  Silver: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383195535.jpeg",
+  Bangles: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768384569628.jpeg",
+  Chains: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768385170537.jpeg",
+  Pendants: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383871212.jpeg",
+  "Rings": "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768384064227.jpeg",
+  "Hara": "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768385454261.jpeg",
+  "Bracelets": "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768384879673.jpeg",
+  Diamond: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383068506.jpeg",
 };
 
   const goToPage = (page) => {
@@ -477,52 +477,71 @@ const enquireOnWhatsApp = () => {
 
 
   const getGridIcon = () => {
-    if (isMobile) {
-      return gridCols === 1 ? (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      ) : (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7" />
+  const iconClass = "w-5 h-5";
+
+  // MOBILE (toggle between list & 2-grid)
+  if (isMobile) {
+    return gridCols === 1 ? (
+      // LIST ICON
+      <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M4 6h16M4 12h16M4 18h16"
+        />
+      </svg>
+    ) : (
+      // 2 COLUMN GRID ICON
+      <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7"
+        />
+      </svg>
+    );
+  }
+
+  // DESKTOP
+  switch (gridCols) {
+    case 2:
+      return (
+        <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7"
+          />
         </svg>
       );
-    } else {
-      switch (gridCols) {
-        case 2: return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h7M4 12h7M4 18h7M13 6h7M13 12h7M13 18h7" />
-          </svg>
-        );
-        case 3: return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <rect x="3" y="3" width="5" height="5" strokeWidth={2}/>
-            <rect x="10" y="3" width="5" height="5" strokeWidth={2}/>
-            <rect x="17" y="3" width="5" height="5" strokeWidth={2}/>
-          </svg>
-        );
-        case 4: return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <rect x="2" y="2" width="4" height="4" strokeWidth={2}/>
-            <rect x="8" y="2" width="4" height="4" strokeWidth={2}/>
-            <rect x="14" y="2" width="4" height="4" strokeWidth={2}/>
-            <rect x="20" y="2" width="4" height="4" strokeWidth={2}/>
-          </svg>
-        );
-        case 6: return (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <rect x="1" y="2" width="3" height="3" strokeWidth={2}/>
-            <rect x="5" y="2" width="3" height="3" strokeWidth={2}/>
-            <rect x="9" y="2" width="3" height="3" strokeWidth={2}/>
-            <rect x="13" y="2" width="3" height="3" strokeWidth={2}/>
-            <rect x="17" y="2" width="3" height="3" strokeWidth={2}/>
-            <rect x="21" y="2" width="3" height="3" strokeWidth={2}/>
-          </svg>
-        );
-        default: return null;
-      }
-    }
-  };
+
+    case 3:
+      return (
+        <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="5" height="5" strokeWidth={2} />
+          <rect x="10" y="3" width="5" height="5" strokeWidth={2} />
+          <rect x="17" y="3" width="5" height="5" strokeWidth={2} />
+        </svg>
+      );
+
+    case 4:
+      return (
+        <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <rect x="2" y="2" width="4" height="4" strokeWidth={2} />
+          <rect x="8" y="2" width="4" height="4" strokeWidth={2} />
+          <rect x="14" y="2" width="4" height="4" strokeWidth={2} />
+          <rect x="20" y="2" width="4" height="4" strokeWidth={2} />
+        </svg>
+      );
+
+    case 6:
+      return (
+        <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {[1,5,9,13,17,21].map((x) => (
+            <rect key={x} x={x} y="2" width="3" height="3" strokeWidth={2} />
+          ))}
+        </svg>
+      );
+
+    default:
+      return null;
+  }
+};
+
 
   const toggleCategory = (cat) => {
   setSelectedCategory(prev =>
@@ -672,149 +691,176 @@ const enquireOnWhatsApp = () => {
         </button>
 
         {showFilterPanel && (
-          <div
-            className="absolute top-full mt-2 left-0 w-80 sm:w-96 bg-white border-2 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90] fade-in"
-            style={{ borderColor: "#7f1a2b" }}
-          >
-            <div className="space-y-5">
+  <div
+    className="
+      absolute top-full mt-2
+      left-1/2 -translate-x-1/2
+      sm:left-0 sm:translate-x-0
+      w-[90vw] sm:w-96
+      bg-white border border-gray-300
+      rounded-xl shadow-lg
+      p-4 max-h-[70vh] overflow-y-auto
+      z-[90]
+    "
+  >
+    <div className="space-y-4">
 
-              {/* ❌ CATEGORY REMOVED FROM HERE */}
+      {/* SUB CATEGORY */}
+      <div>
+        <label className="block text-sm font-semibold mb-1 text-gray-700">
+          Sub-Category
+        </label>
+        <select
+          value={selectedSubCategory}
+          onChange={(e) => setSelectedSubCategory(e.target.value)}
+          className="w-full p-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400"
+        >
+          <option value="">All Sub-Categories</option>
+          {getFilteredSubcatagories().map((sub) => (
+            <option key={sub}>{sub}</option>
+          ))}
+        </select>
+      </div>
 
-              <div>
-                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
-                  Sub-Category
-                </label>
-                <select
-                  value={selectedSubCategory}
-                  onChange={(e) => setSelectedSubCategory(e.target.value)}
-                  className="w-full p-3 border-2 rounded-xl"
-                >
-                  <option value="">All Sub-Categories</option>
-                  {getFilteredSubcatagories().map((sub) => (
-                    <option key={sub}>{sub}</option>
-                  ))}
-                </select>
-              </div>
+      {/* OCCASION */}
+      <div>
+        <label className="block text-sm font-semibold mb-1 text-gray-700">
+          Occasion
+        </label>
+        <select
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
+          className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
+        >
+          {types.map((t) => (
+            <option key={t} value={t === "All" ? "" : t}>
+              {t}
+            </option>
+          ))}
+        </select>
+      </div>
 
-              <div>
-                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
-                  Occasion
-                </label>
-                <select
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="w-full p-3 border-2 rounded-xl"
-                >
-                  {types.map((t) => (
-                    <option key={t} value={t === "All" ? "" : t}>{t}</option>
-                  ))}
-                </select>
-              </div>
+      {/* GENDER */}
+      <div>
+        <label className="block text-sm font-semibold mb-1 text-gray-700">
+          Gender
+        </label>
+        <select
+          value={selectedGender}
+          onChange={(e) => setSelectedGender(e.target.value)}
+          className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
+        >
+          {genders.map((g) => (
+            <option key={g} value={g === "All" ? "" : g}>
+              {g}
+            </option>
+          ))}
+        </select>
+      </div>
 
-              <div>
-                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
-                  Gender
-                </label>
-                <select
-                  value={selectedGender}
-                  onChange={(e) => setSelectedGender(e.target.value)}
-                  className="w-full p-3 border-2 rounded-xl"
-                >
-                  {genders.map((g) => (
-                    <option key={g} value={g === "All" ? "" : g}>{g}</option>
-                  ))}
-                </select>
-              </div>
+      {/* METAL */}
+      <div>
+        <label className="block text-sm font-semibold mb-1 text-gray-700">
+          Metal
+        </label>
+        <select
+          value={metalFilter}
+          onChange={(e) => setMetalFilter(e.target.value)}
+          className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
+        >
+          {metals.map((m) => (
+            <option key={m} value={m === "All" ? "" : m}>
+              {m}
+            </option>
+          ))}
+        </select>
+      </div>
 
-              <div>
-                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
-                  Metal
-                </label>
-                <select
-                  value={metalFilter}
-                  onChange={(e) => setMetalFilter(e.target.value)}
-                  className="w-full p-3 border-2 rounded-xl"
-                >
-                  {metals.map((m) => (
-                    <option key={m} value={m === "All" ? "" : m}>{m}</option>
-                  ))}
-                </select>
-              </div>
+      {/* DESIGN OWNERSHIP */}
+      <div>
+        <label className="block text-sm font-semibold mb-1 text-gray-700">
+          Design Ownership
+        </label>
+        <select
+          value={designFilter}
+          onChange={(e) => setDesignFilter(e.target.value)}
+          className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
+        >
+          <option value="">All</option>
+          <option value="our">In House</option>
+          <option value="Others">Others</option>
+        </select>
+      </div>
 
-              <div>
-                <label className="block font-bold mb-2" style={{ color: "#7f1a2b" }}>
-                  Design Ownership
-                </label>
-                <select
-                  value={designFilter}
-                  onChange={(e) => setDesignFilter(e.target.value)}
-                  className="w-full p-3 border-2 rounded-xl"
-                >
-                  <option value="">All</option>
-                  <option value="our">In House</option>
-                  <option value="Others">Others</option>
-                </select>
-              </div>
-              
-                    <div>
-                      <label className="block font-bold mb-3 text-base" style={{ color: '#7f1a2b' }}>
-                        Weight Range (grams)
-                      </label>
-                      <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-xl border-2 border-amber-200">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Min Weight</label>
-                            <input
-                              type="number"
-                              min="0"
-                              max={weightMax - 1}
-                              value={weightMin}
-                              onChange={(e) => setWeightMin(Math.max(0, Math.min(Number(e.target.value), weightMax - 1)))}
-                              className="w-full p-2.5 border-2 border-gray-300 rounded-lg text-center font-bold smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                              style={{ color: '#7f1a2b' }}
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Max Weight</label>
-                            <input
-                              type="number"
-                              min={weightMin + 1}
-                              max="200"
-                              value={weightMax}
-                              onChange={(e) => setWeightMax(Math.max(weightMin + 1, Math.min(200, Number(e.target.value))))}
-                              className="w-full p-2.5 border-2 border-gray-300 rounded-lg text-center font-bold smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                              style={{ color: '#7f1a2b' }}
-                            />
-                          </div>
-                        </div>
-                        <div className="mt-3 text-center">
-                          <span className="inline-block px-4 py-1.5 bg-white rounded-full text-sm font-bold shadow-sm" style={{ color: '#efb20c' }}>
-                            {weightMin}g - {weightMax}g
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+      {/* WEIGHT RANGE */}
+      <div>
+        <label className="block text-sm font-semibold mb-2 text-gray-700">
+          Weight (grams)
+        </label>
 
-                    <div>
-                      <label className="block font-bold mb-2 text-base" style={{ color: '#7f1a2b' }}>Search by ID</label>
-                      <input
-                        type="text"
-                        placeholder="Enter exact ID"
-                        value={searchId}
-                        onChange={(e) => setSearchId(e.target.value)}
-                        className="w-full p-3 border-2 border-gray-300 rounded-xl smooth-transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200 focus:outline-none"
-                      />
-                    </div>
+        <div className="grid grid-cols-2 gap-3">
+          <input
+            type="number"
+            min="0"
+            max={weightMax - 1}
+            value={weightMin}
+            onChange={(e) =>
+              setWeightMin(Math.max(0, Math.min(Number(e.target.value), weightMax - 1)))
+            }
+            className="p-2 text-sm border border-gray-300 rounded-lg text-center"
+            placeholder="Min"
+          />
 
-              <button
-                onClick={clearAllFilters}
-                className="gradient-maroon w-full py-3 text-white font-bold rounded-xl"
-              >
-                Clear All Filters
-              </button>
-            </div>
-          </div>
-        )}
+          <input
+            type="number"
+            min={weightMin + 1}
+            max="200"
+            value={weightMax}
+            onChange={(e) =>
+              setWeightMax(Math.max(weightMin + 1, Math.min(200, Number(e.target.value))))
+            }
+            className="p-2 text-sm border border-gray-300 rounded-lg text-center"
+            placeholder="Max"
+          />
+        </div>
+
+        <p className="mt-2 text-xs text-center text-gray-500">
+          {weightMin}g – {weightMax}g
+        </p>
+      </div>
+
+      {/* SEARCH BY ID */}
+      <div>
+        <label className="block text-sm font-semibold mb-1 text-gray-700">
+          Search by ID
+        </label>
+        <input
+          type="text"
+          value={searchId}
+          onChange={(e) => setSearchId(e.target.value)}
+          placeholder="Exact ID"
+          className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
+        />
+      </div>
+
+      {/* CLEAR FILTER */}
+      <button
+        onClick={clearAllFilters}
+        className="
+          w-full py-2 text-sm
+          border border-gray-300
+          rounded-lg text-gray-600
+          hover:border-gray-400
+          smooth-transition
+        "
+      >
+        Clear Filters
+      </button>
+
+    </div>
+  </div>
+)}
+
       </div>
 
       {/* ================= SORT ================= */}
@@ -966,13 +1012,26 @@ const enquireOnWhatsApp = () => {
       </button>
 
       {/* GRID */}
-      <button
-        onClick={cycleGrid}
-        className="px-2.5 py-1 rounded-full bg-amber-500 text-white text-xs sm:text-[11px]"
-      >
-        {getGridIcon()}
-        <span className="hidden sm:inline ml-1 font-semibold">{gridCols}</span>
-      </button>
+<button
+  onClick={cycleGrid}
+  className="
+    flex items-center justify-center
+    px-3 py-2
+    rounded-full
+    bg-white
+    border border-amber-500
+    text-amber-600
+    text-sm
+    hover:border-amber-600
+    smooth-transition
+    transition-transform duration-200
+    active:rotate-90 active:scale-95
+  "
+>
+  {getGridIcon()}
+</button>
+
+
     </div>
 
     {/* ================= SEARCH DROPDOWN (OLD STYLE) ================= */}
