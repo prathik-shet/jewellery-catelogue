@@ -606,42 +606,46 @@ const enquireOnWhatsApp = () => {
 
     {/* ================= CATEGORY SLIDER ================= */}
     <div className="overflow-x-auto sm:overflow-x-hidden no-scrollbar mb-3">
-      <div className="flex gap-4 px-1 sm:justify-center">
-        {categories.map((cat) => {
-          const imageSrc =
-            CATEGORY_IMAGES[cat] ||
-            "https://picsum.photos/seed/default/300/300";
+  <div className="flex gap-4 px-1 sm:justify-center">
+    {categories.map((cat) => {
+      const imageSrc =
+        CATEGORY_IMAGES[cat] ||
+        "https://picsum.photos/seed/default/300/300";
 
-          const isActive = selectedCategory.includes(cat);
+      const isActive = selectedCategory.includes(cat);
 
-          return (
-            <button
-              key={cat}
-              onClick={() => toggleCategory(cat)}
-              className="flex flex-col items-center min-w-[70px]"
-            >
-              <div
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border
-                  ${isActive ? "border-amber-400" : "border-gray-300"}`}
-              >
-                <img
-                  src={imageSrc}
-                  alt={cat}
-                  loading="lazy"
-                  className="w-full h-full object-cover bg-gray-100"
-                />
-              </div>
-              <span
-                className={`mt-1.5 text-xs sm:text-sm font-medium
-                  ${isActive ? "text-amber-600" : "text-gray-700"}`}
-              >
-                {cat}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
+      return (
+        <button
+          key={cat}
+          onClick={() => toggleCategory(cat)}
+          className="flex flex-col items-center min-w-[70px]"
+        >
+          <div
+            className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden transition-all duration-200
+              ${isActive 
+                ? "border-4 border-amber-500 shadow-md scale-105" 
+                : "border-2 border-gray-300"}`}
+          >
+            <img
+              src={imageSrc}
+              alt={cat}
+              loading="lazy"
+              className="w-full h-full object-cover bg-gray-100"
+            />
+          </div>
+
+          <span
+            className={`mt-1.5 text-xs sm:text-sm font-medium transition-colors
+              ${isActive ? "text-amber-600" : "text-gray-700"}`}
+          >
+            {cat}
+          </span>
+        </button>
+      );
+    })}
+  </div>
+</div>
+
 
     {/* ================= CONTROL STRIP ================= */}
     <div className="flex items-center justify-center gap-2 mb-2 border rounded-xl px-3 py-2 bg-white shadow-sm">
@@ -959,7 +963,8 @@ const enquireOnWhatsApp = () => {
 
 
 
-      <div className="pt-60 sm:pt-64">
+      <div className="pt-72 sm:pt-80">
+
         {loading && (
           <div className="flex items-center justify-center py-20">
             <div className="text-center fade-in">
@@ -1002,7 +1007,7 @@ const enquireOnWhatsApp = () => {
     "
   >
     {mainImage && (
-      <div className="mb-3">
+      <div className="relative mb-3">
         {/* Fixed-size image container */}
         <div className="w-full h-[220px] sm:h-[240px] overflow-hidden rounded-lg bg-white">
           <img
