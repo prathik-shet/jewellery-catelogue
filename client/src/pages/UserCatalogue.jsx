@@ -621,6 +621,7 @@ const enquireOnWhatsApp = () => {
   className="glass-effect fixed left-0 w-full z-[85] shadow-lg p-3 border-b top-[96px] sm:top-[104px]"
   style={{ borderColor: "#efb20c" }}
 >
+
   <div className="w-full max-w-7xl mx-auto">
 
     {/* CATEGORY SLIDER */}
