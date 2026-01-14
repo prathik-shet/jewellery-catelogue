@@ -618,15 +618,36 @@ const enquireOnWhatsApp = () => {
       
       {/* ================= FIXED HEADER ================= */}
 <div
-  className="glass-effect fixed left-0 w-full z-[85] shadow-lg p-3 border-b top-[96px] sm:top-[104px]"
+  className="glass-effect fixed left-0 w-full z-[85] shadow-lg p-3 border-b
+             top-[80px] sm:top-[88px]"
   style={{ borderColor: "#efb20c" }}
 >
+
 
   <div className="w-full max-w-7xl mx-auto">
 
     {/* CATEGORY SLIDER */}
-    <div className="overflow-x-auto no-scrollbar pb-1">
-      <div className="flex gap-4 px-1 justify-start sm:justify-center min-w-max">
+    {/* ================= CATEGORY SLIDER (FIXED, NO GAP) ================= */}
+<div
+  className="
+    glass-effect
+    fixed
+    left-0
+    w-full
+    z-[85]
+    shadow-lg
+    border-b
+    top-[80px]
+    sm:top-[88px]
+  "
+  style={{ borderColor: "#efb20c" }}
+>
+  <div className="w-full max-w-7xl mx-auto px-2 py-2">
+
+    {/* CATEGORY SLIDER */}
+    <div className="overflow-x-auto no-scrollbar">
+      <div className="flex gap-4 justify-start sm:justify-center min-w-max">
+
         {categories.map((cat) => {
           const imageSrc =
             CATEGORY_IMAGES[cat] ||
@@ -642,12 +663,17 @@ const enquireOnWhatsApp = () => {
               className="flex flex-col items-center min-w-[70px] focus:outline-none"
             >
               <div
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden transition-all duration-200
+                className={`
+                  w-14 h-14 sm:w-16 sm:h-16
+                  rounded-full
+                  overflow-hidden
+                  transition-all duration-200
                   ${
                     isActive
                       ? "border-4 border-amber-500 shadow-lg scale-105"
                       : "border-2 border-gray-300"
-                  }`}
+                  }
+                `}
               >
                 <img
                   src={imageSrc}
@@ -667,6 +693,11 @@ const enquireOnWhatsApp = () => {
             </button>
           );
         })}
+
+      </div>
+    </div>
+  
+
       </div>
     </div>
   
