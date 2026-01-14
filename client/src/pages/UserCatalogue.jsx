@@ -618,89 +618,59 @@ const enquireOnWhatsApp = () => {
       
       {/* ================= FIXED HEADER ================= */}
 <div
-  className="glass-effect fixed left-0 w-full z-[85] shadow-lg p-3 border-b
-             top-[80px] sm:top-[88px]"
+  className="glass-effect fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-3 border-b"
   style={{ borderColor: "#efb20c" }}
 >
+  <div className="w-full max-w-7xl mx-auto relative">
 
+    {/* ================= CATEGORY SLIDER ================= */}
+<div className="overflow-x-auto sm:overflow-x-hidden no-scrollbar mb-3">
+  <div className="flex gap-4 px-1 sm:justify-center">
+    {categories.map((cat) => {
+      const imageSrc =
+        CATEGORY_IMAGES[cat] ||
+        "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/categories/default.jpg";
 
-  <div className="w-full max-w-7xl mx-auto">
+      const isActive =
+        selectedCategory.length === 1 && selectedCategory[0] === cat;
 
-    {/* CATEGORY SLIDER */}
-    {/* ================= CATEGORY SLIDER (FIXED, NO GAP) ================= */}
-<div
-  className="
-    glass-effect
-    fixed
-    left-0
-    w-full
-    z-[85]
-    shadow-lg
-    border-b
-    top-[80px]
-    sm:top-[88px]
-  "
-  style={{ borderColor: "#efb20c" }}
->
-  <div className="w-full max-w-7xl mx-auto px-2 py-2">
+      return (
+        <button
+          key={cat}
+          onClick={() => toggleCategory(cat)}
+          className="flex flex-col items-center min-w-[70px] focus:outline-none"
+        >
+          <div
+            className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden transition-all duration-200
+              ${
+                isActive
+                  ? "border-4 border-amber-500 shadow-lg scale-105"
+                  : "border-2 border-gray-300"
+              }`}
+          >
+            <img
+              src={imageSrc}
+              alt={cat}
+              loading="lazy"
+              className="w-full h-full object-cover bg-gray-100"
+            />
+          </div>
 
-    {/* CATEGORY SLIDER */}
-    <div className="overflow-x-auto no-scrollbar">
-      <div className="flex gap-4 justify-start sm:justify-center min-w-max">
-
-        {categories.map((cat) => {
-          const imageSrc =
-            CATEGORY_IMAGES[cat] ||
-            "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/categories/default.jpg";
-
-          const isActive =
-            selectedCategory.length === 1 && selectedCategory[0] === cat;
-
-          return (
-            <button
-              key={cat}
-              onClick={() => toggleCategory(cat)}
-              className="flex flex-col items-center min-w-[70px] focus:outline-none"
-            >
-              <div
-                className={`
-                  w-14 h-14 sm:w-16 sm:h-16
-                  rounded-full
-                  overflow-hidden
-                  transition-all duration-200
-                  ${
-                    isActive
-                      ? "border-4 border-amber-500 shadow-lg scale-105"
-                      : "border-2 border-gray-300"
-                  }
-                `}
-              >
-                <img
-                  src={imageSrc}
-                  alt={cat}
-                  loading="lazy"
-                  className="w-full h-full object-cover bg-gray-100"
-                />
-              </div>
-
-              <span
-                className={`mt-1.5 text-xs sm:text-sm font-semibold ${
-                  isActive ? "text-amber-600" : "text-gray-700"
-                }`}
-              >
-                {cat}
-              </span>
-            </button>
-          );
-        })}
-
-      </div>
-    </div>
-  
-
-      </div>
-    </div>
-  
+          <span
+            className={`mt-1.5 text-xs sm:text-sm font-semibold transition-colors
+              ${
+                isActive
+                  ? "text-amber-600"
+                  : "text-gray-700"
+              }`}
+          >
+            {cat}
+          </span>
+        </button>
+      );
+    })}
+  </div>
+</div>
 
 
 
@@ -1140,8 +1110,7 @@ const enquireOnWhatsApp = () => {
 
 
 
-      <div className="pt-[240px] sm:pt-[260px]">
-
+      <div className="pt-72 sm:pt-80">
 
         {loading && (
           <div className="flex items-center justify-center py-20">
@@ -1316,25 +1285,24 @@ const enquireOnWhatsApp = () => {
     onTouchMove={onTouchMove}
     onTouchEnd={onTouchEnd}
   >
-    {/* MODAL CONTAINER */}
-    <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[88vh] shadow-[0_12px_35px_rgba(0,0,0,0.22)] flex flex-col relative overflow-y-auto lg:overflow-hidden">
+    <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[88vh] overflow-hidden shadow-[0_12px_35px_rgba(0,0,0,0.22)] flex flex-col relative">
 
-      {/* HEADER */}
-      <div className="bg-white px-4 py-3 flex items-center justify-between shrink-0 border-b">
-        <div className="flex items-center gap-2 min-w-0">
+      {/* HEADER – CLEAN WHITE */}
+      <div className="bg-white px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => navigateToItem("prev")}
+            onClick={() => navigateToItem('prev')}
             className="px-2 py-1 rounded hover:bg-gray-100 transition"
           >
             ◀
           </button>
 
-          <h2 className="text-base font-semibold truncate max-w-[60vw] text-[#2e2e2e]">
+          <h2 className="text-base font-semibold truncate max-w-md text-[#2e2e2e]">
             {selectedItem.name}
           </h2>
 
           <button
-            onClick={() => navigateToItem("next")}
+            onClick={() => navigateToItem('next')}
             className="px-2 py-1 rounded hover:bg-gray-100 transition"
           >
             ▶
@@ -1353,10 +1321,10 @@ const enquireOnWhatsApp = () => {
       </div>
 
       {/* BODY */}
-      <div className="flex flex-col lg:flex-row flex-1 min-h-0">
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
         {/* LEFT – IMAGE */}
-        <div className="lg:w-3/5 bg-gray-50 px-4 py-6 flex flex-col items-center justify-center shrink-0">
+        <div className="lg:w-3/5 bg-gray-50 px-4 py-6 flex flex-col items-center justify-center">
           {(() => {
             const itemMedia = getItemMedia(selectedItem);
             const mainImage = getMainImage(selectedItem);
@@ -1369,8 +1337,12 @@ const enquireOnWhatsApp = () => {
                     src={mainImage}
                     alt={selectedItem.name}
                     onClick={() => openMediaModal(itemMedia, 0)}
-                    className="max-h-[280px] sm:max-h-[350px] w-auto object-contain rounded-xl bg-white shadow-sm cursor-zoom-in hover:opacity-95 transition"
+                    className="max-h-[350px] w-auto object-contain rounded-xl bg-white shadow-sm cursor-zoom-in hover:opacity-95 transition-all duration-300"
                   />
+
+                  <div className="absolute bottom-4 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    Tap to expand 🔍
+                  </div>
                 </div>
 
                 {/* THUMBNAILS */}
@@ -1380,13 +1352,13 @@ const enquireOnWhatsApp = () => {
                       <div
                         key={index}
                         onClick={() => openMediaModal(itemMedia, index + 1)}
-                        className="w-14 h-14 rounded-lg overflow-hidden cursor-pointer hover:scale-105 transition shadow-sm bg-white"
+                        className="w-14 h-14 rounded-lg overflow-hidden cursor-pointer hover:scale-105 transition-all shadow-sm bg-white"
                       >
-                        {media.type === "image" ? (
+                        {media.type === 'image' ? (
                           <img
                             src={media.src}
-                            alt="thumbnail"
                             className="w-full h-full object-cover"
+                            alt="thumbnail"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-black text-white text-xs">
@@ -1403,7 +1375,7 @@ const enquireOnWhatsApp = () => {
         </div>
 
         {/* RIGHT – DETAILS */}
-        <div className="lg:w-2/5 px-6 py-6 bg-[#fff8e6] overflow-y-auto max-h-full">
+        <div className="lg:w-2/5 px-6 py-6 overflow-y-auto bg-[#fff8e6]">
           <div className="grid grid-cols-2 gap-4 text-sm">
 
             {/* PRODUCT ID */}
@@ -1417,27 +1389,17 @@ const enquireOnWhatsApp = () => {
             </div>
 
             {[
-              [
-                "Category",
-                `${selectedItem.category?.main}${
-                  selectedItem.category?.sub
-                    ? ` - ${selectedItem.category.sub}`
-                    : ""
-                }`,
-              ],
-              ["Type", selectedItem.type],
-              ["Gender", selectedItem.gender],
-              ["Purity", selectedItem.carat || "N/A"],
-              ["Weight", `${selectedItem.weight}g`],
-              ["Stone Weight", `${selectedItem.stoneWeight || "N/A"}g`],
-              [
-                "Design",
-                selectedItem.isOurDesign === false ? "Others" : "In House",
-              ],
+              ['Category', `${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}`],
+              ['Type', selectedItem.type],
+              ['Gender', selectedItem.gender],
+              ['Purity', selectedItem.carat || 'N/A'],
+              ['Weight', `${selectedItem.weight}g`],
+              ['Stone Weight', `${selectedItem.stoneWeight || 'N/A'}g`],
+              ['Design', selectedItem.isOurDesign === false ? 'Others' : 'In House'],
             ].map(([label, value], i) => (
               <div
                 key={i}
-                className="bg-white rounded-xl px-3 py-2 shadow-sm hover:shadow-md transition"
+                className="bg-white rounded-xl px-3 py-2 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
                   {label}
@@ -1448,86 +1410,65 @@ const enquireOnWhatsApp = () => {
               </div>
             ))}
           </div>
-
-          {/* MOBILE ACTIONS */}
-          <div className="mt-6 flex flex-col gap-3 lg:hidden">
-            <button
-              onClick={enquireOnWhatsApp}
-              className="w-full px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90 transition active:scale-95"
-              style={{ backgroundColor: "#128C7E" }}
-            >
-              Enquire on WhatsApp
-            </button>
-
-            <button
-              onClick={shareOnWhatsApp}
-              className="w-full px-6 py-3 rounded-xl text-white font-semibold hover:opacity-90 transition active:scale-95"
-              style={{ backgroundColor: "#25D366" }}
-            >
-              Share on WhatsApp
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* FOOTER – DESKTOP ONLY */}
-      <div className="hidden lg:flex bg-white px-4 py-3 justify-end gap-3 shrink-0 border-t">
+      {/* FOOTER */}
+      <div className="bg-white px-4 py-3 flex justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)]">
         <button
           onClick={enquireOnWhatsApp}
-          className="px-6 py-2.5 rounded-xl text-white font-semibold hover:opacity-90 transition active:scale-95"
-          style={{ backgroundColor: "#128C7E" }}
+          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 hover:opacity-90 transition active:scale-95"
+          style={{ backgroundColor: '#128C7E' }}
         >
-          Enquire
+          💬 Enquire
         </button>
 
         <button
           onClick={shareOnWhatsApp}
-          className="px-6 py-2.5 rounded-xl text-white font-semibold hover:opacity-90 transition active:scale-95"
-          style={{ backgroundColor: "#25D366" }}
+          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 hover:opacity-90 transition active:scale-95"
+          style={{ backgroundColor: '#25D366' }}
         >
-          Share
+          🔗 Share
         </button>
       </div>
     </div>
   </div>
 )}
 
-{/* LIGHTBOX MEDIA VIEWER */}
+{/* LIGHTBOX MEDIA VIEWER – BORDERLESS */}
 {modalMedia.length > 0 && (
   <div className="fixed inset-0 bg-black/95 z-[999] flex items-center justify-center backdrop-blur-md animate-fade-in">
     <div className="relative w-full h-full flex items-center justify-center p-4">
+
+      {/* CLOSE */}
       <button
         onClick={closeMediaModal}
-        className="absolute top-6 right-6 z-50 text-white bg-white/10 hover:bg-white/20 rounded-full p-3 transition hover:scale-110"
+        className="absolute top-6 right-6 z-50 text-white bg-white/10 hover:bg-white/20 rounded-full p-3 backdrop-blur-sm transition-all hover:scale-110"
       >
         ✕
       </button>
 
+      {/* NAVIGATION */}
       {modalMedia.length > 1 && (
         <>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigateMedia("prev");
-            }}
-            className="absolute left-6 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/20 rounded-full p-4"
+            onClick={(e) => { e.stopPropagation(); navigateMedia('prev'); }}
+            className="absolute left-6 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/20 rounded-full p-4 transition hover:scale-110"
           >
             ◀
           </button>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigateMedia("next");
-            }}
-            className="absolute right-6 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/20 rounded-full p-4"
+            onClick={(e) => { e.stopPropagation(); navigateMedia('next'); }}
+            className="absolute right-6 top-1/2 -translate-y-1/2 text-white bg-white/10 hover:bg-white/20 rounded-full p-4 transition hover:scale-110"
           >
             ▶
           </button>
         </>
       )}
 
+      {/* MEDIA */}
       <div className="w-full h-full flex items-center justify-center">
-        {modalMedia[currentMediaIndex].type === "image" ? (
+        {modalMedia[currentMediaIndex].type === 'image' ? (
           <img
             src={modalMedia[currentMediaIndex].src}
             alt=""
@@ -1543,6 +1484,7 @@ const enquireOnWhatsApp = () => {
         )}
       </div>
 
+      {/* COUNTER */}
       {modalMedia.length > 1 && (
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/10 text-white px-6 py-2 rounded-full text-sm">
           {currentMediaIndex + 1} / {modalMedia.length}
@@ -1551,7 +1493,6 @@ const enquireOnWhatsApp = () => {
     </div>
   </div>
 )}
-
 
     </div>
   );
