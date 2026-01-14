@@ -617,72 +617,61 @@ const enquireOnWhatsApp = () => {
       </div>
       
       {/* ================= FIXED HEADER ================= */}
-
-  <div className="w-full max-w-7xl mx-auto">
-
-  {/* CATEGORY SLIDER */}
 <div
-  className="
-    sticky
-    top-[96px]
-    z-[85]
-    glass-effect
-    border-b
-    shadow-md
-    p-3
-  "
+  className="glass-effect fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-3 border-b"
   style={{ borderColor: "#efb20c" }}
 >
-  <div className="max-w-7xl mx-auto overflow-x-auto no-scrollbar">
-    <div className="flex gap-4 min-w-max justify-start sm:justify-center">
-      {categories.map((cat) => {
-        const isActive =
-          selectedCategory.length === 1 && selectedCategory[0] === cat;
+  <div className="w-full max-w-7xl mx-auto relative">
 
-        return (
-          <button
-            key={cat}
-            onClick={() => toggleCategory(cat)}
-            className="flex flex-col items-center min-w-[70px]"
+    {/* ================= CATEGORY SLIDER ================= */}
+<div className="category-scroll overflow-x-auto no-scrollbar sm:no-scrollbar mb-3">
+  <div className="flex gap-4 px-1 sm:justify-center min-w-max">
+    {categories.map((cat) => {
+      const imageSrc =
+        CATEGORY_IMAGES[cat] ||
+        "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/categories/default.jpg";
+
+      const isActive =
+        selectedCategory.length === 1 && selectedCategory[0] === cat;
+
+      return (
+        <button
+          key={cat}
+          onClick={() => toggleCategory(cat)}
+          className="flex flex-col items-center min-w-[70px] focus:outline-none"
+        >
+          <div
+            className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden transition-all duration-200
+              ${
+                isActive
+                  ? "border-4 border-amber-500 shadow-lg scale-105"
+                  : "border-2 border-gray-300"
+              }`}
           >
-            <div
-              className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden
-                ${isActive
-                  ? "border-4 border-amber-500 scale-105"
-                  : "border-2 border-gray-300"}
-              `}
-            >
-              <img
-                src={CATEGORY_IMAGES[cat]}
-                alt={cat}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <span className={`mt-1.5 text-xs sm:text-sm font-semibold ${
-              isActive ? "text-amber-600" : "text-gray-700"
-            }`}>
-              {cat}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  
+            <img
+              src={imageSrc}
+              alt={cat}
+              loading="lazy"
+              className="w-full h-full object-cover bg-gray-100"
+            />
+          </div>
 
-
-
-  
-
-      
-
-
+          <span
+            className={`mt-1.5 text-xs sm:text-sm font-semibold transition-colors
+              ${isActive ? "text-amber-600" : "text-gray-700"}`}
+          >
+            {cat}
+          </span>
+        </button>
+      );
+    })}
   </div>
 </div>
 
 
 
     {/* ================= CONTROL STRIP ================= */}
-    <div className="mt-3 flex items-center justify-center gap-2">
+    <div className="flex items-center justify-center gap-2 mb-2 border rounded-xl px-3 py-2 bg-white shadow-sm">
 
       {/* ================= FILTER ================= */}
       <div className="relative">
@@ -1098,7 +1087,7 @@ const enquireOnWhatsApp = () => {
       </div>
     )}
   </div>
-
+</div>
 
 {/* ================= BACKDROP ================= */}
 {(showFilterPanel || showSortPanel || showSearch) && (
@@ -1117,9 +1106,7 @@ const enquireOnWhatsApp = () => {
 
 
 
-      <div className="pt-[calc(96px+96px)]">
-
-
+      <div className="pt-72 sm:pt-80">
 
         {loading && (
           <div className="flex items-center justify-center py-20">
@@ -1296,7 +1283,7 @@ const enquireOnWhatsApp = () => {
   >
     <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[88vh] overflow-hidden shadow-[0_12px_35px_rgba(0,0,0,0.22)] flex flex-col relative">
 
-      {/* ================= HEADER ================= */}
+      {/* HEADER – CLEAN WHITE */}
       <div className="bg-white px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
@@ -1329,10 +1316,10 @@ const enquireOnWhatsApp = () => {
         </button>
       </div>
 
-      {/* ================= BODY ================= */}
+      {/* BODY */}
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
-        {/* ========== LEFT : IMAGE ========== */}
+        {/* LEFT – IMAGE */}
         <div className="lg:w-3/5 bg-gray-50 px-4 py-6 flex flex-col items-center justify-center">
           {(() => {
             const itemMedia = getItemMedia(selectedItem);
@@ -1366,8 +1353,8 @@ const enquireOnWhatsApp = () => {
                         {media.type === 'image' ? (
                           <img
                             src={media.src}
-                            alt="thumbnail"
                             className="w-full h-full object-cover"
+                            alt="thumbnail"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-black text-white text-xs">
@@ -1383,10 +1370,11 @@ const enquireOnWhatsApp = () => {
           })()}
         </div>
 
-        {/* ========== RIGHT : DETAILS ========== */}
-        <div className="lg:w-2/5 px-6 py-6 overflow-y-auto bg-[#fff8e6] flex flex-col">
-
+        {/* RIGHT – DETAILS */}
+        <div className="lg:w-2/5 px-6 py-6 overflow-y-auto bg-[#fff8e6]">
           <div className="grid grid-cols-2 gap-4 text-sm">
+
+            {/* PRODUCT ID */}
             <div className="col-span-2 bg-white rounded-xl px-4 py-3 shadow-sm">
               <div className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
                 Product ID
@@ -1418,33 +1406,14 @@ const enquireOnWhatsApp = () => {
               </div>
             ))}
           </div>
-
-          {/* ===== MOBILE ACTIONS (NO FOOTER) ===== */}
-          <div className="mt-6 flex gap-3 lg:hidden">
-            <button
-              onClick={enquireOnWhatsApp}
-              className="flex-1 px-4 py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-95"
-              style={{ backgroundColor: '#128C7E' }}
-            >
-              💬 Enquire
-            </button>
-
-            <button
-              onClick={shareOnWhatsApp}
-              className="flex-1 px-4 py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-95"
-              style={{ backgroundColor: '#25D366' }}
-            >
-              🔗 Share
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* ================= DESKTOP FOOTER ONLY ================= */}
-      <div className="hidden lg:flex bg-white px-4 py-3 justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)]">
+      {/* FOOTER */}
+      <div className="bg-white px-4 py-3 flex justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)]">
         <button
           onClick={enquireOnWhatsApp}
-          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 active:scale-95"
+          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 hover:opacity-90 transition active:scale-95"
           style={{ backgroundColor: '#128C7E' }}
         >
           💬 Enquire
@@ -1452,13 +1421,12 @@ const enquireOnWhatsApp = () => {
 
         <button
           onClick={shareOnWhatsApp}
-          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 active:scale-95"
+          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 hover:opacity-90 transition active:scale-95"
           style={{ backgroundColor: '#25D366' }}
         >
           🔗 Share
         </button>
       </div>
-
     </div>
   </div>
 )}
