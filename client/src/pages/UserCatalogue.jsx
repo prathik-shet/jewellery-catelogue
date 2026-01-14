@@ -1109,7 +1109,8 @@ const enquireOnWhatsApp = () => {
 
 
 
-      <div className="pt-72 sm:pt-80">
+      <div className="pt-[240px] sm:pt-[260px]">
+
 
         {loading && (
           <div className="flex items-center justify-center py-20">
