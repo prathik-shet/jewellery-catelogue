@@ -245,11 +245,12 @@ const weightMax = Number(req.query.weightMax);
 if (!isNaN(weightMin) || !isNaN(weightMax)) {
   filters.push({
     weight: {
-      ...( !isNaN(weightMin) && { $gte: weightMin } ),
-      ...( !isNaN(weightMax) && { $lte: weightMax } )
+      ...(!isNaN(weightMin) && { $gte: weightMin }),
+      ...(!isNaN(weightMax) && { $lte: weightMax })
     }
   });
 }
+
 
 
     const query = filters.length ? { $and: filters } : {};

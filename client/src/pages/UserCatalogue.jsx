@@ -842,41 +842,32 @@ const enquireOnWhatsApp = () => {
         </div>
 
         {/* WEIGHT RANGE */}
-        <div>
-          <label className="block text-sm font-semibold mb-2 text-gray-700">
-            Weight (grams)
-          </label>
+<div>
+  <label className="block text-sm font-semibold mb-2 text-gray-700">
+    Weight (grams)
+  </label>
 
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              type="number"
-              min="0"
-              max={weightMax - 1}
-              value={weightMin}
-              onChange={(e) =>
-                setWeightMin(Math.max(0, Math.min(Number(e.target.value), weightMax - 1)))
-              }
-              className="p-2 text-sm border border-gray-300 rounded-lg text-center"
-              placeholder="Min"
-            />
+  {/* DISPLAY VALUES */}
+  <div className="flex justify-between text-sm font-medium text-gray-600 mb-2">
+    <span>{weightRange[0]} g</span>
+    <span>{weightRange[1]} g</span>
+  </div>
 
-            <input
-              type="number"
-              min={weightMin + 1}
-              max="200"
-              value={weightMax}
-              onChange={(e) =>
-                setWeightMax(Math.max(weightMin + 1, Math.min(200, Number(e.target.value))))
-              }
-              className="p-2 text-sm border border-gray-300 rounded-lg text-center"
-              placeholder="Max"
-            />
-          </div>
+  {/* SINGLE SLIDER WITH 2 BUTTONS */}
+  <Slider
+    value={weightRange}
+    onValueChange={setWeightRange}
+    min={0}
+    max={200}
+    step={0.1}
+    className="w-full"
+  />
 
-          <p className="mt-2 text-xs text-center text-gray-500">
-            {weightMin}g – {weightMax}g
-          </p>
-        </div>
+  <p className="mt-2 text-xs text-center text-gray-500">
+    {weightRange[0]}g – {weightRange[1]}g
+  </p>
+</div>
+
 
         {/* SEARCH BY ID */}
         <div>
@@ -1385,7 +1376,7 @@ const enquireOnWhatsApp = () => {
               <div className="text-lg font-bold text-[#7f1a2b]">
                 {selectedItem.id}
               </div>
-            </div>
+            </div>filter
 
             {[
               ['Category', `${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}`],
