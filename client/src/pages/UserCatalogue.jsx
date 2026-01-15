@@ -1,8 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { Slider } from "../components/ui/slider";
-
-
 
 function UserCatalogue() {
   const [jewellery, setJewellery] = useState([]);
@@ -10,10 +7,8 @@ function UserCatalogue() {
   const [sortByDate, setSortByDate] = useState('newest');
   const [stoneFilter, setStoneFilter] = useState('');
   const [metalFilter, setMetalFilter] = useState('');
-  const [weightRange, setWeightRange] = useState([0, 200]);
-
-  const weightMin = weightRange[0];
-  const weightMax = weightRange[1];
+  const [weightMin, setWeightMin] = useState(0);
+  const [weightMax, setWeightMax] = useState(200);
   const [selectedCategory, setSelectedCategory] = useState([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [selectedType, setSelectedType] = useState('');
@@ -385,7 +380,8 @@ function UserCatalogue() {
     setSelectedGender('');
     setStoneFilter('');
     setMetalFilter('');
-    setWeightRange([0, 200]);
+    setWeightMin(0);
+    setWeightMax(200);
     setSearchQuery('');
     setSearchId('');
     setDesignFilter('');
@@ -846,32 +842,41 @@ const enquireOnWhatsApp = () => {
         </div>
 
         {/* WEIGHT RANGE */}
-<div>
-  <label className="block text-sm font-semibold mb-2 text-gray-700">
-    Weight (grams)
-  </label>
+        <div>
+          <label className="block text-sm font-semibold mb-2 text-gray-700">
+            Weight (grams)
+          </label>
 
-  {/* DISPLAY VALUES */}
-  <div className="flex justify-between text-sm font-medium text-gray-600 mb-2">
-    <span>{weightRange[0]} g</span>
-    <span>{weightRange[1]} g</span>
-  </div>
+          <div className="grid grid-cols-2 gap-3">
+            <input
+              type="number"
+              min="0"
+              max={weightMax - 1}
+              value={weightMin}
+              onChange={(e) =>
+                setWeightMin(Math.max(0, Math.min(Number(e.target.value), weightMax - 1)))
+              }
+              className="p-2 text-sm border border-gray-300 rounded-lg text-center"
+              placeholder="Min"
+            />
 
-  {/* SINGLE SLIDER WITH 2 BUTTONS */}
-  <Slider
-    value={weightRange}
-    onValueChange={setWeightRange}
-    min={0}
-    max={200}
-    step={0.1}
-    className="w-full"
-  />
+            <input
+              type="number"
+              min={weightMin + 1}
+              max="200"
+              value={weightMax}
+              onChange={(e) =>
+                setWeightMax(Math.max(weightMin + 1, Math.min(200, Number(e.target.value))))
+              }
+              className="p-2 text-sm border border-gray-300 rounded-lg text-center"
+              placeholder="Max"
+            />
+          </div>
 
-  <p className="mt-2 text-xs text-center text-gray-500">
-    {weightRange[0]}g – {weightRange[1]}g
-  </p>
-</div>
-
+          <p className="mt-2 text-xs text-center text-gray-500">
+            {weightMin}g – {weightMax}g
+          </p>
+        </div>
 
         {/* SEARCH BY ID */}
         <div>
@@ -1380,7 +1385,7 @@ const enquireOnWhatsApp = () => {
               <div className="text-lg font-bold text-[#7f1a2b]">
                 {selectedItem.id}
               </div>
-            </div>filter
+            </div>
 
             {[
               ['Category', `${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}`],
