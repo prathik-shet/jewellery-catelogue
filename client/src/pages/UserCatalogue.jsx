@@ -322,7 +322,7 @@ function UserCatalogue() {
   Silver: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383195535.jpeg",
   Bangles: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768384569628.jpeg",
   Chains: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768385170537.jpeg",
-  Pendants: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383871212.jpeg",
+  Pendants: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768453799461.jpeg",
   "Rings": "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768384064227.jpeg",
   "Hara": "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768385454261.jpeg",
   "Bracelets": "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768384879673.jpeg",
@@ -608,9 +608,13 @@ const enquireOnWhatsApp = () => {
             />
           </div>
           <div className="text-center sm:text-left">
-            <h1 style={{ color: '#2e2e2e' }} className="text-xl sm:text-2xl lg:text-3xl font-black tracking-wide brand-font drop-shadow-sm">
-              VIMALESHWARA JEWELLERS
-            </h1>
+            <h1
+  style={{ color: '#2e2e2e' }}
+  className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-black tracking-wide brand-font drop-shadow-sm"
+>
+  VIMALESHWARA JEWELLERS
+</h1>
+
             <p style={{ color: '#7f1a2b' }} className="text-xs sm:text-sm font-semibold tracking-wider">Premium Jewellery Collection</p>
           </div>
         </div>
