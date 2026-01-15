@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { Slider } from "@/components/ui/slider";
+import { Slider } from "../components/ui/slider";
+
 
 
 function UserCatalogue() {
