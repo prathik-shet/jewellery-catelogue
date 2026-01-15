@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import { Slider } from "@/components/ui/slider";
+
 
 function UserCatalogue() {
   const [jewellery, setJewellery] = useState([]);
@@ -7,8 +9,10 @@ function UserCatalogue() {
   const [sortByDate, setSortByDate] = useState('newest');
   const [stoneFilter, setStoneFilter] = useState('');
   const [metalFilter, setMetalFilter] = useState('');
-  const [weightMin, setWeightMin] = useState(0);
-  const [weightMax, setWeightMax] = useState(200);
+  const [weightRange, setWeightRange] = useState([0, 200]);
+
+  const weightMin = weightRange[0];
+  const weightMax = weightRange[1];
   const [selectedCategory, setSelectedCategory] = useState([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [selectedType, setSelectedType] = useState('');
