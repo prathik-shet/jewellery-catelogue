@@ -385,8 +385,20 @@ function UserCatalogue() {
     setSelectedGender('');
     setStoneFilter('');
     setMetalFilter('');
-    setWeightMin(0);
-    setWeightMax(200);
+    const clearAllFilters = () => {
+  setSelectedCategory([]);
+  setSelectedSubCategory('');
+  setSelectedType('');
+  setSelectedGender('');
+  setStoneFilter('');
+  setMetalFilter('');
+  setWeightRange([0, 200]); // ✅ FIXED
+  setSearchQuery('');
+  setSearchId('');
+  setDesignFilter('');
+  setCurrentPage(1);
+};
+
     setSearchQuery('');
     setSearchId('');
     setDesignFilter('');
