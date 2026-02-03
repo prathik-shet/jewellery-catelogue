@@ -87,12 +87,12 @@ function JewelleryCatalogue() {
     'Rings': 'RIN',
     'Mangalsutra': 'MAN',
     'Chains': 'CHA',
-    'Silver': 'NOS',
+    'Silver': 'SIL',
     'Necklace': 'NEC',
     'Hara': 'SET',
     'Bangles': 'BAN',
     'Bracelets': 'BRA',
-    'Diamond': 'ANT',
+    'Diamond': 'DIA',
     'Custom': 'CUS'
   };
 
