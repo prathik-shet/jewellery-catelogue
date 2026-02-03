@@ -71,11 +71,11 @@ function JewelleryCatalogue() {
     'Rings',
     'Mangalsutra',
     'Chains',
-    'Bracelets',
+    'Silver',
     'Necklace',
     'Hara',
     'Bangles',
-    'Silver',
+    'Bracelets',
     'Diamond',
     'Custom',
   ];
@@ -87,11 +87,11 @@ function JewelleryCatalogue() {
     'Rings': 'RIN',
     'Mangalsutra': 'MAN',
     'Chains': 'CHA',
-    'Bracelets': 'NOS',
+    'Silver': 'NOS',
     'Necklace': 'NEC',
     'Hara': 'SET',
     'Bangles': 'BAN',
-    'Silver': 'BRA',
+    'Bracelets': 'BRA',
     'Diamond': 'ANT',
     'Custom': 'CUS'
   };
