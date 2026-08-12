@@ -209,6 +209,7 @@ function UserCatalogue() {
   const handleItemClick = async (item, index) => {
     setSelectedItem(item);
     setSelectedItemIndex(index);
+    pushOverlayHistoryState('detail');
 
     try {
       const token = localStorage.getItem('token');
@@ -270,8 +271,7 @@ function UserCatalogue() {
         e.preventDefault();
         navigateToItem('next');
       } else if (e.key === 'Escape') {
-        setSelectedItem(null);
-        setSelectedItemIndex(-1);
+        closeSelectedItemModal();
       }
     };
 
@@ -280,6 +280,25 @@ function UserCatalogue() {
       return () => document.removeEventListener('keydown', handleKeyPress);
     }
   }, [selectedItem, selectedItemIndex, jewellery]);
+
+  const isOverlayOpen = selectedItem || modalMedia.length > 0 || showFilterPanel || showSortPanel || showSearch;
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    if (isOverlayOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = '0px';
+    } else {
+      document.body.style.overflow = previousOverflow || '';
+      document.body.style.paddingRight = previousPaddingRight || '';
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow || '';
+      document.body.style.paddingRight = previousPaddingRight || '';
+    };
+  }, [isOverlayOpen]);
 
   const getItemImages = (item) => {
     if (!item) return [];
@@ -403,14 +422,80 @@ function UserCatalogue() {
     return 'Date: Newest First';
   };
 
+  const ensureBaseHistoryState = () => {
+    if (typeof window === 'undefined' || !window.history) return;
+    const currentState = window.history.state || {};
+    if (!Object.prototype.hasOwnProperty.call(currentState, 'modalOpen')) {
+      window.history.replaceState({ ...currentState, modalOpen: false }, '');
+    }
+  };
+
+  const pushOverlayHistoryState = (modalType) => {
+    if (typeof window === 'undefined' || !window.history) return;
+    ensureBaseHistoryState();
+    const currentState = window.history.state || {};
+    if (currentState.modalOpen && currentState.modalType === modalType) return;
+    window.history.pushState({ ...currentState, modalOpen: true, modalType }, '');
+  };
+
+  const closeModalFromHistory = () => {
+    if (typeof window === 'undefined' || !window.history) return;
+    if (window.history.state?.modalOpen) {
+      window.history.back();
+      return;
+    }
+
+    setModalMedia([]);
+    setCurrentMediaIndex(0);
+    setSelectedItem(null);
+    setSelectedItemIndex(-1);
+  };
+
+  useEffect(() => {
+    ensureBaseHistoryState();
+
+    const handleWindowPopState = (event) => {
+      const state = event.state || {};
+      if (!state.modalOpen) {
+        setModalMedia([]);
+        setCurrentMediaIndex(0);
+        setSelectedItem(null);
+        setSelectedItemIndex(-1);
+        return;
+      }
+
+      if (state.modalType === 'detail') {
+        setModalMedia([]);
+        setCurrentMediaIndex(0);
+        return;
+      }
+
+      if (state.modalType === 'gallery') {
+        // Keep item detail open when returning to gallery state.
+        return;
+      }
+    };
+
+    window.addEventListener('popstate', handleWindowPopState);
+    return () => window.removeEventListener('popstate', handleWindowPopState);
+  }, []);
+
   const openMediaModal = (media, startIndex = 0) => {
     setModalMedia(media);
     setCurrentMediaIndex(startIndex);
+    pushOverlayHistoryState('gallery');
   };
 
   const closeMediaModal = () => {
     setModalMedia([]);
     setCurrentMediaIndex(0);
+    closeModalFromHistory();
+  };
+
+  const closeSelectedItemModal = () => {
+    setSelectedItem(null);
+    setSelectedItemIndex(-1);
+    closeModalFromHistory();
   };
 
   const navigateMedia = (direction) => {
@@ -579,6 +664,32 @@ const enquireOnWhatsApp = () => {
 
         .shadow-hover {
           box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .overlay-button {
+          background: rgba(255, 255, 255, 0.14);
+          border: 1px solid rgba(255, 255, 255, 0.22);
+          backdrop-filter: blur(12px);
+        }
+
+        .overlay-button:hover {
+          background: rgba(255, 255, 255, 0.22);
+        }
+
+        .modal-thumb {
+          border: 2px solid transparent;
+          transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .modal-thumb:hover {
+          border-color: rgba(239, 178, 12, 0.9);
+          transform: scale(1.05);
+        }
+
+        .lightbox-counter {
+          background: rgba(0, 0, 0, 0.4);
+          border-radius: 9999px;
+          padding: 0.65rem 1rem;
         }
 
         input[type="number"]::-webkit-inner-spin-button,
@@ -1281,11 +1392,16 @@ const enquireOnWhatsApp = () => {
 {selectedItem && (
   <div
     className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[95] flex items-center justify-center p-4 fade-in"
+    onClick={closeSelectedItemModal}
     onTouchStart={onTouchStart}
     onTouchMove={onTouchMove}
     onTouchEnd={onTouchEnd}
+    style={{ overscrollBehavior: 'none' }}
   >
-    <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[88vh] overflow-hidden shadow-[0_12px_35px_rgba(0,0,0,0.22)] flex flex-col relative">
+    <div
+      className="bg-white rounded-2xl max-w-6xl w-full max-h-[88vh] overflow-hidden shadow-[0_12px_35px_rgba(0,0,0,0.22)] flex flex-col relative"
+      onClick={(e) => e.stopPropagation()}
+    >
 
       {/* ================= HEADER ================= */}
       <div className="bg-white px-4 py-3 flex items-center justify-between">
@@ -1310,10 +1426,7 @@ const enquireOnWhatsApp = () => {
         </div>
 
         <button
-          onClick={() => {
-            setSelectedItem(null);
-            setSelectedItemIndex(-1);
-          }}
+          onClick={closeSelectedItemModal}
           className="px-2 py-1 rounded hover:bg-gray-100 transition text-gray-800 font-bold"
         >
           ✕
@@ -1457,8 +1570,15 @@ const enquireOnWhatsApp = () => {
 
 {/* LIGHTBOX MEDIA VIEWER – BORDERLESS */}
 {modalMedia.length > 0 && (
-  <div className="fixed inset-0 bg-black/95 z-[999] flex items-center justify-center backdrop-blur-md animate-fade-in">
-    <div className="relative w-full h-full flex items-center justify-center p-4">
+  <div
+    className="fixed inset-0 bg-black/95 z-[999] flex items-center justify-center backdrop-blur-md animate-fade-in"
+    onClick={closeMediaModal}
+    style={{ overscrollBehavior: 'none' }}
+  >
+    <div
+      className="relative w-full h-full flex items-center justify-center p-4"
+      onClick={(e) => e.stopPropagation()}
+    >
 
       {/* CLOSE */}
       <button

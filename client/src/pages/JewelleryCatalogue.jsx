@@ -4,10 +4,11 @@ import axios from 'axios';
 function JewelleryCatalogue() {
   const [jewellery, setJewellery] = useState([]);
   const [sortOrder, setSortOrder] = useState('desc');
-  const [sortByDate, setSortByDate] = useState('');
+  const [sortByDate, setSortByDate] = useState('newest');
   const [stoneFilter, setStoneFilter] = useState('');
-  const [metalFilter, setMetalFilter] = useState(''); 
-  const [weightRanges, setWeightRanges] = useState([]);
+  const [metalFilter, setMetalFilter] = useState('');
+  const [weightMin, setWeightMin] = useState(0);
+  const [weightMax, setWeightMax] = useState(200);
   const [selectedCategory, setSelectedCategory] = useState([]);
   const [selectedSubCategory, setSelectedSubCategory] = useState('');
   const [selectedType, setSelectedType] = useState('');
@@ -65,17 +66,16 @@ function JewelleryCatalogue() {
 
   // Static categories - consistent with UserCatalogue
   const catagories = [
-    'All Jewellery',
     'Earrings',
     'Pendants',
     'Rings',
     'Mangalsutra',
     'Chains',
-    'Silver',
+    'Bracelets',
     'Necklace',
     'Hara',
     'Bangles',
-    'Bracelets',
+    'Silver',
     'Diamond',
     'Custom',
   ];
@@ -97,8 +97,24 @@ function JewelleryCatalogue() {
   };
 
   const genders = ['All', 'Unisex', 'Women', 'Men'];
-  const types = ['All', 'festival', 'lightweight', 'daily wear', 'fancy', 'normal'];
-  const metals = ['All', 'gold', 'silver', 'diamond', 'platinum', 'rose gold'];
+  const types = ['All', 'Festival', 'Lightweight', 'Daily Wear', 'Fancy', 'Normal'];
+  const metals = ['All', 'Gold', 'Silver', 'Diamond', 'Platinum', 'Rose Gold'];
+
+  // Category images for better UX
+  const CATEGORY_IMAGES = {
+    Custom: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768385032093.jpeg",
+    Necklace: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383126443.jpeg",
+    Mangalsutra: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383647096.jpeg",
+    Earrings: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768381667017.jpeg",
+    Silver: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383195535.jpeg",
+    Bangles: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768384569628.jpeg",
+    Chains: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768385170537.jpeg",
+    Pendants: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768453799461.jpeg",
+    Rings: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768384064227.jpeg",
+    Hara: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768385454261.jpeg",
+    Bracelets: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768384879673.jpeg",
+    Diamond: "https://vimaleshwara-gold-images.s3.ap-south-1.amazonaws.com/custom/1768383068506.jpeg",
+  };
 
   const isAdmin = true;
 
@@ -405,8 +421,9 @@ function JewelleryCatalogue() {
         params.append('design', designFilter);
       }
       
-      if (weightRanges.length > 0) {
-        params.append('weightRanges', weightRanges.join(','));
+      if (weightMin > 0 || weightMax < 200) {
+        params.append('weightMin', weightMin.toString());
+        params.append('weightMax', weightMax.toString());
       }
       
       if (searchQuery && searchQuery.trim() !== '') {
@@ -487,7 +504,8 @@ function JewelleryCatalogue() {
     metalFilter,
     stoneFilter,
     designFilter,
-    weightRanges,
+    weightMin,
+    weightMax,
     searchQuery,
     searchId,
   ]);
@@ -495,7 +513,7 @@ function JewelleryCatalogue() {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCategory, selectedSubCategory, selectedType, selectedGender, metalFilter, stoneFilter, designFilter, weightRanges, searchQuery, searchId, sortField, sortOrder, sortByDate]);
+  }, [selectedCategory, selectedSubCategory, selectedType, selectedGender, metalFilter, stoneFilter, designFilter, weightMin, weightMax, searchQuery, searchId, sortField, sortOrder, sortByDate]);
 
   useEffect(() => {
     fetchJewellery();
@@ -596,6 +614,26 @@ function JewelleryCatalogue() {
       return () => document.removeEventListener('keydown', handleKeyPress);
     }
   }, [selectedItem, selectedItemIndex, jewellery]);
+
+  const isOverlayOpen = selectedItem || modalMedia.length > 0 || showFilterPanel || showSortPanel || showSearch;
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+
+    if (isOverlayOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = '0px';
+    } else {
+      document.body.style.overflow = previousOverflow || '';
+      document.body.style.paddingRight = previousPaddingRight || '';
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow || '';
+      document.body.style.paddingRight = previousPaddingRight || '';
+    };
+  }, [isOverlayOpen]);
 
   // Helper functions for media handling
   // ================= MEDIA HELPERS (S3 READY + BACKWARD COMPATIBLE) =================
@@ -698,8 +736,7 @@ const getItemMedia = (item) => {
   };
 
   const getAllcatagories = () => {
-    const basecatagories = catagories.filter(cat => cat !== 'All Jewellery');
-    return basecatagories;
+    return catagories;
   };
 
   const getAllSubcatagories = () => {
@@ -726,17 +763,13 @@ const getItemMedia = (item) => {
   };
 
   const getSubCategoriesForMainCategory = (mainCategory) => {
-    if (!Array.isArray(jewellery) || !mainCategory || mainCategory === 'Custom') {
-      return [];
-    }
-    
-    const subCategories = jewellery
+    if (!mainCategory) return [];
+    return jewellery
       .filter(item => item.category?.main === mainCategory)
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
-      .filter((sub, index, arr) => arr.indexOf(sub) === index);
-    
-    return subCategories.sort();
+      .filter((sub, index, arr) => arr.indexOf(sub) === index)
+      .sort();
   };
 
   const clearAllFilters = () => {
@@ -746,15 +779,16 @@ const getItemMedia = (item) => {
     setSelectedGender('');
     setStoneFilter('');
     setMetalFilter('');
-    setWeightRanges([]);
+    setDesignFilter('');
+    setWeightMin(0);
+    setWeightMax(200);
     setSearchQuery('');
     setSearchId('');
-    setDesignFilter('');
     setCurrentPage(1);
   };
 
   const clearAllSorts = () => {
-    setSortField('clickCount');
+    setSortField('');
     setSortOrder('desc');
     setSortByDate('');
     setCurrentPage(1);
@@ -765,11 +799,61 @@ const getItemMedia = (item) => {
     if (sortByDate === 'oldest') return 'Date: Oldest First';
     if (sortField === 'weight' && sortOrder === 'asc') return 'Weight: Low to High';
     if (sortField === 'weight' && sortOrder === 'desc') return 'Weight: High to Low';
-    if (sortField === 'orderNo' && sortOrder === 'asc') return 'Order No: Low to High';
-    if (sortField === 'orderNo' && sortOrder === 'desc') return 'Order No: High to Low';
-    if (sortField === 'clickCount' && sortOrder === 'desc') return 'Popularity: Most Popular First';
-    if (sortField === 'clickCount' && sortOrder === 'asc') return 'Popularity: Least Popular First';
-    return 'Newest First';
+    if (sortField === 'clickCount' && sortOrder === 'desc') return 'Most Popular First';
+    if (sortField === 'clickCount' && sortOrder === 'asc') return 'Least Popular First';
+    return 'Most Popular First';
+  };
+
+  const shareOnWhatsApp = () => {
+    if (!selectedItem) return;
+
+    const mainImage = getMainImage(selectedItem);
+    const imageUrl = mainImage || '';
+    const websiteUrl = 'https://jewellery-catelogue.onrender.com/';
+
+    const message =
+      `*${selectedItem.name}*\n\n` +
+      `*ID:* ${selectedItem.id}\n` +
+      `*Category:* ${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}\n` +
+      `*Type:* ${selectedItem.type}\n` +
+      `*Gender:* ${selectedItem.gender}\n` +
+      `*Purity:* ${selectedItem.carat || 'N/A'}\n` +
+      `*Weight:* ${selectedItem.weight}g\n` +
+      `*Stone Weight:* ${selectedItem.stoneWeight || 'N/A'}g\n` +
+      `*Design:* ${selectedItem.isOurDesign === false ? 'Others' : 'In House'}\n\n` +
+      (imageUrl ? `📸 Image: ${imageUrl}\n\n` : '') +
+      `✨ *More designs available*\n` +
+      `👉 ${websiteUrl}`;
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const enquireOnWhatsApp = () => {
+    if (!selectedItem) return;
+
+    const mainImage = getMainImage(selectedItem);
+    const imageUrl = mainImage || '';
+    const businessNumber = '918088305913';
+    const websiteUrl = 'https://jewellery-catelogue.onrender.com/';
+
+    const message =
+      `👋 *Enquiry for Jewellery*\n\n` +
+      `*${selectedItem.name}*\n\n` +
+      `*ID:* ${selectedItem.id}\n` +
+      `*Category:* ${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}\n` +
+      `*Type:* ${selectedItem.type}\n` +
+      `*Gender:* ${selectedItem.gender}\n` +
+      `*Purity:* ${selectedItem.carat || 'N/A'}\n` +
+      `*Weight:* ${selectedItem.weight}g\n` +
+      `*Stone Weight:* ${selectedItem.stoneWeight || 'N/A'}g\n` +
+      `*Design:* ${selectedItem.isOurDesign === false ? 'Others' : 'In House'}\n\n` +
+      (imageUrl ? `📸 Image: ${imageUrl}\n\n` : '') +
+      `🔗 Catalogue: ${websiteUrl}\n\n` +
+      `Please share price and availability.`;
+
+    const whatsappUrl = `https://wa.me/${businessNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const openMediaModal = (media, startIndex = 0) => {
@@ -1378,48 +1462,54 @@ const handleDelete = async (id) => {
                       </select>
                     </div>
 
-                    {/* Weight Range */}
+                    {/* WEIGHT RANGE */}
                     <div>
-                      <label className="block font-bold text-blue-700 mb-2">Weight Range</label>
-                      <div className="max-h-32 overflow-y-auto border border-gray-300 rounded-lg p-2 bg-gray-50">
-                        {[
-                          '0-2', '2-4', '4-6', '6-8', '8-10', '10-15', '15-20', '20-25',
-                          '25-30', '30-35', '35-40', '40-45', '45-50', '50-75', '75-+'
-                        ].map((range) => (
-                          <label key={range} className="flex items-center gap-2 text-sm p-1 hover:bg-blue-50 rounded cursor-pointer">
-                            <input
-                              type="checkbox"
-                              value={range}
-                              checked={weightRanges.includes(range)}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                setWeightRanges((prev) =>
-                                  e.target.checked
-                                    ? [...prev, value]
-                                    : prev.filter((r) => r !== value)
-                                );
-                              }}
-                              className="w-4 h-4 text-blue-600"
-                            />
-                            <span>{range.replace('-', '–').replace('+', 'g+')}g</span>
-                          </label>
-                        ))}
+                      <label className="block font-bold text-blue-700 mb-2">Weight (grams)</label>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="number"
+                          min="0"
+                          max={weightMax - 1}
+                          value={weightMin}
+                          onChange={(e) =>
+                            setWeightMin(Math.max(0, Math.min(Number(e.target.value), weightMax - 1)))
+                          }
+                          className="p-2 text-sm border border-gray-300 rounded-lg text-center"
+                          placeholder="Min"
+                        />
+
+                        <input
+                          type="number"
+                          min={weightMin + 1}
+                          max="200"
+                          value={weightMax}
+                          onChange={(e) =>
+                            setWeightMax(Math.max(weightMin + 1, Math.min(200, Number(e.target.value))))
+                          }
+                          className="p-2 text-sm border border-gray-300 rounded-lg text-center"
+                          placeholder="Max"
+                        />
                       </div>
+
+                      <p className="mt-2 text-xs text-center text-gray-500">
+                        {weightMin}g – {weightMax}g
+                      </p>
                     </div>
 
-                    {/* Search by ID */}
+                    {/* SEARCH BY ID */}
                     <div>
-                      <label className="block font-bold text-blue-700 mb-2">Search by ID</label>
+                      <label className="block text-sm font-semibold mb-1 text-gray-700">Search by ID</label>
                       <input
                         type="text"
-                        placeholder="Search by ID"
                         value={searchId}
                         onChange={(e) => setSearchId(e.target.value)}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                        placeholder="Exact ID"
+                        className="w-full p-2.5 text-sm border border-gray-300 rounded-lg"
                       />
                     </div>
 
-                    {/* Clear Filters Button */}
+                    {/* CLEAR FILTERS - at bottom */}
                     <button
                       onClick={clearAllFilters}
                       className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center gap-2"
@@ -1478,130 +1568,110 @@ const handleDelete = async (id) => {
               {showSortPanel && (
                 <div className="absolute top-full mt-2 right-0 w-80 sm:w-96 bg-white border-2 border-purple-300 rounded-2xl shadow-2xl p-6 max-h-[70vh] overflow-y-auto z-[90]">
                   <div className="space-y-4">
-                    {/* Current Sort Display */}
-                    <div className="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl border border-purple-300">
-                      <h3 className="font-bold text-purple-700 mb-2">Current Sort</h3>
-                      <p className="text-purple-600 font-semibold">
-                        {getActiveSortDescription()}
-                      </p>
-                    </div>
 
-                    {/* Sort by Field */}
-                    <div>
-                      <label className="block font-bold text-purple-700 mb-2">
-                        Sort By Field
-                      </label>
-                      <select
-                        value={sortField}
-                        onChange={(e) => {
-                          setSortField(e.target.value);
-                          setSortOrder("desc");
-                          setSortByDate("");
-                        }}
-                        className="w-full p-2 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200"
-                      >
-                        <option value="clickCount">Popularity</option>
-                        <option value="weight">Weight</option>
-                        <option value="orderNo">Order Number</option>
-                      </select>
-                    </div>
+                    {/* ACTIVE SORT INFO */}
+                    <p className="text-center text-sm font-semibold text-gray-700">
+                      {getActiveSortDescription()}
+                    </p>
 
-                    {/* Sort Direction */}
+                    {/* SORT BY DATE */}
                     <div>
-                      <label className="block font-bold text-purple-700 mb-2">
-                        Sort Direction
-                      </label>
-                      <div className="space-y-2">
-                        <button
-                          onClick={() => {
-                            setSortOrder("asc");
-                            setSortByDate("");
-                          }}
-                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                            sortOrder === "asc" && !sortByDate
-                              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
-                              : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
-                          }`}
-                        >
-                          {sortField === "clickCount"
-                            ? "Least Popular First"
-                            : "Low to High (Ascending)"}
-                        </button>
-                        <button
-                          onClick={() => {
-                            setSortOrder("desc");
-                            setSortByDate("");
-                          }}
-                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                            sortOrder === "desc" && !sortByDate
-                              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white border-green-600"
-                              : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
-                          }`}
-                        >
-                          {sortField === "clickCount"
-                            ? "Most Popular First"
-                            : "High to Low (Descending)"}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Sort by Date */}
-                    <div>
-                      <label className="block font-bold text-purple-700 mb-2">
+                      <p className="text-sm font-semibold mb-2 text-gray-700">
                         Sort by Date
-                      </label>
-                      <div className="space-y-2">
+                      </p>
+
+                      <div className="flex gap-2">
                         <button
                           onClick={() => {
-                            setSortByDate("newest");
-                            setSortOrder("");
-                            setSortField("");
+                            setSortByDate('newest');
+                            setSortField('');
                           }}
-                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                            sortByDate === "newest"
-                              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600"
-                              : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300"
-                          }`}
+                          className={`flex-1 text-sm px-3 py-2 rounded-lg border smooth-transition
+                            ${
+                              sortByDate === 'newest'
+                                ? 'border-amber-500 text-amber-600 font-semibold'
+                                : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                            }
+                          `}
                         >
-                          Newest First
+                          Newest
                         </button>
+
                         <button
                           onClick={() => {
-                            setSortByDate("oldest");
-                            setSortOrder("");
-                            setSortField("");
+                            setSortByDate('oldest');
+                            setSortField('');
                           }}
-                          className={`w-full p-3 rounded-lg border-2 font-semibold transition-all duration-300 ${
-                            sortByDate === "oldest"
-                              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600"
-                              : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300"
-                          }`}
+                          className={`flex-1 text-sm px-3 py-2 rounded-lg border smooth-transition
+                            ${
+                              sortByDate === 'oldest'
+                                ? 'border-amber-500 text-amber-600 font-semibold'
+                                : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                            }
+                          `}
                         >
-                          Oldest First
+                          Oldest
                         </button>
                       </div>
                     </div>
 
-                    {/* Clear Sort Button */}
+                    {/* SORT BY WEIGHT */}
+                    <div>
+                      <p className="text-sm font-semibold mb-2 text-gray-700">
+                        Sort by Weight
+                      </p>
+
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setSortField('weight');
+                            setSortOrder('desc');
+                            setSortByDate('');
+                          }}
+                          className={`flex-1 text-sm px-3 py-2 rounded-lg border smooth-transition
+                            ${
+                              sortField === 'weight' && sortOrder === 'desc'
+                                ? 'border-amber-500 text-amber-600 font-semibold'
+                                : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                            }
+                          `}
+                        >
+                          High → Low
+                        </button>
+
+                        <button
+                          onClick={() => {
+                            setSortField('weight');
+                            setSortOrder('asc');
+                            setSortByDate('');
+                          }}
+                          className={`flex-1 text-sm px-3 py-2 rounded-lg border smooth-transition
+                            ${
+                              sortField === 'weight' && sortOrder === 'asc'
+                                ? 'border-amber-500 text-amber-600 font-semibold'
+                                : 'border-gray-300 text-gray-600 hover:border-gray-400'
+                            }
+                          `}
+                        >
+                          Low → High
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* RESET */}
                     <button
                       onClick={clearAllSorts}
-                      className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white font-bold rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 flex items-center justify-center gap-2"
+                      className="
+                        w-full text-sm py-2 rounded-lg
+                        border border-gray-300
+                        text-gray-600
+                        hover:border-gray-400
+                        smooth-transition
+                      "
                     >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                        />
-                      </svg>
-                      Reset to Most Popular
+                      Reset Sort
                     </button>
+
                   </div>
                 </div>
               )}
@@ -1916,11 +1986,19 @@ const handleDelete = async (id) => {
       {selectedItem && (
         <div 
           className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[95] flex items-center justify-center p-2"
+          onClick={() => {
+            setSelectedItem(null);
+            setSelectedItemIndex(-1);
+          }}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
+          style={{ overscrollBehavior: 'none' }}
         >
-          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+          <div
+            className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Enhanced Header with Navigation */}
             <div className="bg-gradient-to-r from-amber-400 to-orange-400 p-3 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -2109,29 +2187,48 @@ const handleDelete = async (id) => {
                   )}
                 </div>
 
-                {/* Enhanced Admin Actions */}
-                {isAdmin && (
-                  <div className="flex gap-3 justify-center mt-6">
+                {/* Admin Actions and WhatsApp Buttons */}
+                <div className="mt-6 flex flex-col gap-3">
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => handleEdit(selectedItem)}
-                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 font-bold flex items-center gap-2 text-sm"
+                      onClick={enquireOnWhatsApp}
+                      className="flex-1 px-4 py-2 rounded-lg text-white font-semibold flex items-center justify-center gap-2 text-sm active:scale-95"
+                      style={{ backgroundColor: '#128C7E' }}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Edit
+                      💬 Enquire
                     </button>
                     <button
-                      onClick={() => handleDelete(selectedItem._id)}
-                      className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 font-bold flex items-center gap-2 text-sm"
+                      onClick={shareOnWhatsApp}
+                      className="flex-1 px-4 py-2 rounded-lg text-white font-semibold flex items-center justify-center gap-2 text-sm active:scale-95"
+                      style={{ backgroundColor: '#25D366' }}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Delete
+                      🔗 Share
                     </button>
                   </div>
-                )}
+                  
+                  {isAdmin && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(selectedItem)}
+                        className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 font-bold flex items-center justify-center gap-2 text-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(selectedItem._id)}
+                        className="flex-1 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 font-bold flex items-center justify-center gap-2 text-sm"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -2140,8 +2237,15 @@ const handleDelete = async (id) => {
 
       {/* Enhanced Media Gallery Modal */}
       {modalMedia.length > 0 && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[999] flex items-center justify-center">
-          <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-4">
+        <div
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-[999] flex items-center justify-center"
+          onClick={closeMediaModal}
+          style={{ overscrollBehavior: 'none' }}
+        >
+          <div
+            className="relative w-full h-full flex items-center justify-center p-2 sm:p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Close Button */}
             <button
               onClick={closeMediaModal}
@@ -2297,7 +2401,7 @@ const handleDelete = async (id) => {
                 disabled={isGeneratingId}
               >
                 <option value="">🏷️ Select Main Category* (Auto-generates ID)</option>
-                {catagories.slice(1).map((cat) => (
+                {catagories.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat} {categoryCodeMap[cat] ? `(${categoryCodeMap[cat]})` : ''}
                   </option>
@@ -2377,11 +2481,11 @@ const handleDelete = async (id) => {
               required
             >
               <option value="">✨ Select Type*</option>
-              <option value="festival">💒 festival</option>
-              <option value="lightweight">🪶 Lightweight</option>
-              <option value="daily wear">👕 Daily Wear</option>
-              <option value="fancy">✨ Fancy</option>
-              <option value="normal">⚪ Normal</option>
+              <option value="Festival">💒 Festival</option>
+              <option value="Lightweight">🪶 Lightweight</option>
+              <option value="Daily Wear">👕 Daily Wear</option>
+              <option value="Fancy">✨ Fancy</option>
+              <option value="Normal">⚪ Normal</option>
             </select>
             <select
               name="metal"
@@ -2391,11 +2495,11 @@ const handleDelete = async (id) => {
               required
             >
               <option value="">🥇 Select Metal*</option>
-              <option value="gold">🥇 Gold</option>
-              <option value="silver">🥈 Silver</option>
-              <option value="diamond">💎 Diamond</option>
-              <option value="platinum">⚪ Platinum</option>
-              <option value="rose gold">🌹 Rose Gold</option>
+              <option value="Gold">🥇 Gold</option>
+              <option value="Silver">🥈 Silver</option>
+              <option value="Diamond">💎 Diamond</option>
+              <option value="Platinum">⚪ Platinum</option>
+              <option value="Rose Gold">🌹 Rose Gold</option>
             </select>
             <select
               name="carat"
