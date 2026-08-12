@@ -18,13 +18,14 @@ function UserCatalogue() {
   const [designFilter, setDesignFilter] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(20);
+  const [itemsPerPage] = useState(30);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isDataFetched, setIsDataFetched] = useState(false);
 
   const [showSearch, setShowSearch] = useState(false);
+  const [subCategories, setSubCategories] = useState([]);
 
 
   const [modalMedia, setModalMedia] = useState([]);
@@ -162,6 +163,7 @@ function UserCatalogue() {
       let items = [];
       let total = 0;
       let pages = 1;
+      let availableSubCategories = [];
 
       if (data) {
         if (Array.isArray(data)) {
@@ -172,14 +174,26 @@ function UserCatalogue() {
           items = data.items;
           total = data.totalItems || data.total || 0;
           pages = data.totalPages || Math.ceil(total / itemsPerPage);
+          availableSubCategories = data.subCategories || [];
         } else if (data.pagination && data.items) {
           items = data.items;
           total = data.pagination.totalCount;
           pages = data.pagination.totalPages;
+          availableSubCategories = data.subCategories || [];
         }
       }
 
       setJewellery(items);
+      setSubCategories(
+        availableSubCategories.length > 0
+          ? availableSubCategories
+          : Array.from(
+              new Set(items
+                .map(item => item.category?.sub)
+                .filter(sub => sub && sub.trim() !== '')
+              )
+            ).sort()
+      );
       setTotalItems(total);
       setTotalPages(pages);
     } catch (error) {
@@ -357,35 +371,38 @@ function UserCatalogue() {
 
   const getPaginationRange = () => {
     const range = [];
-    const maxVisible = 5;
+    const total = totalPages;
+    const siblings = 1;
 
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) range.push(i);
-    } else {
-      let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-      let end = Math.min(totalPages, start + maxVisible - 1);
-
-      if (end - start + 1 < maxVisible) {
-        start = Math.max(1, end - maxVisible + 1);
-      }
-
-      for (let i = start; i <= end; i++) range.push(i);
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) range.push(i);
+      return range;
     }
+
+    const left = Math.max(2, currentPage - siblings);
+    const right = Math.min(total - 1, currentPage + siblings);
+    const showLeftEllipsis = left > 2;
+    const showRightEllipsis = right < total - 1;
+
+    range.push(1);
+    if (showLeftEllipsis) range.push('left-ellipsis');
+
+    const start = showLeftEllipsis ? left : 2;
+    const end = showRightEllipsis ? right : total - 1;
+    for (let i = start; i <= end; i++) range.push(i);
+
+    if (showRightEllipsis) range.push('right-ellipsis');
+    range.push(total);
 
     return range;
   };
 
   const getFilteredSubcatagories = () => {
-    if (selectedCategory.length === 0) {
-      return jewellery
-        .map(item => item.category?.sub)
-        .filter(sub => sub && sub.trim() !== '')
-        .filter((sub, index, arr) => arr.indexOf(sub) === index)
-        .sort();
+    if (subCategories.length > 0) {
+      return subCategories;
     }
 
     return jewellery
-      .filter(item => selectedCategory.includes(item.category?.main))
       .map(item => item.category?.sub)
       .filter(sub => sub && sub.trim() !== '')
       .filter((sub, index, arr) => arr.indexOf(sub) === index)
@@ -1358,17 +1375,21 @@ const enquireOnWhatsApp = () => {
                   </button>
 
                   <div className="flex items-center gap-2">
-                    {getPaginationRange().map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => goToPage(page)}
-                        className={`w-11 h-11 rounded-xl font-bold smooth-transition hover-scale ${
-                          page === currentPage ? 'text-white shadow-md' : 'bg-white text-gray-700 border-2 hover:border-amber-400'
-                        }`}
-                        style={page === currentPage ? { backgroundColor: '#efb20c' } : { borderColor: '#efb20c' }}
-                      >
-                        {page}
-                      </button>
+                    {getPaginationRange().map((page, index) => (
+                      page === 'left-ellipsis' || page === 'right-ellipsis' ? (
+                        <span key={`${page}-${index}`} className="text-gray-500 px-2">...</span>
+                      ) : (
+                        <button
+                          key={page}
+                          onClick={() => goToPage(page)}
+                          className={`w-11 h-11 rounded-xl font-bold smooth-transition hover-scale ${
+                            page === currentPage ? 'text-white shadow-md' : 'bg-white text-gray-700 border-2 hover:border-amber-400'
+                          }`}
+                          style={page === currentPage ? { backgroundColor: '#efb20c' } : { borderColor: '#efb20c' }}
+                        >
+                          {page}
+                        </button>
+                      )
                     ))}
                   </div>
 
