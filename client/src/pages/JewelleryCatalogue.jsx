@@ -615,7 +615,7 @@ function JewelleryCatalogue() {
     }
   }, [selectedItem, selectedItemIndex, jewellery]);
 
-  const isOverlayOpen = selectedItem || modalMedia.length > 0 || showFilterPanel || showSortPanel || showSearch;
+  const isOverlayOpen = selectedItem || modalMedia.length > 0 || showFilterPanel || showSortPanel;
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
