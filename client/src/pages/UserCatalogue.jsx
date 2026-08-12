@@ -576,7 +576,31 @@ const enquireOnWhatsApp = () => {
   window.open(whatsappUrl, '_blank');
 };
 
+const downloadImage = async () => {
+  if (!selectedItem) return;
 
+  const mainImage = getMainImage(selectedItem);
+  if (!mainImage) {
+    alert('No image available for download');
+    return;
+  }
+
+  try {
+    const response = await fetch(mainImage);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${selectedItem.name || 'jewellery'}-${selectedItem.id || 'image'}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Download failed:', error);
+    alert('Failed to download image. Please try again.');
+  }
+};
 
   const getGridIcon = () => {
   const iconClass = "w-5 h-5";
@@ -1547,6 +1571,14 @@ const enquireOnWhatsApp = () => {
           {/* ===== MOBILE ACTIONS (NO FOOTER) ===== */}
           <div className="mt-6 flex gap-3 lg:hidden">
             <button
+              onClick={downloadImage}
+              className="flex-1 px-4 py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-95"
+              style={{ backgroundColor: '#6366f1' }}
+            >
+              ⬇️ Download
+            </button>
+
+            <button
               onClick={enquireOnWhatsApp}
               className="flex-1 px-4 py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-95"
               style={{ backgroundColor: '#128C7E' }}
@@ -1567,6 +1599,14 @@ const enquireOnWhatsApp = () => {
 
       {/* ================= DESKTOP FOOTER ONLY ================= */}
       <div className="hidden lg:flex bg-white px-4 py-3 justify-end gap-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.08)]">
+        <button
+          onClick={downloadImage}
+          className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 active:scale-95"
+          style={{ backgroundColor: '#6366f1' }}
+        >
+          ⬇️ Download
+        </button>
+
         <button
           onClick={enquireOnWhatsApp}
           className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 active:scale-95"
