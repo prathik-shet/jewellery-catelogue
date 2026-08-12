@@ -586,16 +586,15 @@ const downloadImage = async () => {
   }
 
   try {
-    const response = await fetch(mainImage);
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
+    const filename = `${selectedItem.name || 'jewellery'}-${selectedItem.id || 'image'}.jpg`;
+    const downloadUrl = `/api/jewellery/download-image/proxy?url=${encodeURIComponent(mainImage)}&filename=${encodeURIComponent(filename)}`;
+
     const link = document.createElement('a');
-    link.href = url;
-    link.download = `${selectedItem.name || 'jewellery'}-${selectedItem.id || 'image'}.jpg`;
+    link.href = downloadUrl;
+    link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   } catch (error) {
     console.error('Download failed:', error);
     alert('Failed to download image. Please try again.');

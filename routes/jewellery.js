@@ -288,4 +288,36 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// ===============================
+// DOWNLOAD IMAGE (CORS BYPASS)
+// ===============================
+router.get("/download-image/proxy", async (req, res) => {
+  try {
+    const { url, filename } = req.query;
+
+    if (!url) {
+      return res.status(400).json({ error: "URL parameter is required" });
+    }
+
+    // Fetch image from S3 (server-side, no CORS issues)
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      return res.status(response.status).json({ error: "Failed to fetch image" });
+    }
+
+    const buffer = await response.arrayBuffer();
+
+    // Set headers for download
+    res.setHeader("Content-Type", response.headers.get("content-type") || "image/jpeg");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename || 'image.jpg'}"`);
+    res.setHeader("Content-Length", buffer.byteLength);
+
+    res.send(Buffer.from(buffer));
+  } catch (error) {
+    console.error("Download error:", error);
+    res.status(500).json({ error: "Failed to download image" });
+  }
+});
+
 module.exports = router;
