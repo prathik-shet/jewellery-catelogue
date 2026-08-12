@@ -724,7 +724,7 @@ const enquireOnWhatsApp = () => {
         }
       `}</style>
 
-      <div className="fixed top-0 left-0 w-full z-[90] shadow-xl p-4 bg-[#f9faf7] text-[#2e2e2e]">
+      <div className="sticky top-0 left-0 w-full z-[90] shadow-xl p-4 bg-[#f9faf7] text-[#2e2e2e]">
 
         <div className="flex items-center gap-4 justify-center sm:justify-start max-w-7xl mx-auto">
           <div className="relative">
@@ -748,9 +748,9 @@ const enquireOnWhatsApp = () => {
         </div>
       </div>
       
-      {/* ================= FIXED HEADER ================= */}
+      {/* ================= STICKY HEADER ================= */}
 <div
-  className="glass-effect fixed top-20 sm:top-24 left-0 w-full z-[85] shadow-lg p-3 border-b"
+  className="glass-effect sticky top-[72px] sm:top-[96px] left-0 w-full z-[85] shadow-lg p-3 border-b"
   style={{ borderColor: "#efb20c" }}
 >
   <div className="w-full max-w-7xl mx-auto relative">
@@ -1238,7 +1238,7 @@ const enquireOnWhatsApp = () => {
 
 
 
-      <div className="pt-72 sm:pt-80">
+      <div className="pt-4">
 
         {loading && (
           <div className="flex items-center justify-center py-20">
@@ -1283,13 +1283,13 @@ const enquireOnWhatsApp = () => {
   >
     {mainImage && (
   <div className="relative mb-3">
-    {/* Fixed-size image container */}
-    <div className="w-full h-[220px] sm:h-[240px] overflow-hidden rounded-lg bg-white">
+    {/* Fixed-size image container with proper aspect ratio */}
+    <div className="w-full aspect-square overflow-hidden rounded-lg bg-gradient-to-br from-gray-100 via-gray-50 to-gray-100 flex items-center justify-center shadow-sm">
       <img
         src={mainImage}
         alt={item.name}
-        loading="lazy"
-        className="w-full h-full object-cover smooth-transition group-hover:scale-105"
+        loading="eager"
+        className="w-full h-full object-contain smooth-transition group-hover:scale-105"
       />
     </div>
 
