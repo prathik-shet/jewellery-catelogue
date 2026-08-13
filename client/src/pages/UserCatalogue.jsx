@@ -1374,41 +1374,30 @@ const downloadImage = async () => {
   </div>
 )}
         {isDataFetched && totalPages > 1 && jewellery.length > 0 && (
-          <div className="px-4 sm:px-6 pb-8 mt-8 max-w-7xl mx-auto">
-            <div className="bg-white/95 rounded-2xl p-6 border-2 shadow-2xl" style={{ borderColor: '#efb20c' }}>
-              <div className="flex flex-col items-center gap-6">
-                <div className="text-center">
-                  <p className="text-lg font-bold mb-2" style={{ color: '#7f1a2b' }}>
-                    Page {currentPage} of {totalPages}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {totalItems} total items
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 flex-wrap justify-center">
+          <div className="px-4 sm:px-6 pb-8 mt-6 max-w-7xl mx-auto">
+            <div className="flex items-center gap-2 flex-wrap justify-center">
                   <button
                     onClick={() => goToPage(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className={`px-5 py-2.5 rounded-xl font-bold smooth-transition ${
-                      currentPage === 1 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'gradient-maroon text-white hover:shadow-lg hover-scale'
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold smooth-transition ${
+                      currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#7f1a2b] text-white hover:bg-[#a52438]'
                     }`}
                   >
-                    Previous
+                    ← Prev
                   </button>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     {getPaginationRange().map((page, index) => (
                       page === 'left-ellipsis' || page === 'right-ellipsis' ? (
-                        <span key={`${page}-${index}`} className="text-gray-500 px-2">...</span>
+                        <span key={`${page}-${index}`} className="text-gray-500 px-1">...</span>
                       ) : (
                         <button
                           key={page}
                           onClick={() => goToPage(page)}
-                          className={`w-11 h-11 rounded-xl font-bold smooth-transition hover-scale ${
-                            page === currentPage ? 'text-white shadow-md' : 'bg-white text-gray-700 border-2 hover:border-amber-400'
+                          className={`w-9 h-9 rounded-lg text-sm font-semibold smooth-transition ${
+                            page === currentPage ? 'text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-300 hover:border-[#efb20c]'
                           }`}
-                          style={page === currentPage ? { backgroundColor: '#efb20c' } : { borderColor: '#efb20c' }}
+                          style={page === currentPage ? { backgroundColor: '#efb20c' } : {}}
                         >
                           {page}
                         </button>
@@ -1419,14 +1408,12 @@ const downloadImage = async () => {
                   <button
                     onClick={() => goToPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className={`px-5 py-2.5 rounded-xl font-bold smooth-transition ${
-                      currentPage === totalPages ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'gradient-maroon text-white hover:shadow-lg hover-scale'
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold smooth-transition ${
+                      currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#7f1a2b] text-white hover:bg-[#a52438]'
                     }`}
                   >
-                    Next
+                    Next →
                   </button>
-                </div>
-              </div>
             </div>
           </div>
         )}
@@ -1534,37 +1521,36 @@ const downloadImage = async () => {
         {/* ========== RIGHT : DETAILS ========== */}
         <div className="lg:w-2/5 px-6 py-6 overflow-y-auto bg-[#fff8e6] flex flex-col">
 
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div className="col-span-2 bg-white rounded-xl px-4 py-3 shadow-sm">
-              <div className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
-                Product ID
-              </div>
-              <div className="text-lg font-bold text-[#7f1a2b]">
-                {selectedItem.id}
-              </div>
-            </div>
-
-            {[
-              ['Category', `${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}`],
-              ['Type', selectedItem.type],
-              ['Gender', selectedItem.gender],
-              ['Purity', selectedItem.carat || 'N/A'],
-              ['Weight', `${selectedItem.weight}g`],
-              ['Stone Weight', `${selectedItem.stoneWeight || 'N/A'}g`],
-              ['Design', selectedItem.isOurDesign === false ? 'Others' : 'In House'],
-            ].map(([label, value], i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl px-3 py-2 shadow-sm hover:shadow-md transition-shadow"
-              >
+          <div className="bg-white rounded-xl px-4 py-4 shadow-sm">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="col-span-2">
                 <div className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
-                  {label}
+                  Product ID
                 </div>
-                <div className="text-sm font-bold text-[#7f1a2b] mt-0.5">
-                  {value}
+                <div className="text-lg font-bold text-[#7f1a2b]">
+                  {selectedItem.id}
                 </div>
               </div>
-            ))}
+
+              {[
+                ['Category', `${selectedItem.category?.main}${selectedItem.category?.sub ? ` - ${selectedItem.category.sub}` : ''}`],
+                ['Type', selectedItem.type],
+                ['Gender', selectedItem.gender],
+                ['Purity', selectedItem.carat || 'N/A'],
+                ['Weight', `${selectedItem.weight}g`],
+                ['Stone Weight', `${selectedItem.stoneWeight || 'N/A'}g`],
+                ['Design', selectedItem.isOurDesign === false ? 'Others' : 'In House'],
+              ].map(([label, value], i) => (
+                <div key={i}>
+                  <div className="text-[10px] uppercase tracking-wide text-gray-500 font-semibold">
+                    {label}
+                  </div>
+                  <div className="text-sm font-bold text-[#7f1a2b] mt-0.5">
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ===== MOBILE ACTIONS (NO FOOTER) ===== */}
@@ -1572,7 +1558,7 @@ const downloadImage = async () => {
             <button
               onClick={downloadImage}
               className="flex-1 px-4 py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-95"
-              style={{ backgroundColor: '#6366f1' }}
+              style={{ backgroundColor: '#efb20c' }}
             >
               ⬇️ Download
             </button>
@@ -1580,7 +1566,7 @@ const downloadImage = async () => {
             <button
               onClick={enquireOnWhatsApp}
               className="flex-1 px-4 py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-95"
-              style={{ backgroundColor: '#128C7E' }}
+              style={{ backgroundColor: '#7f1a2b' }}
             >
               💬 Enquire
             </button>
@@ -1588,7 +1574,7 @@ const downloadImage = async () => {
             <button
               onClick={shareOnWhatsApp}
               className="flex-1 px-4 py-3 rounded-xl text-white font-semibold flex items-center justify-center gap-2 active:scale-95"
-              style={{ backgroundColor: '#25D366' }}
+              style={{ backgroundColor: '#7f1a2b' }}
             >
               🔗 Share
             </button>
@@ -1601,7 +1587,7 @@ const downloadImage = async () => {
         <button
           onClick={downloadImage}
           className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 active:scale-95"
-          style={{ backgroundColor: '#6366f1' }}
+          style={{ backgroundColor: '#efb20c' }}
         >
           ⬇️ Download
         </button>
@@ -1609,7 +1595,7 @@ const downloadImage = async () => {
         <button
           onClick={enquireOnWhatsApp}
           className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 active:scale-95"
-          style={{ backgroundColor: '#128C7E' }}
+          style={{ backgroundColor: '#7f1a2b' }}
         >
           💬 Enquire
         </button>
@@ -1617,7 +1603,7 @@ const downloadImage = async () => {
         <button
           onClick={shareOnWhatsApp}
           className="px-6 py-2.5 rounded-xl text-white font-semibold flex items-center gap-2 active:scale-95"
-          style={{ backgroundColor: '#25D366' }}
+          style={{ backgroundColor: '#7f1a2b' }}
         >
           🔗 Share
         </button>
