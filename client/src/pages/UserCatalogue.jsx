@@ -779,8 +779,8 @@ const downloadImage = async () => {
   <div className="w-full max-w-7xl mx-auto relative">
 
     {/* ================= CATEGORY SLIDER ================= */}
-<div className="category-scroll overflow-x-auto no-scrollbar sm:no-scrollbar mb-3">
-  <div className="flex gap-4 px-1 sm:justify-center min-w-max">
+<div className="category-scroll overflow-x-auto no-scrollbar sm:no-scrollbar mb-3 pb-2">
+  <div className="flex gap-4 px-1 sm:justify-center min-w-max pb-2">
     {categories.map((cat) => {
       const imageSrc =
         CATEGORY_IMAGES[cat] ||
@@ -1349,27 +1349,17 @@ const downloadImage = async () => {
           )}
         </div>
         {isDataFetched && totalItems > 0 && (
-  <div className="px-4 sm:px-6 mb-6 fade-in">
-    <div className="bg-[#f9faf7] rounded-2xl p-5 shadow-[0_6px_24px_rgba(0,0,0,0.08)] max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        
-        <div>
-          <p className="text-lg font-bold text-[#7f1a2b]">
-            Showing {jewellery.length} of {totalItems} items
-          </p>
-
-          {totalPages > 1 && (
-            <p className="text-sm text-gray-600 mt-1">
-              Page {currentPage} of {totalPages}
-            </p>
-          )}
-        </div>
-
-        <div className="text-sm font-semibold text-gray-700 bg-gradient-to-r from-amber-50 to-yellow-50 px-4 py-2.5 rounded-xl shadow-sm">
-          {getActiveSortDescription()}
-        </div>
-
-      </div>
+  <div className="px-4 sm:px-6 mb-4 fade-in">
+    <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs sm:text-sm text-gray-600 max-w-7xl mx-auto">
+      <span className="font-medium">
+        {jewellery.length} of {totalItems} items
+      </span>
+      
+      {totalPages > 1 && (
+        <span className="font-medium">
+          Page {currentPage} / {totalPages}
+        </span>
+      )}
     </div>
   </div>
 )}

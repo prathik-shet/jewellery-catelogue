@@ -134,26 +134,28 @@ export default function Dashboard() {
                 }`}
                 onClick={() => setPopupImage(img)}
               >
-                <img src={img} alt="" className="w-full h-full object-cover" />
+                <img src={img} alt="" className="w-full h-full object-cover" loading="lazy" />
               </div>
             ))}
           </div>
 
           {/* MOBILE */}
-          <div className="md:hidden mx-4 aspect-[4/3] relative overflow-hidden rounded-2xl shadow-lg cursor-pointer">
-            {SLIDER_IMAGES.map((img, i) => (
-              <div
-                key={i}
-                className={`absolute inset-0 transition-opacity duration-700 ${
-                  i === currentSlide
-                    ? "opacity-100 pointer-events-auto"
-                    : "opacity-0 pointer-events-none"
-                }`}
-                onClick={() => setPopupImage(img)}
-              >
-                <img src={img} alt="" className="w-full h-full object-cover" />
-              </div>
-            ))}
+          <div className="md:hidden px-4 py-4 relative overflow-hidden rounded-2xl shadow-lg cursor-pointer">
+            <div className="w-full aspect-video relative overflow-hidden rounded-xl bg-gray-200">
+              {SLIDER_IMAGES.map((img, i) => (
+                <div
+                  key={i}
+                  className={`absolute inset-0 transition-opacity duration-700 ${
+                    i === currentSlide
+                      ? "opacity-100 pointer-events-auto"
+                      : "opacity-0 pointer-events-none"
+                  }`}
+                  onClick={() => setPopupImage(img)}
+                >
+                  <img src={img} alt="" className="w-full h-full object-contain bg-gray-100" loading="lazy" />
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -217,24 +219,27 @@ export default function Dashboard() {
       {/* ---------------- IMAGE POPUP ---------------- */}
       {popupImage && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4"
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center px-3 py-4"
           onClick={() => setPopupImage(null)}
         >
           <div
-            className="relative max-w-4xl w-full"
+            className="relative w-full max-w-4xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setPopupImage(null)}
-              className="absolute -top-10 right-0 text-white text-3xl font-bold"
+              className="absolute -top-8 right-0 text-white text-3xl font-bold hover:scale-110 transition-transform z-10"
             >
               ×
             </button>
-            <img
-              src={popupImage}
-              alt=""
-              className="w-full max-h-[80vh] object-contain rounded-xl bg-white"
-            />
+            <div className="flex items-center justify-center w-full bg-gray-100 rounded-xl overflow-hidden">
+              <img
+                src={popupImage}
+                alt="Enlarged view"
+                className="w-full h-auto max-h-[90vh] object-contain"
+                loading="lazy"
+              />
+            </div>
           </div>
         </div>
       )}
