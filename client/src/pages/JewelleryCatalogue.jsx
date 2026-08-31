@@ -268,16 +268,26 @@ function JewelleryCatalogue() {
       const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' });
       const imageUrls = extractBulkImageUrls(rows);
 
+      console.log('🚀 About to send bulk import request');
+      console.log('📤 Extracted URLs count:', imageUrls.length);
+      console.log('📤 Extracted URLs:', imageUrls);
+
       if (!imageUrls.length) {
         throw new Error('No valid image URLs found in the file. Please include an image/imageUrl/url/link column in the Excel sheet.');
       }
 
       const token = localStorage.getItem('token');
+      const payload = { items: imageUrls };
+      console.log('📦 Payload to send:', JSON.stringify(payload));
+      
       const response = await axios.post(
         '/api/jewellery/bulk-import',
-        { items: imageUrls },
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      console.log('✅ Backend response:', response.data);
+      console.log('✅ Items inserted:', response.data.inserted);
 
       await fetchJewellery();
       alert(`${response.data.inserted} bulk image item(s) added successfully.`);
