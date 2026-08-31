@@ -67,11 +67,17 @@ router.post("/", async (req, res) => {
 
 router.post("/bulk-import", async (req, res) => {
   try {
+    console.log('📥 BULK IMPORT REQUEST RECEIVED');
+    console.log('📥 Request body:', JSON.stringify(req.body, null, 2));
+    
     const rawItems = Array.isArray(req.body?.items)
       ? req.body.items
       : Array.isArray(req.body?.images)
         ? req.body.images
         : [];
+
+    console.log('📥 Raw items extracted:', rawItems.length, 'items');
+    console.log('📥 Raw items content:', JSON.stringify(rawItems, null, 2));
 
     const urlCandidates = rawItems.flatMap((item) => {
       if (typeof item === 'string') return [item];
@@ -92,13 +98,19 @@ router.post("/bulk-import", async (req, res) => {
       return [];
     });
 
+    console.log('📥 URL candidates found:', urlCandidates.length);
+
     const validImages = [...new Set(
       urlCandidates
         .map((value) => String(value).trim())
         .filter((value) => value && /^https?:\/\//i.test(value))
     )];
 
+    console.log('✅ Valid images after validation:', validImages.length);
+    console.log('✅ Valid images:', JSON.stringify(validImages, null, 2));
+
     if (!validImages.length) {
+      console.log('❌ NO VALID IMAGES - RETURNING 400');
       return res.status(400).json({
         error: "No valid image URLs were found. Please upload an Excel/CSV file with image links.",
       });
@@ -125,8 +137,10 @@ router.post("/bulk-import", async (req, res) => {
       clickCount: 0,
     }));
 
+    console.log('📦 About to insert', bulkItems.length, 'items into database');
     const created = await Jewellery.insertMany(bulkItems, { ordered: false });
 
+    console.log('✅ Successfully inserted', created.length, 'items');
     res.status(201).json({
       inserted: created.length,
       message: 'Bulk image items uploaded successfully.',
