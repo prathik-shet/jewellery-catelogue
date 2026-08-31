@@ -124,24 +124,45 @@ function JewelleryCatalogue() {
     const candidates = [];
     const seen = new Set();
 
-    const addUrl = (value) => {
-      if (typeof value !== 'string' && typeof value !== 'number') return;
-      const trimmed = String(value).trim();
-      if (!trimmed) return;
-      const normalized = trimmed.replace(/\\s+/g, '');
+    console.log('📊 DEBUG: extractBulkImageUrls received rows:', rows);
+    console.log('📊 DEBUG: Number of rows:', rows.length);
 
-      if (!/^https?:\/\//i.test(normalized)) return;
+    const addUrl = (value) => {
+      console.log('  → Checking value:', value, '| Type:', typeof value);
+      if (typeof value !== 'string' && typeof value !== 'number') {
+        console.log('    ✗ Skipped: not string/number');
+        return;
+      }
+      const trimmed = String(value).trim();
+      if (!trimmed) {
+        console.log('    ✗ Skipped: empty after trim');
+        return;
+      }
+      const normalized = trimmed.replace(/\s+/g, '');
+
+      if (!/^https?:\/\//i.test(normalized)) {
+        console.log('    ✗ Skipped: not HTTPS URL');
+        return;
+      }
 
       if (!seen.has(normalized)) {
         seen.add(normalized);
         candidates.push(normalized);
+        console.log('    ✅ Added URL:', normalized);
+      } else {
+        console.log('    ⚠ Duplicate URL');
       }
     };
 
-    rows.forEach((row) => {
-      if (!row) return;
+    rows.forEach((row, rowIndex) => {
+      console.log(`\n📌 Processing row ${rowIndex}:`, row);
+      if (!row) {
+        console.log('  ✗ Row is empty');
+        return;
+      }
 
       if (typeof row === 'string' || typeof row === 'number') {
+        console.log('  Direct string/number value');
         addUrl(row);
         return;
       }
@@ -161,8 +182,10 @@ function JewelleryCatalogue() {
         'Photo',
       ];
 
+      console.log('  Checking predefined fields:', fieldNames);
       fieldNames.forEach((field) => {
         if (Object.prototype.hasOwnProperty.call(row, field)) {
+          console.log(`  Found field '${field}'`);
           const value = row[field];
           if (Array.isArray(value)) {
             value.forEach(addUrl);
@@ -172,6 +195,7 @@ function JewelleryCatalogue() {
         }
       });
 
+      console.log('  Checking all object values for fallback:');
       Object.values(row).forEach((value) => {
         if (Array.isArray(value)) {
           value.forEach(addUrl);
@@ -181,6 +205,7 @@ function JewelleryCatalogue() {
       });
     });
 
+    console.log('✅ Final extracted URLs:', candidates);
     return candidates;
   };
 
