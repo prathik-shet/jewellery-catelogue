@@ -126,6 +126,9 @@ function JewelleryCatalogue() {
 
     console.log('📊 DEBUG: extractBulkImageUrls received rows:', rows);
     console.log('📊 DEBUG: Number of rows:', rows.length);
+    if (rows.length > 0) {
+      console.log('📊 DEBUG: First row keys:', Object.keys(rows[0]));
+    }
 
     const addUrl = (value) => {
       console.log('  → Checking value:', value, '| Type:', typeof value);
@@ -167,7 +170,8 @@ function JewelleryCatalogue() {
         return;
       }
 
-      const fieldNames = [
+      // Generate all possible field name variations
+      const baseFieldNames = [
         'image',
         'images',
         'imageUrl',
@@ -182,8 +186,17 @@ function JewelleryCatalogue() {
         'Photo',
       ];
 
-      console.log('  Checking predefined fields:', fieldNames);
-      fieldNames.forEach((field) => {
+      // Add XLSX-normalized variations (spaces to underscores/removed)
+      const expandedFieldNames = new Set(baseFieldNames);
+      baseFieldNames.forEach((name) => {
+        expandedFieldNames.add(name.replace(/\s+/g, '_')); // space to underscore
+        expandedFieldNames.add(name.replace(/\s+/g, '')); // remove spaces
+        expandedFieldNames.add(name.toLowerCase());
+        expandedFieldNames.add(name.toUpperCase());
+      });
+
+      console.log('  Checking predefined fields:', Array.from(expandedFieldNames));
+      expandedFieldNames.forEach((field) => {
         if (Object.prototype.hasOwnProperty.call(row, field)) {
           console.log(`  Found field '${field}'`);
           const value = row[field];
@@ -195,7 +208,28 @@ function JewelleryCatalogue() {
         }
       });
 
-      console.log('  Checking all object values for fallback:');
+      // Also check for case-insensitive matches
+      const rowKeys = Object.keys(row);
+      console.log('  Checking for case-insensitive field matches');
+      rowKeys.forEach((key) => {
+        const lowerKey = key.toLowerCase();
+        if (
+          lowerKey.includes('image') ||
+          lowerKey.includes('url') ||
+          lowerKey.includes('link') ||
+          lowerKey.includes('photo')
+        ) {
+          console.log(`  Found potential URL field: '${key}'`);
+          const value = row[key];
+          if (Array.isArray(value)) {
+            value.forEach(addUrl);
+          } else {
+            addUrl(value);
+          }
+        }
+      });
+
+      console.log('  Checking all remaining object values:');
       Object.values(row).forEach((value) => {
         if (Array.isArray(value)) {
           value.forEach(addUrl);
