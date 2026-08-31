@@ -2,11 +2,70 @@ const express = require("express");
 const router = express.Router();
 const Jewellery = require("../models/Jewellery");
 
+const normalizeEnum = (value, allowedValues, fallback) => {
+  if (value === undefined || value === null || value === "") {
+    return fallback;
+  }
+
+  const normalized = String(value).trim();
+  if (!normalized) return fallback;
+
+  const exactMatch = allowedValues.find(
+    (allowed) => allowed.toLowerCase() === normalized.toLowerCase()
+  );
+
+  if (exactMatch) return exactMatch;
+
+  const aliasMap = {
+    gold: "gold",
+    silver: "silver",
+    diamond: "diamond",
+    platinum: "platinum",
+    "rose gold": "rose gold",
+    "rose-gold": "rose gold",
+    festival: "festival",
+    lightweight: "lightweight",
+    "daily wear": "daily wear",
+    "daily-wear": "daily wear",
+    fancy: "fancy",
+    normal: "normal",
+    men: "Men",
+    women: "Women",
+    unisex: "Unisex",
+  };
+
+  const alias = aliasMap[normalized.toLowerCase()];
+  return alias || fallback;
+};
+
+const normalizeItemPayload = (body = {}) => {
+  const categoryMain = body.category?.main ? String(body.category.main).trim() : "";
+  const categorySub = body.category?.sub ? String(body.category.sub).trim() : "";
+
+  return {
+    ...body,
+    category: {
+      main: categoryMain,
+      sub: categorySub,
+    },
+    metal: normalizeEnum(body.metal, ["gold", "silver", "diamond", "platinum", "rose gold"], "gold"),
+    type: normalizeEnum(body.type, ["festival", "lightweight", "daily wear", "fancy", "normal"], "normal"),
+    gender: normalizeEnum(body.gender, ["Men", "Women", "Unisex"], "Unisex"),
+    carat: body.carat === undefined || body.carat === null || body.carat === "" ? null : Number(body.carat),
+    weight: body.weight === undefined || body.weight === null || body.weight === "" ? null : Number(body.weight),
+    stoneWeight: body.stoneWeight === undefined || body.stoneWeight === null || body.stoneWeight === "" ? null : Number(body.stoneWeight),
+    orderNo: body.orderNo === undefined || body.orderNo === null || body.orderNo === "" ? null : Number(body.orderNo),
+    isOurDesign: body.isOurDesign !== false,
+  };
+};
+
 // ===============================
 // CREATE JEWELLERY ITEM (URL ONLY)
 // ===============================
 router.post("/", async (req, res) => {
   try {
+    const payload = normalizeItemPayload(req.body);
+
     const {
       id,
       name,
@@ -21,7 +80,11 @@ router.post("/", async (req, res) => {
       isOurDesign,
       images = [],
       videos = [],
-    } = req.body;
+    } = payload;
+
+    const validType = normalizeEnum(type, ["festival", "lightweight", "daily wear", "fancy", "normal"], "normal");
+    const validMetal = normalizeEnum(metal, ["gold", "silver", "diamond", "platinum", "rose gold"], "gold");
+    const validGender = normalizeEnum(gender, ["Men", "Women", "Unisex"], "Unisex");
 
     if (!id || !name || !category?.main || !weight || !metal || !carat) {
       return res.status(400).json({
@@ -48,10 +111,10 @@ router.post("/", async (req, res) => {
       images: finalImages,
       image: finalImages[0] || null, // ✅ MAIN IMAGE
       videos: finalVideos,
-      gender: gender || "Unisex",
+      gender: validGender,
       stoneWeight: stoneWeight ? Number(stoneWeight) : null,
-      type: type || "normal",
-      metal,
+      type: validType,
+      metal: validMetal,
       carat: Number(carat),
       orderNo: orderNo || null,
       isOurDesign: isOurDesign !== false,
@@ -169,6 +232,8 @@ router.post("/bulk-import", async (req, res) => {
 // ===============================
 router.put("/:id", async (req, res) => {
   try {
+    const payload = normalizeItemPayload(req.body);
+
     const {
       id,
       name,
@@ -183,7 +248,11 @@ router.put("/:id", async (req, res) => {
       isOurDesign,
       images = [],
       videos = [],
-    } = req.body;
+    } = payload;
+
+    const validType = normalizeEnum(type, ["festival", "lightweight", "daily wear", "fancy", "normal"], "normal");
+    const validMetal = normalizeEnum(metal, ["gold", "silver", "diamond", "platinum", "rose gold"], "gold");
+    const validGender = normalizeEnum(gender, ["Men", "Women", "Unisex"], "Unisex");
 
     if (!id || !name || !category?.main || !weight || !metal || !carat) {
       return res.status(400).json({
@@ -207,10 +276,10 @@ router.put("/:id", async (req, res) => {
         sub: category.sub || "",
       },
       weight: Number(weight),
-      gender: gender || "Unisex",
+      gender: validGender,
       stoneWeight: stoneWeight ? Number(stoneWeight) : null,
-      type: type || "normal",
-      metal,
+      type: validType,
+      metal: validMetal,
       carat: Number(carat),
       orderNo: orderNo || null,
       isOurDesign: isOurDesign !== false,
