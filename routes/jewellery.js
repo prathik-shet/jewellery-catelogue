@@ -127,7 +127,7 @@ router.post("/bulk-import", async (req, res) => {
       gender: 'Unisex',
       stoneWeight: 0,
       type: 'normal',
-      metal: 'Gold',
+      metal: 'gold',
       carat: 22,
       orderNo: null,
       isOurDesign: true,
@@ -136,6 +136,18 @@ router.post("/bulk-import", async (req, res) => {
       videos: [],
       clickCount: 0,
     }));
+
+    const invalidItems = bulkItems.filter((item) => {
+      const validationError = new Jewellery(item).validateSync();
+      return !!validationError;
+    });
+
+    if (invalidItems.length) {
+      console.log('❌ Invalid bulk items detected:', invalidItems.length);
+      return res.status(400).json({
+        error: 'One or more bulk items failed model validation.',
+      });
+    }
 
     console.log('📦 About to insert', bulkItems.length, 'items into database');
     const created = await Jewellery.insertMany(bulkItems, { ordered: false });
