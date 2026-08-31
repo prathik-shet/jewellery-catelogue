@@ -59,6 +59,62 @@ const normalizeItemPayload = (body = {}) => {
   };
 };
 
+const categoryCodeMap = {
+  Earrings: "EAR",
+  Earring: "EAR",
+  Pendants: "PEN",
+  Pendant: "PEN",
+  Rings: "RIN",
+  Ring: "RIN",
+  Mangalsutra: "MAN",
+  Chains: "CHA",
+  Chain: "CHA",
+  Bracelets: "BRA",
+  Bracelet: "BRA",
+  Necklace: "NEC",
+  Necklaces: "NEC",
+  Hara: "SET",
+  Bangles: "BAN",
+  Bangle: "BAN",
+  Silver: "SIL",
+  Diamond: "DIA",
+  Custom: "CUS",
+};
+
+const getCategoryCode = (category) => {
+  const trimmedCategory = String(category || "").trim();
+  return categoryCodeMap[trimmedCategory] ||
+    trimmedCategory.replace(/[^a-zA-Z0-9]/g, "").slice(0, 3).toUpperCase() ||
+    "ITM";
+};
+
+const generateBulkIds = async (category, count) => {
+  const code = getCategoryCode(category);
+  const existingItems = await Jewellery.find(
+    { id: { $regex: `^${code}\\d+$`, $options: "i" } },
+    { id: 1, _id: 0 }
+  ).lean();
+
+  const usedNumbers = new Set(
+    existingItems
+      .map(({ id }) => Number(String(id).slice(code.length)))
+      .filter((number) => Number.isInteger(number) && number > 0)
+  );
+
+  const ids = [];
+  let nextNumber = usedNumbers.size ? Math.max(...usedNumbers) + 1 : 1;
+  while (ids.length < count) {
+    if (!usedNumbers.has(nextNumber)) {
+      const id = `${code}${String(nextNumber).padStart(5, "0")}`;
+      ids.push(id);
+      usedNumbers.add(nextNumber);
+    }
+    nextNumber += 1;
+  }
+
+  return ids;
+};
+
 // ===============================
 // CREATE JEWELLERY ITEM (URL ONLY)
 // ===============================
@@ -179,12 +235,21 @@ router.post("/bulk-import", async (req, res) => {
       });
     }
 
+    const category = String(req.body?.category || "").trim();
+    if (!category || category.toLowerCase() === "custom") {
+      return res.status(400).json({
+        error: "A valid category from the Excel filename is required for bulk import.",
+      });
+    }
+
+    const generatedIds = await generateBulkIds(category, validImages.length);
+
     const bulkItems = validImages.map((url, index) => ({
-      id: `BULK${Date.now()}${String(index + 1).padStart(4, '0')}`,
+      id: generatedIds[index],
       name: `Bulk Image ${index + 1}`,
       category: {
-        main: 'Custom',
-        sub: 'Bulk Upload',
+        main: category,
+        sub: '',
       },
       weight: 0,
       gender: 'Unisex',

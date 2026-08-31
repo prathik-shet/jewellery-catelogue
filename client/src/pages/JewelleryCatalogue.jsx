@@ -247,6 +247,12 @@ function JewelleryCatalogue() {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
 
+    const categoryFromFilename = file.name
+      .replace(/\.[^.]+$/, '')
+      .replace(/[_-]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
     const validTypes = [
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -277,7 +283,7 @@ function JewelleryCatalogue() {
       }
 
       const token = localStorage.getItem('token');
-      const payload = { items: imageUrls };
+      const payload = { category: categoryFromFilename, items: imageUrls };
       console.log('📦 Payload to send:', JSON.stringify(payload));
       
       const response = await axios.post(
