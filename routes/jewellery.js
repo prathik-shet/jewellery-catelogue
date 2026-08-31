@@ -65,6 +65,79 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.post("/bulk-import", async (req, res) => {
+  try {
+    const rawItems = Array.isArray(req.body?.items)
+      ? req.body.items
+      : Array.isArray(req.body?.images)
+        ? req.body.images
+        : [];
+
+    const urlCandidates = rawItems.flatMap((item) => {
+      if (typeof item === 'string') return [item];
+      if (item && typeof item === 'object') {
+        const values = [
+          item.image,
+          item.imageUrl,
+          item.imageURL,
+          item.img,
+          item.url,
+          item.link,
+          item.Image,
+          item['Image URL'],
+          item['image url'],
+        ];
+        return values.filter((value) => typeof value === 'string' || typeof value === 'number');
+      }
+      return [];
+    });
+
+    const validImages = [...new Set(
+      urlCandidates
+        .map((value) => String(value).trim())
+        .filter((value) => value && /^https?:\/\//i.test(value))
+    )];
+
+    if (!validImages.length) {
+      return res.status(400).json({
+        error: "No valid image URLs were found. Please upload an Excel/CSV file with image links.",
+      });
+    }
+
+    const bulkItems = validImages.map((url, index) => ({
+      id: `BULK${Date.now()}${String(index + 1).padStart(4, '0')}`,
+      name: `Bulk Image ${index + 1}`,
+      category: {
+        main: 'Custom',
+        sub: 'Bulk Upload',
+      },
+      weight: 0,
+      gender: 'Unisex',
+      stoneWeight: 0,
+      type: 'normal',
+      metal: 'Gold',
+      carat: 22,
+      orderNo: null,
+      isOurDesign: true,
+      images: [url],
+      image: url,
+      videos: [],
+      clickCount: 0,
+    }));
+
+    const created = await Jewellery.insertMany(bulkItems, { ordered: false });
+
+    res.status(201).json({
+      inserted: created.length,
+      message: 'Bulk image items uploaded successfully.',
+      items: created,
+    });
+  } catch (err) {
+    console.error('BULK IMPORT ERROR:', err);
+    res.status(500).json({ error: err.message || 'Bulk import failed' });
+  }
+});
+
 // ===============================
 // UPDATE JEWELLERY ITEM (URL ONLY)
 // ===============================

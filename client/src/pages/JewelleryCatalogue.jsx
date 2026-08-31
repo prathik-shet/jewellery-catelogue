@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
+import * as XLSX from 'xlsx';
 
 function JewelleryCatalogue() {
   const [jewellery, setJewellery] = useState([]);
@@ -63,6 +64,7 @@ function JewelleryCatalogue() {
 
   // ID Generation state
   const [isGeneratingId, setIsGeneratingId] = useState(false);
+  const [bulkImporting, setBulkImporting] = useState(false);
 
   // Static categories - consistent with UserCatalogue
   const catagories = [
@@ -117,6 +119,117 @@ function JewelleryCatalogue() {
   };
 
   const isAdmin = true;
+
+  const extractBulkImageUrls = (rows = []) => {
+    const candidates = [];
+    const seen = new Set();
+
+    const addUrl = (value) => {
+      if (typeof value !== 'string' && typeof value !== 'number') return;
+      const trimmed = String(value).trim();
+      if (!trimmed) return;
+      const normalized = trimmed.replace(/\\s+/g, '');
+
+      if (!/^https?:\/\//i.test(normalized)) return;
+
+      if (!seen.has(normalized)) {
+        seen.add(normalized);
+        candidates.push(normalized);
+      }
+    };
+
+    rows.forEach((row) => {
+      if (!row) return;
+
+      if (typeof row === 'string' || typeof row === 'number') {
+        addUrl(row);
+        return;
+      }
+
+      const fieldNames = [
+        'image',
+        'images',
+        'imageUrl',
+        'imageURL',
+        'img',
+        'url',
+        'link',
+        'Image',
+        'Image URL',
+        'ImageUrl',
+        'PHOTO',
+        'Photo',
+      ];
+
+      fieldNames.forEach((field) => {
+        if (Object.prototype.hasOwnProperty.call(row, field)) {
+          const value = row[field];
+          if (Array.isArray(value)) {
+            value.forEach(addUrl);
+          } else {
+            addUrl(value);
+          }
+        }
+      });
+
+      Object.values(row).forEach((value) => {
+        if (Array.isArray(value)) {
+          value.forEach(addUrl);
+        } else {
+          addUrl(value);
+        }
+      });
+    });
+
+    return candidates;
+  };
+
+  const handleBulkExcelImport = async (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const validTypes = [
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/csv',
+    ];
+    const extension = file.name.split('.').pop()?.toLowerCase();
+
+    if (!validTypes.includes(file.type) && !['csv', 'xlsx', 'xls'].includes(extension || '')) {
+      alert('Please upload a valid Excel or CSV file.');
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      setBulkImporting(true);
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheetName = workbook.SheetNames[0];
+      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' });
+      const imageUrls = extractBulkImageUrls(rows);
+
+      if (!imageUrls.length) {
+        throw new Error('No valid image URLs found in the file. Please include an image/imageUrl/url/link column in the Excel sheet.');
+      }
+
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        '/api/jewellery/bulk-import',
+        { items: imageUrls },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      await fetchJewellery();
+      alert(`${response.data.inserted} bulk image item(s) added successfully.`);
+    } catch (error) {
+      console.error('Bulk import error:', error);
+      alert(error.response?.data?.error || error.message || 'Bulk image import failed.');
+    } finally {
+      setBulkImporting(false);
+      event.target.value = '';
+    }
+  };
 
   // FIXED: Enhanced function to generate next ID for a category with comprehensive fallback
   const generateNextId = async (category) => {
@@ -2312,6 +2425,22 @@ const handleDelete = async (id) => {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Bulk image import */}
+      {isAdmin && (
+        <div className="fixed top-24 right-4 z-[110] flex items-center gap-3">
+          <label className="cursor-pointer rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-600 text-white px-4 py-3 shadow-lg hover:from-sky-600 hover:to-cyan-700 transition-all duration-300 font-bold text-sm sm:text-base">
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              onChange={handleBulkExcelImport}
+              disabled={bulkImporting}
+            />
+            {bulkImporting ? 'Importing...' : 'Bulk Add Images'}
+          </label>
         </div>
       )}
 
